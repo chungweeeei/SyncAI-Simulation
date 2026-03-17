@@ -1,0 +1,59 @@
+# ROS 2 / Colcon build directories
+build/
+install/
+log/
+devel/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+*.egg
+
+# C++ build artifacts
+*.o
+*.a
+*.so
+*.dylib
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.cproject
+.pydevproject
+.settings/
+
+# Gazebo
+*.log
+*.world.state
+
+# ROS bag files
+*.bag
+*.bag.active
+*.db3
+*.db3-shm
+*.db3-wal
+
+# Generated documentation
+doc/_build/
+docs/_build/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS files
+.DS_Store
+Thumbs.db
