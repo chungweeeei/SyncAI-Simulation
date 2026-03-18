@@ -1,174 +1,137 @@
-#include <syncai_robot_sim_common/diff_drive_common.hpp>
-#include <cmath>
+#include "syncai_robot_sim_common/diff_driver_common.hpp"
 
-namespace syncai_amr_sim_common
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <tf2/LinearMath/Quaternion.h>
+
+#include <cmath>
+#include <algorithm>
+
+namespace syncai_robot_sim_common
 {
-DiffDriverCommon::DiffDriverCommon()
-{
+DiffDriverCommon::DiffDriverCommon() = default;
+
+rclcpp::Logger DiffDriverCommon::logger() const {
+    if (_ros_node) {
+        return _ros_node->get_logger();
+    } 
+    return rclcpp::get_logger("diff_driver_common");
 }
 
-void DiffDriverCommon::set_model_name(const std::string &model_name)
-{
+void DiffDriverCommon::set_model_name(const std::string &model_name) {
     _model_name = model_name;
 }
 
-std::string DiffDriverCommon::model_name() const
-{
+std::string DiffDriverCommon::model_name() const {
     return _model_name;
 }
 
-rclcpp::Logger DiffDriverCommon::logger() const
-{
-    return _ros_node->get_logger();
-}
+void DiffDriverCommon::init_ros_node(const rclcpp::Node::SharedPtr node) {
+    _ros_node = node;
 
-void DiffDriverCommon::init_ros_node(rclcpp::Node::SharedPtr node){
-    
-    _ros_node = std::move(node);
-    
-    // register velocity command
+    // Initialize subscriber and publisher
     _cmd_vel_sub = _ros_node->create_subscription<geometry_msgs::msg::Twist>(
-        "cmd_vel", 10, std::bind(&DiffDriverCommon::cmd_vel_callback, this, std::placeholders::_1));
+        _config.cmd_vel_topic, 
+        rclcpp::QoS(10),
+        std::bind(&DiffDriverCommon::cmd_vel_callback, this, std::placeholders::_1));
 
-    // publish odometry
-    _odom_pub = _ros_node->create_publisher<nav_msgs::msg::Odometry>("odom", 10);
+    _odom_pub = _ros_node->template create_publisher<nav_msgs::msg::Odometry>(_config.odom_topic, rclcpp::QoS(10));
 
-    // TF broadcaster
-    _tf_broadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(_ros_node);
+    _tf2_broadcaster = std::make_shared<tf2_ros::TransformBroadcaster>(_ros_node);
 
-    RCLCPP_INFO(logger(), "DiffDriverCommon initialized for robot: %s",  _model_name.c_str());
-
+    RCLCPP_INFO(logger(), "DiffDriver [%s] initialized: cmd_vel='%s', odom='%s'",
+      _model_name.c_str(),
+      _config.cmd_vel_topic.c_str(),
+      _config.odom_topic.c_str());
 }
 
-void DiffDriverCommon::cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
-{
-  _cmd_linear_vel = std::clamp(msg->linear.x, -_max_linear_vel, _max_linear_vel);
-  _cmd_angular_vel = std::clamp(msg->angular.z, -_max_angular_vel, _max_angular_vel);
+
+void DiffDriverCommon::cmd_vel_callback(
+  const geometry_msgs::msg::Twist::SharedPtr msg) {
+  std::lock_guard<std::mutex> lock(_cmd_vel_mutex);
+  _latest_cmd.linear_x = std::clamp(msg->linear.x, -_config.max_linear_velocity, _config.max_linear_velocity);
+  _latest_cmd.angular_z = std::clamp(msg->angular.z, -_config.max_angular_velocity, _config.max_angular_velocity);
 }
 
-DiffDriverCommon::UpdateResult DiffDriverCommon::update(
-    const Eigen::Isometry3d& pose, double time
-){
-    UpdateResult result;
+DiffDriverCommon::VelocityCommand DiffDriverCommon::get_velocity_command() const {
+  std::lock_guard<std::mutex> lock(_cmd_vel_mutex);
+  return _latest_cmd;
+}
 
-    double dt = time - _last_update_time;
+void DiffDriverCommon::update_odometry(const Eigen::Isometry3d& pose, double time) {
+
+    if (!_initialized_pose){
+        _old_pose = pose;
+        _last_update_time = time;
+        _last_odom_pub_time = time;
+        _initialized_pose = true;
+        return;
+    }
+
+    const double dt = time - _last_update_time;
+    if (dt <= 0.0) return;
+
+    // Compute velocities from pose difference
+    const Eigen::Isometry3d delta = _old_pose.inverse() * pose;
+    const Eigen::Vector3d dp = delta.translation();
+
+    // Extract yaw from pose
+    const Eigen::Matrix3d rot = pose.rotation();
+    const double yaw = std::atan2(rot(1, 0), rot(0, 0));
+    const Eigen::Matrix3d old_rot = _old_pose.rotation();
+    const double old_yaw = std::atan2(old_rot(1, 0), old_rot(0, 0));
+    double dyaw = yaw - old_yaw;
+
+    // Normalize angle
+    while (dyaw > M_PI) dyaw -= 2.0 * M_PI;
+    while (dyaw < -M_PI) dyaw += 2.0 * M_PI;
+
+    const double vx = dp.x() / dt;
+    const double wz = dyaw / dt;
+
+    _old_pose = pose;
     _last_update_time = time;
-    _pose = pose;
 
-    if (!_initialized){
-        _initialized = true;
-        _last_pose = pose;
-        return result;
-    }
+    // Check if it's time to publish odometry
+    const double odom_period = 1.0 / _config.odom_publish_rate;
+    if ((time - _last_odom_pub_time) < odom_period) return;
+    
+    _last_odom_pub_time = time;
 
-    // prevent dt from being too small or too large
-    if (dt <= 0.0 || dt > 1.0){
-        _last_pose = pose;
-        return result;
-    }
+    if (!_ros_node) return;
 
-    // compute actual velocity
-    Eigen::Vector3d displacement = pose.translation() - _last_pose.translation();
-    double yaw = compute_yaw(pose);
-    double last_yaw = compute_yaw(_last_pose);
-    double dyaw = yaw - last_yaw;
-
-    // handle angle
-    if (dyaw > M_PI) dyaw -= 2.0 * M_PI;
-    if (dyaw < -M_PI) dyaw += 2.0 * M_PI;
-
-    _actual_linear_vel = displacement.head<2>().norm() / dt;
-    _actual_angular_vel = dyaw / dt;
-
-    double target_linear = apply_acceleration_limit(
-      _actual_linear_vel, _cmd_linear_vel, _max_linear_accel, dt);
-    double target_angular = apply_acceleration_limit(
-      _actual_angular_vel, _cmd_angular_vel, _max_angular_accel, dt);
-
-    result.linear_vel = target_linear;
-    result.angular_vel = target_angular;
-
-    // publish odometry and tf
-    double odom_period = 1.0 / _odom_publish_rate;
-    if (time - _last_odom_publish_time >= odom_period) {
-      publish_odometry(time);
-      publish_tf(time);
-      _last_odom_publish_time = time;
-    }
-
-    _last_pose = pose;
-    return result;
-}
-
-double DiffDriverCommon::apply_acceleration_limit(
-  double current, double target, double max_accel, double dt) const
-{
-  double diff = target - current;
-  double max_change = max_accel * dt;
-  
-  if (std::abs(diff) <= max_change) {
-    return target;
-  }
-  return current + std::copysign(max_change, diff);
-}
-
-double DiffDriverCommon::compute_yaw(const Eigen::Isometry3d& pose) const
-{
-  Eigen::Quaterniond quat(pose.linear());
-  return std::atan2(
-    2.0 * (quat.w() * quat.z() + quat.x() * quat.y()),
-    1.0 - 2.0 * (quat.y() * quat.y() + quat.z() * quat.z()));
-}
-
-void DiffDriverCommon::publish_odometry(double time)
-{
-    const int32_t t_sec = static_cast<int32_t>(time);
-    const uint32_t t_nsec =
-      static_cast<uint32_t>((time - static_cast<double>(t_sec)) * 1e9);
-    const rclcpp::Time stamp{t_sec, t_nsec, RCL_ROS_TIME};
-
+    // Build and publish Odometry message
     nav_msgs::msg::Odometry odom_msg;
-    odom_msg.header.stamp = stamp;
-    odom_msg.header.frame_id = _odom_frame;
-    odom_msg.child_frame_id = _base_frame;
+    odom_msg.header.stamp = _ros_node->now();
+    odom_msg.header.frame_id = _config.odom_frame_id;
+    odom_msg.child_frame_id = _config.base_frame_id;
 
-    // Position
-    odom_msg.pose.pose.position.x = _pose.translation().x();
-    odom_msg.pose.pose.position.y = _pose.translation().y();
-    odom_msg.pose.pose.position.z = _pose.translation().z();
+    // Position from world pose
+    odom_msg.pose.pose.position.x = pose.translation().x();
+    odom_msg.pose.pose.position.y = pose.translation().y();
+    odom_msg.pose.pose.position.z = pose.translation().z();
 
-    // Orientation
-    Eigen::Quaterniond quat(_pose.linear());
-    odom_msg.pose.pose.orientation.x = quat.x();
-    odom_msg.pose.pose.orientation.y = quat.y();
-    odom_msg.pose.pose.orientation.z = quat.z();
-    odom_msg.pose.pose.orientation.w = quat.w();
+    const Eigen::Quaterniond q(pose.rotation());
+    odom_msg.pose.pose.orientation.x = q.x();
+    odom_msg.pose.pose.orientation.y = q.y();
+    odom_msg.pose.pose.orientation.z = q.z();
+    odom_msg.pose.pose.orientation.w = q.w();
 
-    _odom_pub->publish(odom_msg);   
-}
+    _odom_pub->publish(odom_msg);
 
-void DiffDriverCommon::publish_tf(double time){
-    const int32_t t_sec = static_cast<int32_t>(time);
-    const uint32_t t_nsec =
-        static_cast<uint32_t>((time - static_cast<double>(t_sec)) * 1e9);
-    const rclcpp::Time stamp{t_sec, t_nsec, RCL_ROS_TIME};
-
+    // Publish TF: odom -> base_link
     geometry_msgs::msg::TransformStamped tf_msg;
-    tf_msg.header.stamp = stamp;
-    tf_msg.header.frame_id = _odom_frame;
-    tf_msg.child_frame_id = _base_frame;
+    tf_msg.header.stamp = odom_msg.header.stamp;
+    tf_msg.header.frame_id = _config.odom_frame_id;
+    tf_msg.child_frame_id = _config.base_frame_id;
+    tf_msg.transform.translation.x = pose.translation().x();
+    tf_msg.transform.translation.y = pose.translation().y();
+    tf_msg.transform.translation.z = pose.translation().z();
+    tf_msg.transform.rotation.x = q.x();
+    tf_msg.transform.rotation.y = q.y();
+    tf_msg.transform.rotation.z = q.z();
+    tf_msg.transform.rotation.w = q.w();
 
-    tf_msg.transform.translation.x = _pose.translation().x();
-    tf_msg.transform.translation.y = _pose.translation().y();
-    tf_msg.transform.translation.z = _pose.translation().z();
-
-    Eigen::Quaterniond quat(_pose.linear());
-    tf_msg.transform.rotation.x = quat.x();
-    tf_msg.transform.rotation.y = quat.y();
-    tf_msg.transform.rotation.z = quat.z();
-    tf_msg.transform.rotation.w = quat.w();
-
-    _tf_broadcaster->sendTransform(tf_msg);
+    _tf2_broadcaster->sendTransform(tf_msg);
 }
 
 }
