@@ -1,5 +1,5 @@
-#ifndef SYCNAI_ROBOT_STATE_HPP
-#define SYCNAI_ROBOT_STATE_HPP
+#ifndef SYCNAI_ROBOT_STATE__SYCNAI_ROBOT_STATE_HPP_
+#define SYCNAI_ROBOT_STATE__SYCNAI_ROBOT_STATE_HPP_
 
 #include <rclcpp/rclcpp.hpp>
 #include <nav_msgs/msg/odometry.hpp>
@@ -22,14 +22,14 @@ private:
     void battery_timer_callback();
 
     // Subscribers
-    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub;
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
 
     // Publishers
-    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_pub;
-    rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_pub;
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_pub_;
+    rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_pub_;
 
     // Timer for battery
-    rclcpp::TimerBase::SharedPtr battery_timer;
+    rclcpp::TimerBase::SharedPtr battery_timer_;
 
     // Parameters
     double battery_level_;
@@ -39,4 +39,4 @@ private:
 };
 } // namespace syncai
 
-#endif // SYCNAI_ROBOT_STATE_HPP
+#endif // SYCNAI_ROBOT_STATE__SYCNAI_ROBOT_STATE_HPP_
