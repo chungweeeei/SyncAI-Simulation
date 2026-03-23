@@ -3,11 +3,12 @@ import glob
 import configparser
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
+from ament_index_python.packages import get_package_prefix
 
 def generate_launch_description():
 
@@ -17,7 +18,21 @@ def generate_launch_description():
         "dp1f.world"
     ])
 
+    # Set GZ_SIM_SYSTEM_PLUGIN_PATH so Gazebo can find our custom plugins
+    plugin_dir = os.path.join(get_package_prefix("syncai_demo_gz"), "lib", "syncai_demo_gz")
+    gz_plugin_path = os.environ.get("GZ_SIM_SYSTEM_PLUGIN_PATH", "")
+    if gz_plugin_path:
+        plugin_dir = plugin_dir + ":" + gz_plugin_path
+
+    # Set GZ_SIM_RESOURCE_PATH so Gazebo can resolve package:// URIs for models
+    share_dir = os.path.join(get_package_prefix("syncai_demo_gz"), "share")
+    gz_resource_path = os.environ.get("GZ_SIM_RESOURCE_PATH", "")
+    if gz_resource_path:
+        share_dir = share_dir + ":" + gz_resource_path
+
     actions = [
+        SetEnvironmentVariable("GZ_SIM_SYSTEM_PLUGIN_PATH", plugin_dir),
+        SetEnvironmentVariable("GZ_SIM_RESOURCE_PATH", share_dir),
         DeclareLaunchArgument("world", default_value=default_world),
         DeclareLaunchArgument("gui", default_value="true"),
         DeclareLaunchArgument("headless", default_value="false"),
@@ -31,6 +46,36 @@ def generate_launch_description():
                 "on_exit_shutdown": "true",
             }.items(),
         )
+    ]
+
+    # Spawn door model and bridge its topics
+    door_model_path = PathJoinSubstitution([
+        FindPackageShare("syncai_demo_gz"),
+        "models", "door", "model.sdf"
+    ])
+
+    actions.append(Node(
+        package="ros_gz_sim",
+        executable="create",
+        arguments=[
+            "-file", door_model_path,
+            "-name", "door_01",
+            "-x", "11.9",
+            "-y", "17.8",
+            "-z", "0.0",
+        ],
+        output="screen"
+    ))
+
+    bridge_topics = [
+        # Door topics
+        "/door/door_01/cmd_topic@std_msgs/msg/Bool]gz.msgs.Boolean",
+        "/door/door_01/state@std_msgs/msg/String[gz.msgs.StringMsg",
+        # Camera topic
+        "/camera@sensor_msgs/msg/Image[gz.msgs.Image",
+        # Global topics
+        "/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V",
+        "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"
     ]
 
     DATA_DIR = os.path.expanduser("~/data")
@@ -59,20 +104,11 @@ def generate_launch_description():
             ]
         ))
 
-        # ROS <-> Gazebo bridge
-        actions.append(Node(
-            package="ros_gz_bridge",
-            executable="parameter_bridge",
-            namespace=robot_id,
-            arguments=[
-                f"/{robot_id}/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
-                f'/{robot_id}/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
-                f'/{robot_id}/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
-                '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
-                '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'
-            ],
-            output="screen"
-        ))
+        bridge_topics.extend([
+            f"/{robot_id}/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
+            f"/{robot_id}/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry",
+            f"/{robot_id}/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan"
+        ])
 
         actions.append(Node(
             package='tf2_ros',
@@ -80,5 +116,13 @@ def generate_launch_description():
             arguments=['0.0', '0.0', '0.12', '0', '0', '0', f'{robot_id}/base_link', f'{robot_id}/laser'],
             output='screen'
         ))
+
+    # Create a single ROS <-> Gazebo bridge node for all topics
+    actions.append(Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        arguments=bridge_topics,
+        output="screen"
+    ))
 
     return LaunchDescription(actions)

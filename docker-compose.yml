@@ -38,6 +38,43 @@ services:
     tty: true
     restart: unless-stopped
 
+  robot01:
+    build:
+      context: ./robot_ws
+      dockerfile: Dockerfile
+    image: syncai-robot-base-image:latest
+    container_name: syncai-robot01
+
+    runtime: nvidia
+
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - XAUTHORITY=/home/ubuntu/.Xauthority
+
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+
+      # ROS 2 DDS
+      - ROS_DOMAIN_ID=0
+      - CYCLONEDDS_URI=file:///home/ubuntu/data/cyclonedds.xml
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      - SYNCAI_DATA_DIR=/home/ubuntu/data
+
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ubuntu/.Xauthority:ro
+      - ./robot_ws:/home/ubuntu/robot_ws
+      - ./data/robot01:/home/ubuntu/data
+      - ./map:/home/ubuntu/map
+      - ./params:/home/ubuntu/params
+    
+    network_mode: host
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+  
+
 
 
       

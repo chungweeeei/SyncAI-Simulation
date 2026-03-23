@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(syncai_demo_gz)
+project(syncai_common)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -7,19 +7,17 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(gz-sim8 REQUIRED)
-find_package(gz-plugin2 REQUIRED COMPONENTS register)
-find_package(gz-transport13 REQUIRED)
-find_package(gz-msgs10 REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
-# Door Plugin
-add_library(DoorPlugin SHARED src/DoorPlugin.cc)
-target_link_libraries(DoorPlugin
-  gz-sim8::gz-sim8
-  gz-plugin2::gz-plugin2-register
-  gz-transport13::gz-transport13
-  gz-msgs10::gz-msgs10
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/RobotState.msg"
+  DEPENDENCIES
+    std_msgs
+    geometry_msgs
 )
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -33,15 +31,5 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-install(TARGETS DoorPlugin
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-install(DIRECTORY
-  launch
-  models
-  worlds
-  DESTINATION share/${PROJECT_NAME}
-)
-
+ament_export_dependencies(rosidl_default_runtime)
 ament_package()

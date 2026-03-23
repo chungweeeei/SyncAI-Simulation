@@ -5,11 +5,6 @@
   xsi:schemaLocation="https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd"
 >
     <Domain Id="0">
-        <General>
-            <Interfaces>
-                <NetworkInterface>auto</NetworkInterface>
-            </Interfaces>
-        </General>
         <Tracing>
             <Verbosity>config</Verbosity>
             <OutputFile>stdout</OutputFile>

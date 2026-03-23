@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(syncai_demo_gz)
+project(syncai_robot_state)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -7,19 +7,34 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(gz-sim8 REQUIRED)
-find_package(gz-plugin2 REQUIRED COMPONENTS register)
-find_package(gz-transport13 REQUIRED)
-find_package(gz-msgs10 REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(syncai_common REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
-# Door Plugin
-add_library(DoorPlugin SHARED src/DoorPlugin.cc)
-target_link_libraries(DoorPlugin
-  gz-sim8::gz-sim8
-  gz-plugin2::gz-plugin2-register
-  gz-transport13::gz-transport13
-  gz-msgs10::gz-msgs10
+# Include directories
+include_directories(include)
+
+# Add executable
+add_executable(syncai_robot_state src/syncai_robot_state.cpp)
+
+ament_target_dependencies(syncai_robot_state
+  rclcpp
+  syncai_common
+  tf2_ros
+  sensor_msgs
 )
+
+install(TARGETS syncai_robot_state
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY 
+  include
+  launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -32,16 +47,5 @@ if(BUILD_TESTING)
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
-
-install(TARGETS DoorPlugin
-  DESTINATION lib/${PROJECT_NAME}
-)
-
-install(DIRECTORY
-  launch
-  models
-  worlds
-  DESTINATION share/${PROJECT_NAME}
-)
 
 ament_package()

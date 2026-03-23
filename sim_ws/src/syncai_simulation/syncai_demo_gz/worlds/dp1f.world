@@ -57,5 +57,12 @@
         </collision>
       </link>
     </model>
+    <!-- Camera near the door -->
+    <include>
+      <uri>package://syncai_demo_gz/models/camera</uri>
+      <name>camera_01</name>
+      <pose>7.5 17.8 2.5 0 0.52 0</pose>
+    </include>
+
   </world>
 </sdf>

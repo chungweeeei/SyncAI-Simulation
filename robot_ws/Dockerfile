@@ -17,29 +17,31 @@ RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install Gazebo Harmonic and dependencies
+# Install ROS 2 Jazzy + Navigation2 + dependencies
 RUN apt-get update && apt-get install -y \
     ros-jazzy-ros-base \
-    ros-jazzy-ros-gz \
-    ros-jazzy-ros-gz-sim \
-    ros-jazzy-ros-gz-bridge \
+    ros-jazzy-navigation2 \
+    ros-jazzy-nav2-bringup \
+    ros-jazzy-slam-toolbox \
     ros-jazzy-tf2-ros \
-    ros-jazzy-teleop-twist-keyboard \
+    ros-jazzy-tf2-tools \
     ros-jazzy-rmw-cyclonedds-cpp \
-    libeigen3-dev \
+    ros-jazzy-rosidl-default-generators \
+    ros-jazzy-rosidl-default-runtime \
+    ros-jazzy-std-msgs \
+    ros-jazzy-geometry-msgs \
+    ros-jazzy-sensor-msgs \
+    ros-jazzy-rviz2 \
     python3-colcon-common-extensions \
-    python3-rosdep \ 
-    mesa-utils \
-    libgl1-mesa-dri \
-    libgl1 \
-    byobu \ 
-    net-tools \ 
+    python3-rosdep \
+    byobu \
+    net-tools \
     && rm -rf /var/lib/apt/lists/*
 
-# Initialized ros dep
+# Initialize rosdep
 RUN rosdep init || true && rosdep update --rosdistro jazzy
 
-# Install Python dependencies
+# Install Python dependencies (for syncai_robot_api)
 RUN apt-get update && apt-get install -y python3-pip && rm -rf /var/lib/apt/lists/*
 RUN pip3 install --break-system-packages \
     structlog \
@@ -55,5 +57,11 @@ RUN echo "ubuntu ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 USER ubuntu
 WORKDIR /home/ubuntu
 
-ENTRYPOINT [ "/home/ubuntu/entrypoint.sh" ]
+# Auto-source ROS 2 and workspace in every shell
+RUN echo 'source /opt/ros/jazzy/setup.bash' >> ~/.bashrc && \
+    echo '[ -f ~/robot_ws/install/setup.bash ] && source ~/robot_ws/install/setup.bash' >> ~/.bashrc
+
+ENV SYNCAI_DATA_DIR=/home/ubuntu/data
+
+ENTRYPOINT ["/home/ubuntu/entrypoint.sh"]
 CMD ["bash"]
