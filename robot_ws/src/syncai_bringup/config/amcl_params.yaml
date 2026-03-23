@@ -17,23 +17,23 @@ amcl:
     do_beams_skip: false
     global_frame_id: "map"
     lambda_short: 0.1
-    laser_likelihood_max_dist: 2.0
-    laser_max_range: 100.0
-    laser_min_range: -1.0
-    laser_model_type: "likelihood_field"
-    # More beams = more accurate scan matching
-    max_beams: 120
+    laser_likelihood_max_dist: 1.0
+    laser_max_range: 30.0
+    laser_min_range: 0.1
+    laser_model_type: "likelihood_field_prob"
+    # More beams = more accurate scan matching during rotation
+    max_beams: 180
     # More particles = more stable localization during fast motion
-    max_particles: 8000
-    min_particles: 2000
+    max_particles: 10000
+    min_particles: 3000
     pf_err: 0.01
     pf_z: 0.99
     recovery_alpha_fast: 0.1
     recovery_alpha_slow: 0.001
-    resample_interval: 2
+    resample_interval: 1
     robot_model_type: "nav2_amcl::DifferentialMotionModel"
     save_pose_rate: 0.5
-    sigma_hit: 0.1
+    sigma_hit: 0.15
     tf_broadcast: true
     transform_tolerance: 0.5
     # Update very frequently during rotation - critical for fast spin
