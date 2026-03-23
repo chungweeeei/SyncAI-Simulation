@@ -16,7 +16,11 @@ setup(
         (os.path.join('share', package_name, 'launch'),
             glob(os.path.join('launch', '*launch.[pxy][yma]*'))),
     ],
-    install_requires=['setuptools'],
+    install_requires=[
+        'setuptools',
+        'fastapi',
+        'uvicorn',
+    ],
     zip_safe=True,
     maintainer='syncrobotic',
     maintainer_email='chungweeeei@gmail.com',
