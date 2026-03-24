@@ -79,7 +79,7 @@ def init_task_router(task_repo: TaskRepo, nav_gateway: NavigationGateway) -> API
         # Step2: Start add task to repository
         success = task_repo.add_task(task)
         if not success:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=f"Task {task.id} already exists")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Task {task.id} already exists")
 
         return TaskResponse(id=task.id, status=TaskStatus.PENDING, message="Task created successfully")
 
