@@ -21,6 +21,15 @@ target_link_libraries(DoorPlugin
   gz-msgs10::gz-msgs10
 )
 
+# Alarm Plugin
+add_library(AlarmPlugin SHARED src/AlarmPlugin.cc)
+target_link_libraries(AlarmPlugin
+  gz-sim8::gz-sim8
+  gz-plugin2::gz-plugin2-register
+  gz-transport13::gz-transport13
+  gz-msgs10::gz-msgs10
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
@@ -33,7 +42,7 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-install(TARGETS DoorPlugin
+install(TARGETS DoorPlugin AlarmPlugin
   DESTINATION lib/${PROJECT_NAME}
 )
 

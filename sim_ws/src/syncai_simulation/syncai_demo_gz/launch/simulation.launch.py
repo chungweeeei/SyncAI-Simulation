@@ -71,6 +71,9 @@ def generate_launch_description():
         # Door topics
         "/door/door_01/cmd_topic@std_msgs/msg/Bool]gz.msgs.Boolean",
         "/door/door_01/state@std_msgs/msg/String[gz.msgs.StringMsg",
+        # Alarm topics
+        "/alarm/alarm_01/cmd_topic@std_msgs/msg/Bool]gz.msgs.Boolean",
+        "/alarm/alarm_01/state@std_msgs/msg/String[gz.msgs.StringMsg",
         # Camera topic
         "/camera@sensor_msgs/msg/Image[gz.msgs.Image",
         # Global topics
