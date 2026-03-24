@@ -57,7 +57,7 @@ void DriverManagerNode::battery_timer_callback()
     msg.header.stamp = this->now();
     msg.header.frame_id = robot_frame_id_;
 
-    msg.percentage = static_cast<float>(battery_level_ / 100.0);
+    msg.percentage = static_cast<float>(static_cast<int>(battery_level_));
     msg.voltage = static_cast<float>(20.0 + (battery_level_ / 100.0) * 5.2);  // 20V~25.2V
     msg.current = 2.5f;
     msg.temperature = 35.0f;

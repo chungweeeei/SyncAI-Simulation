@@ -19,11 +19,12 @@ class TaskRepo:
         with self._lock:
             if task.id in self._tasks:
                 return False
-            # Clear cancelled tasks before adding new one
+            
             self._tasks = {
                 tid: t for tid, t in self._tasks.items()
                 if t.status != TaskStatus.CANCELLED
             }
+            
             self._tasks[task.id] = task
             return True
 
@@ -52,24 +53,41 @@ class TaskRepo:
     def update_task_status(self, task_id: str, status: TaskStatus, error_msg: Optional[str] = None):
         with self._lock:
             task = self._tasks.get(task_id)
-            if task:
-                task.status = status
-                if error_msg:
-                    task.error_msg = error_msg
+            if not task:
+                return
+            
+            task.status = status
+
+            if not error_msg:
+                return
+            
+            task.error_msg = error_msg
+
 
     def update_step_status(self, task_id: str, step_index: int, status: StepStatus, error_msg: Optional[str] = None):
         with self._lock:
             task = self._tasks.get(task_id)
-            if task and step_index < len(task.payload.steps):
-                task.payload.steps[step_index].status = status
-                if error_msg:
-                    task.payload.steps[step_index].error_msg = error_msg
+            if not task:
+                return
+            
+            if step_index >= len(task.payload.steps):
+                return
+            
+            task.payload.steps[step_index].status = status
+
+            if not error_msg:
+                return
+            
+            task.error_msg = error_msg
+
 
     def update_current_step_index(self, task_id: str, index: int):
         with self._lock:
             task = self._tasks.get(task_id)
-            if task:
-                task.current_step_index = index
+            if not task:
+                return
+            
+            task.current_step_index = index
 
     def get_next_pending_task(self) -> Optional[Task]:
         with self._lock:

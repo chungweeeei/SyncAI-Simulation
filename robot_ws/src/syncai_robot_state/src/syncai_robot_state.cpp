@@ -47,13 +47,19 @@ void RobotStateNode::get_parameters()
 void RobotStateNode::init_pub_sub()
 {
     // Publisher
-    robot_state_pub_ = this->create_publisher<syncai_common::msg::RobotState>("/robot_state", rclcpp::QoS(5));
+    robot_state_pub_ = this->create_publisher<syncai_common::msg::RobotState>("robot_state", rclcpp::QoS(5));
 
     // Subscribers
     battery_sub_ = this->create_subscription<sensor_msgs::msg::BatteryState>(
         "battery_state",
         rclcpp::QoS(5),
         std::bind(&RobotStateNode::battery_callback, this, std::placeholders::_1)
+    );
+
+    odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
+        "odom",
+        rclcpp::QoS(5),
+        std::bind(&RobotStateNode::odom_callback, this, std::placeholders::_1)
     );
 
     // Timer
@@ -89,7 +95,10 @@ void RobotStateNode::robot_state_timer_callback()
         RCLCPP_WARN(this->get_logger(), "Could not get transform: %s", ex.what());
     }
 
-    // Battery 
+    // Velocity
+    msg.velocity = current_velocity_;
+
+    // Battery
     msg.battery_percentage = battery_percentage_;
     msg.battery_voltage = battery_voltage_;
 
@@ -100,7 +109,13 @@ void RobotStateNode::battery_callback(const sensor_msgs::msg::BatteryState::Shar
 {
     battery_percentage_ = msg->percentage;
     battery_voltage_ = msg->voltage;
-} 
+}
+
+void RobotStateNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
+{
+    current_velocity_ = msg->twist.twist;
+}
+
 }// namespace syncai_robot_state
 
 int main(int argc, char ** argv){

@@ -3,7 +3,7 @@ import structlog
 import threading
 
 from syncai_robot_api.repositories.task.task import TaskRepo
-from syncai_robot_api.repositories.task.schema import TaskStatus, StepStatus
+from syncai_robot_api.repositories.task.schema import TaskStatus, StepStatus, StepType
 from syncai_robot_api.gateways.navigation import NavigationGateway
 
 
@@ -36,7 +36,8 @@ class TaskExecutorJob:
             if task is None:
                 time.sleep(self._interval)
                 continue
-
+            
+            # blocking call to execute the task
             self._execute_task(task.id)
             time.sleep(self._interval)
 
@@ -52,6 +53,7 @@ class TaskExecutorJob:
 
         steps = task.payload.steps
         for i, step in enumerate(steps):
+            # Check if task was cancelled before executing each step
             current = self._task_repo.get_task(task_id)
             if current and current.status == TaskStatus.CANCELLED:
                 for j in range(i, len(steps)):
@@ -65,11 +67,15 @@ class TaskExecutorJob:
                 "[TaskExecutorJob] Executing step",
                 task_id=task_id, step_id=step.id, step_type=step.type
             )
-
-            if step.type == "MOVE":
+            
+            # handle each step type
+            if step.type == StepType.MOVE:
                 success, msg = self._nav_gateway.navigate_to_pose(
                     x=step.params.x, y=step.params.y, yaw=step.params.r
                 )
+            elif step.type == StepType.WAIT:
+                time.sleep(step.params.durationSec)
+                success, msg = True, "Wait completed"
             else:
                 success, msg = False, f"Unknown step type: {step.type}"
 
@@ -94,12 +100,11 @@ class TaskExecutorJob:
                     task_id=task_id, step_id=step.id, error=msg
                 )
                 break
-        else:
-            self._task_repo.update_task_status(task_id, TaskStatus.COMPLETED)
-            self._logger.info("[TaskExecutorJob] Task completed", task_id=task_id)
+        
+        self._task_repo.update_task_status(task_id, TaskStatus.COMPLETED)
+        self._logger.info("[TaskExecutorJob] Task completed", task_id=task_id)
 
         self._task_repo.clear_active_task()
-
 
 def init_task_executor_job(
     logger: structlog.stdlib.BoundLogger,

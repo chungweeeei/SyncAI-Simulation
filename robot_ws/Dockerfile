@@ -47,7 +47,8 @@ RUN pip3 install --break-system-packages \
     structlog \
     fastapi \
     uvicorn \
-    websockets
+    websockets \
+    confluent-kafka \
 
 COPY scripts/entrypoint.sh /home/ubuntu/entrypoint.sh
 RUN chmod +x /home/ubuntu/entrypoint.sh

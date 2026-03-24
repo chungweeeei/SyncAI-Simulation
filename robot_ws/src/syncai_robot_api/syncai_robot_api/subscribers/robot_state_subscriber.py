@@ -13,6 +13,7 @@ from syncai_common.msg import RobotState as RobotStateMsg
 from syncai_robot_api.repositories.robot.robot import RobotRepo
 from syncai_robot_api.repositories.robot.schema import (
     RobotPose,
+    RobotVelocity,
     RobotBattery,
     RobotState
 )
@@ -29,7 +30,7 @@ class RobotStateSubscriber:
 
         self._robot_state_sub = node.create_subscription(
             msg_type=RobotStateMsg,
-            topic="/robot_state",
+            topic="robot_state",
             callback=self._robot_state_cb,
             qos_profile=QoSProfile(
                 depth=5,
@@ -58,6 +59,11 @@ class RobotStateSubscriber:
                     z=msg.pose.orientation.z,
                     w=msg.pose.orientation.w
                 )
+            ),
+            velocity=RobotVelocity(
+                vx=msg.velocity.linear.x,
+                vy=msg.velocity.linear.y,
+                omega=msg.velocity.angular.z
             ),
             battery=RobotBattery(
                 percentage=msg.battery_percentage,

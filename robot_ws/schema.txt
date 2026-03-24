@@ -1,0 +1,41 @@
+{
+    "timestamp": "2026-03-23T09:38:43.00Z"
+    "version": "2.0.0"
+    "manufacturer": "RobotCo"
+    "serialNumber": "AMR-001"
+    "agvPosition": {
+        "x": 12.50,
+        "y": 5.2,
+        "theta": 0.785,
+        "mapId": xxx,
+        "positionInitialized": true
+    },
+    "velocity": {
+        "vx": 0.5,
+        "omega": 0.0
+    },
+    "batteryState": {
+        "batteryCharge": 85.5,
+        "charging": false,
+        "batteryVoltage": 48.2
+    },
+    "actionState": [
+        {
+            "actionId": "lift_1",
+            "actionStatus": "RUNNING"
+        }
+    ],
+    "paused": false
+}
+
+Operating Mode(運作模式)
+- AUTO
+- MANUAL
+- MAINTENANCE
+
+Action Status
+- WAITING
+- INITIALIZING
+- RUNNING
+- FINISHED
+- FAILED

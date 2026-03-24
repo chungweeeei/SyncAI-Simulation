@@ -1,5 +1,5 @@
 import math
-import time
+import threading
 import structlog
 
 from typing import Optional, Tuple
@@ -10,6 +10,12 @@ from rclpy.action.client import ClientGoalHandle
 from nav2_msgs.action import NavigateToPose
 from geometry_msgs.msg import PoseStamped
 from action_msgs.msg import GoalStatus
+
+
+def _wait_for_future(future, timeout: Optional[float] = None) -> bool:
+    event = threading.Event()
+    future.add_done_callback(lambda _: event.set())
+    return event.wait(timeout=timeout)
 
 
 class NavigationGateway:
@@ -49,10 +55,10 @@ class NavigationGateway:
             x=x, y=y, yaw=yaw
         )
 
+        # Send goal and wait for acceptance
         send_goal_future = self._nav_client.send_goal_async(goal_msg)
-
-        while not send_goal_future.done():
-            time.sleep(0.1)
+        if not _wait_for_future(send_goal_future, timeout=15.0):
+            return False, "Timeout waiting for goal acceptance"
 
         self._current_goal_handle = send_goal_future.result()
 
@@ -62,9 +68,9 @@ class NavigationGateway:
 
         self._logger.info("[NavigationGateway] Goal accepted")
 
+        # Wait for navigation result (no timeout — nav can take a long time)
         result_future = self._current_goal_handle.get_result_async()
-        while not result_future.done():
-            time.sleep(0.1)
+        _wait_for_future(result_future)
 
         result = result_future.result()
         self._current_goal_handle = None
@@ -83,8 +89,7 @@ class NavigationGateway:
 
         self._logger.info("[NavigationGateway] Cancelling current goal")
         cancel_future = self._current_goal_handle.cancel_goal_async()
-        while not cancel_future.done():
-            time.sleep(0.1)
+        _wait_for_future(cancel_future, timeout=10.0)
 
         return True
 

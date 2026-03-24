@@ -16,6 +16,9 @@ string map              # Active map identifier
 # --- Position (map frame) ---
 geometry_msgs/Pose pose
 
+# --- Velocity ---
+geometry_msgs/Twist velocity
+
 # --- Battery --
 float32 battery_percentage # 0.0 ~ 100.0%
 float32 battery_voltage    # Volts

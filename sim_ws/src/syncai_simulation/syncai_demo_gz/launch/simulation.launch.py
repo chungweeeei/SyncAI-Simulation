@@ -107,13 +107,21 @@ def generate_launch_description():
         bridge_topics.extend([
             f"/{robot_id}/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
             f"/{robot_id}/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry",
-            f"/{robot_id}/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan"
+            f"/{robot_id}/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
+            f"/{robot_id}/imu@sensor_msgs/msg/Imu[gz.msgs.IMU"
         ])
 
         actions.append(Node(
             package='tf2_ros',
             executable='static_transform_publisher',
             arguments=['0.0', '0.0', '0.12', '0', '0', '0', f'{robot_id}/base_link', f'{robot_id}/laser'],
+            output='screen'
+        ))
+
+        actions.append(Node(
+            package='tf2_ros',
+            executable='static_transform_publisher',
+            arguments=['0', '0', '0', '0', '0', '0', f'{robot_id}/base_link', f'{robot_id}/imu'],
             output='screen'
         ))
 

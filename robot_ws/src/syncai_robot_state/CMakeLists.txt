@@ -11,6 +11,7 @@ find_package(rclcpp REQUIRED)
 find_package(syncai_common REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 
 # Include directories
 include_directories(include)
@@ -23,6 +24,7 @@ ament_target_dependencies(syncai_robot_state
   syncai_common
   tf2_ros
   sensor_msgs
+  nav_msgs
 )
 
 install(TARGETS syncai_robot_state

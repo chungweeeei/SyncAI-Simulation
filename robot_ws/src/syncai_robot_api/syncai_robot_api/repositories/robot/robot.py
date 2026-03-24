@@ -3,11 +3,8 @@ import threading
 
 from typing import Optional
 
-from syncai_robot_api.repositories.robot.schema import (
-    RobotPose,
-    RobotBattery,
-    RobotState
-)
+from syncai_robot_api.repositories.robot.schema import RobotState
+
 
 class RobotRepo:
 

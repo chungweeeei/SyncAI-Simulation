@@ -9,12 +9,17 @@ SESSION_NAME="syncai"
 # Kill existing session if any
 byobu kill-session -t "$SESSION_NAME" 2>/dev/null
 
-# ---------- Window 0: map_server / amcl ----------
+# ---------- Window 0: ekf / map_server ----------
 byobu new-session -d -s "$SESSION_NAME" -n "localization"
 byobu send-keys -t "$SESSION_NAME:localization" \
-  "ros2 launch syncai_bringup map_server_launch.py" Enter
+  "ros2 launch syncai_bringup ekf_launch.py" Enter
 byobu split-window -v -t "$SESSION_NAME:localization"
 byobu send-keys -t "$SESSION_NAME:localization.1" \
+  "ros2 launch syncai_bringup map_server_launch.py" Enter
+
+# ---------- Window 1: amcl ----------
+byobu new-window -t "$SESSION_NAME" -n "amcl"
+byobu send-keys -t "$SESSION_NAME:amcl" \
   "ros2 launch syncai_bringup amcl_launch.py" Enter
 
 # ---------- Window 1: planner / controller ----------

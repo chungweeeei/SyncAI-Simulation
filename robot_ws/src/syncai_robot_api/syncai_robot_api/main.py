@@ -48,11 +48,11 @@ class SyncAIRobotAPI(Node):
         init_robot_state_subscriber(logger=logger, node=self, robot_repo=robot_repo)
 
         # Register jobs
-        init_send_robot_state_job(logger=logger, robot_repo=robot_repo, agent_gateway=agent_gateway)
+        init_send_robot_state_job(logger=logger, robot_repo=robot_repo, task_repo=task_repo, agent_gateway=agent_gateway)
         init_task_executor_job(logger=logger, task_repo=task_repo, nav_gateway=nav_gateway)
 
         # Start HTTP API server
-        start_api_server(logger=logger, task_repo=task_repo, nav_gateway=nav_gateway)
+        start_api_server(logger=logger, robot_repo=robot_repo, task_repo=task_repo, nav_gateway=nav_gateway)
 
 
 def main():

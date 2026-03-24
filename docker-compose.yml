@@ -69,6 +69,9 @@ services:
       - ./map:/home/ubuntu/map
       - ./params:/home/ubuntu/params
     
+    extra_hosts:
+      - "kafka:10.8.101.86"
+
     network_mode: host
     stdin_open: true
     tty: true

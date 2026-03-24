@@ -20,6 +20,25 @@
           <box><size>0.42 0.31 0.18</size></box>
         </geometry>
       </collision>
+
+      <sensor name="imu_sensor" type="imu">
+        <topic>robot01/imu</topic>
+        <update_rate>100</update_rate>
+        <always_on>1</always_on>
+        <gz_frame_id>robot01/imu</gz_frame_id>
+        <imu>
+          <angular_velocity>
+            <x><noise type="gaussian"><mean>0</mean><stddev>0.0002</stddev></noise></x>
+            <y><noise type="gaussian"><mean>0</mean><stddev>0.0002</stddev></noise></y>
+            <z><noise type="gaussian"><mean>0</mean><stddev>0.0002</stddev></noise></z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x><noise type="gaussian"><mean>0</mean><stddev>0.017</stddev></noise></x>
+            <y><noise type="gaussian"><mean>0</mean><stddev>0.017</stddev></noise></y>
+            <z><noise type="gaussian"><mean>0</mean><stddev>0.017</stddev></noise></z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
     </link>
 
     <!-- Robot Footprint -->
@@ -260,6 +279,8 @@
         </lidar>
        </sensor>
     </link>
+
+    <plugin filename="gz-sim-imu-system" name="gz::sim::systems::Imu"/>
 
     <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
       <left_joint>drivewhl_l_joint</left_joint>
