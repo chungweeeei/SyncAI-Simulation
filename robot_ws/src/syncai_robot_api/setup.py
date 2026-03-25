@@ -20,6 +20,7 @@ setup(
         'setuptools',
         'fastapi',
         'uvicorn',
+        'temporalio',
     ],
     zip_safe=True,
     maintainer='syncrobotic',
