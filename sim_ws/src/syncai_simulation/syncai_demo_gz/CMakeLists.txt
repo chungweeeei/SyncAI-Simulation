@@ -30,6 +30,15 @@ target_link_libraries(AlarmPlugin
   gz-msgs10::gz-msgs10
 )
 
+# Vertex Plugin
+add_library(VertexPlugin SHARED src/VertexPlugin.cc)
+target_link_libraries(VertexPlugin
+  gz-sim8::gz-sim8
+  gz-plugin2::gz-plugin2-register
+  gz-transport13::gz-transport13
+  gz-msgs10::gz-msgs10
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
@@ -42,7 +51,7 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-install(TARGETS DoorPlugin AlarmPlugin
+install(TARGETS DoorPlugin AlarmPlugin VertexPlugin
   DESTINATION lib/${PROJECT_NAME}
 )
 

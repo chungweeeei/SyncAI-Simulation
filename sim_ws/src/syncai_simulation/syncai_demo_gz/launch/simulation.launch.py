@@ -1,6 +1,7 @@
 import os
 import glob
 import configparser
+import yaml
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
@@ -8,7 +9,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
-from ament_index_python.packages import get_package_prefix
+from ament_index_python.packages import get_package_prefix, get_package_share_directory
 
 def generate_launch_description():
 
@@ -48,38 +49,53 @@ def generate_launch_description():
         )
     ]
 
-    # Spawn door model and bridge its topics
-    door_model_path = PathJoinSubstitution([
-        FindPackageShare("syncai_demo_gz"),
-        "models", "door", "model.sdf"
-    ])
-
-    actions.append(Node(
-        package="ros_gz_sim",
-        executable="create",
-        arguments=[
-            "-file", door_model_path,
-            "-name", "door_01",
-            "-x", "11.9",
-            "-y", "17.8",
-            "-z", "0.0",
-        ],
-        output="screen"
-    ))
-
     bridge_topics = [
-        # Door topics
-        "/door/door_01/cmd_topic@std_msgs/msg/Bool]gz.msgs.Boolean",
-        "/door/door_01/state@std_msgs/msg/String[gz.msgs.StringMsg",
-        # Alarm topics
-        "/alarm/alarm_01/cmd_topic@std_msgs/msg/Bool]gz.msgs.Boolean",
-        "/alarm/alarm_01/state@std_msgs/msg/String[gz.msgs.StringMsg",
         # Camera topic
         "/camera@sensor_msgs/msg/Image[gz.msgs.Image",
         # Global topics
         "/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V",
         "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock"
     ]
+
+    # Load IoT device config from syncai_iot_collector package
+    iot_config_path = os.path.join(
+        get_package_share_directory("syncai_iot_collector"), "config", "iot_devices.yaml"
+    )
+    with open(iot_config_path, "r") as f:
+        iot_config = yaml.safe_load(f)
+
+    # Spawn and bridge IoT devices from config
+    for device in iot_config.get("devices", []):
+        device_id = device["id"]
+        device_type = device["type"]
+
+        if device_type == "door":
+            # Doors are spawned dynamically by launch file
+            pose = device.get("pose", [0, 0, 0, 0, 0, 0])
+            door_model_path = PathJoinSubstitution([
+                FindPackageShare("syncai_demo_gz"),
+                "models", "door", "model.sdf"
+            ])
+            actions.append(Node(
+                package="ros_gz_sim",
+                executable="create",
+                name=f"spawn_{device_id}",
+                arguments=[
+                    "-file", door_model_path,
+                    "-name", device_id,
+                    "-x", str(pose[0]),
+                    "-y", str(pose[1]),
+                    "-z", str(pose[2]),
+                ],
+                output="screen"
+            ))
+
+        # Bridge topics for all device types (door, alarm)
+        bridge_topics.extend([
+            f"/{device_type}/{device_id}/cmd_topic@std_msgs/msg/Bool]gz.msgs.Boolean",
+            f"/{device_type}/{device_id}/state@std_msgs/msg/String[gz.msgs.StringMsg",
+        ])
+
 
     DATA_DIR = os.path.expanduser("~/data")
     for config_file in glob.glob(os.path.join(DATA_DIR, "*/system.ini")):
@@ -97,11 +113,12 @@ def generate_launch_description():
         actions.append(Node(
             package="ros_gz_sim",
             executable="create",
+            name=f"spawn_{robot_id}",
             namespace=robot_id,
             arguments=[
                 "-file", os.path.join(DATA_DIR, robot_id, "model.sdf"),
                 "-name", robot_id,
-                "-x", x, 
+                "-x", x,
                 "-y", y,
                 "-z", z,
             ]

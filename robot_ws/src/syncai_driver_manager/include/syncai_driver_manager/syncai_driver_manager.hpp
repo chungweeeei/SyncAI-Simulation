@@ -3,6 +3,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/battery_state.hpp>
+#include <std_srvs/srv/trigger.hpp>
 
 namespace syncai_driver_manager
 {
@@ -17,9 +18,15 @@ private:
     void init_pub_sub();
 
     void battery_timer_callback();
+    void recharge_callback(
+        const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
+        std::shared_ptr<std_srvs::srv::Trigger::Response> response);
 
-    // Publishers 
+    // Publishers
     rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_pub_;
+
+    // Services
+    rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr recharge_srv_;
 
     // Timers
     rclcpp::TimerBase::SharedPtr battery_timer_;

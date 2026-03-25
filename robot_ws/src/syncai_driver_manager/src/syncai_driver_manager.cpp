@@ -40,6 +40,11 @@ void DriverManagerNode::init_pub_sub()
 {
     battery_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("battery_state", rclcpp::QoS(10));
 
+    recharge_srv_ = this->create_service<std_srvs::srv::Trigger>(
+        "recharge",
+        std::bind(&DriverManagerNode::recharge_callback, this,
+                  std::placeholders::_1, std::placeholders::_2));
+
     auto period = std::chrono::duration<double>(1.0 / battery_publish_rate_);
     battery_timer_ = this->create_wall_timer(
         std::chrono::duration_cast<std::chrono::milliseconds>(period),
@@ -67,6 +72,16 @@ void DriverManagerNode::battery_timer_callback()
     if(battery_level_ < 20.0 && battery_level_ > 0.0){
         RCLCPP_WARN(this->get_logger(), "Low battery: %.1f%%", battery_level_);
     }
+}
+
+void DriverManagerNode::recharge_callback(
+    const std::shared_ptr<std_srvs::srv::Trigger::Request> /*request*/,
+    std::shared_ptr<std_srvs::srv::Trigger::Response> response)
+{
+    battery_level_ = 100.0;
+    response->success = true;
+    response->message = "Battery recharged to 100%";
+    RCLCPP_INFO(this->get_logger(), "[DriverManagerNode] Battery recharged to 100%%");
 }
 
 }// namespace syncai_driver_manager

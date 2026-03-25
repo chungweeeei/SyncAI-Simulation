@@ -128,9 +128,9 @@ public:
     SetJointPos(_ecm, this->leftJointEntity_, newLeft);
     SetJointPos(_ecm, this->rightJointEntity_, newRight);
 
-    // Publish state periodically (~2 Hz)
+    // Publish state periodically (~1 Hz)
     this->timeSinceLastPub_ += dt;
-    if (this->timeSinceLastPub_ >= 0.5)
+    if (this->timeSinceLastPub_ >= 1.0)
     {
       this->timeSinceLastPub_ = 0.0;
 

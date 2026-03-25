@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<sdf version="1.9">
+  <model name="vertex">
+    <static>true</static>
+
+    <link name="base_link">
+      <visual name="marker_visual">
+        <pose>0 0 0.01 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.3</radius>
+            <length>0.02</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.3 0.3 0.3 1</ambient>
+          <diffuse>0.4 0.4 0.4 1</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <plugin filename="VertexPlugin" name="syncai::VertexPlugin">
+      <link_name>base_link</link_name>
+      <visual_name>marker_visual</visual_name>
+      <detection_range>0.5</detection_range>
+    </plugin>
+  </model>
+</sdf>
