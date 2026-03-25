@@ -91,7 +91,7 @@ initial_pose_theta=0.0
 
 | Variable | Default | Used by |
 |---|---|---|
-| `KAFKA_BROKER` | `10.8.101.86` | agent.py |
+| `SYNCAI_SERVER_IP` | `10.8.101.86` | agent.py (Kafka :9092 + HTTP :8000) |
 | `SYNCAI_API_PORT` | `3000` | server.py |
 | `SYNCAI_DATA_DIR` | `~/data` | Dockerfile |
 | `RMW_IMPLEMENTATION` | `rmw_cyclonedds_cpp` | docker-compose |

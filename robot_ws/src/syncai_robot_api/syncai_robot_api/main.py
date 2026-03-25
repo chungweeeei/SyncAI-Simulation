@@ -2,6 +2,7 @@ import os
 import configparser
 
 import structlog
+from dataclasses import dataclass
 
 import rclpy
 from rclpy.node import Node
@@ -11,19 +12,25 @@ from syncai_robot_api.repositories.task.task import init_task_repo
 from syncai_robot_api.subscribers.robot_state_subscriber import init_robot_state_subscriber
 
 from syncai_robot_api.gateways.agent import init_agent_gateway
-from syncai_robot_api.gateways.navigation import init_navigation_gateway
+from syncai_robot_api.gateways.robot import init_robot_gateway
 
 from syncai_robot_api.jobs.send_robot_state import init_send_robot_state_job
 from syncai_robot_api.jobs.task_executor import init_task_executor_job
 
 from syncai_robot_api.server import start_api_server
 
+@dataclass
+class RobotConfig:
+    robot_id: str
+    map: str
 
-def _read_robot_id():
+def _read_robot_config() -> RobotConfig:
     data_dir = os.path.expanduser("~/data")
     config = configparser.ConfigParser()
     config.read(os.path.join(data_dir, "system.ini"))
-    return config.get("identity", "robot_id", fallback="robot01")
+    robot_id = config.get("identity", "robot_id", fallback="robot01")
+    map_name = config.get("spawn", "map", fallback="default")
+    return RobotConfig(robot_id=robot_id, map=map_name)
 
 
 class SyncAIRobotAPI(Node):
@@ -33,8 +40,7 @@ class SyncAIRobotAPI(Node):
 
         self._log = logger
 
-        robot_id = _read_robot_id()
-        self._log.info("[SyncAIRobotAPI] Initialized", robot_id=robot_id)
+        robot_config = _read_robot_config()
 
         # Register repositories
         robot_repo = init_robot_repo(logger=logger)
@@ -42,17 +48,21 @@ class SyncAIRobotAPI(Node):
 
         # Register gateways
         agent_gateway = init_agent_gateway(logger=logger)
-        nav_gateway = init_navigation_gateway(logger=logger, node=self, robot_id=robot_id)
+        robot_gateway = init_robot_gateway(logger=logger, node=self, robot_id=robot_config.robot_id)
+
+        # Send map info when system starts.
+        # TODO: need to consider server is offline case
+        agent_gateway.send_map_info(map=robot_config.map)
 
         # Register subscribers
         init_robot_state_subscriber(logger=logger, node=self, robot_repo=robot_repo)
 
         # Register jobs
         init_send_robot_state_job(logger=logger, robot_repo=robot_repo, task_repo=task_repo, agent_gateway=agent_gateway)
-        init_task_executor_job(logger=logger, task_repo=task_repo, nav_gateway=nav_gateway)
+        init_task_executor_job(logger=logger, task_repo=task_repo, robot_gateway=robot_gateway)
 
         # Start HTTP API server
-        start_api_server(logger=logger, robot_repo=robot_repo, task_repo=task_repo, nav_gateway=nav_gateway)
+        start_api_server(logger=logger, robot_repo=robot_repo, task_repo=task_repo, robot_gateway=robot_gateway)
 
 
 def main():

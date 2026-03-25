@@ -10,10 +10,10 @@ from syncai_robot_api.routers.task import init_task_router
 from syncai_robot_api.routers.robot_state import init_robot_state_router
 from syncai_robot_api.repositories.robot.robot import RobotRepo
 from syncai_robot_api.repositories.task.task import TaskRepo
-from syncai_robot_api.gateways.navigation import NavigationGateway
+from syncai_robot_api.gateways.robot import RobotGateway
 
 
-def create_app(robot_repo: RobotRepo, task_repo: TaskRepo, nav_gateway: NavigationGateway) -> FastAPI:
+def create_app(robot_repo: RobotRepo, task_repo: TaskRepo, robot_gateway: RobotGateway) -> FastAPI:
     app = FastAPI(title="SyncAI Robot API", version="0.1.0")
     app.add_middleware(
         CORSMiddleware,
@@ -23,7 +23,7 @@ def create_app(robot_repo: RobotRepo, task_repo: TaskRepo, nav_gateway: Navigati
         allow_headers=["Content-Type", "Content-Length", "Authorization"],
     )
 
-    app.include_router(init_task_router(task_repo=task_repo, nav_gateway=nav_gateway))
+    app.include_router(init_task_router(task_repo=task_repo, robot_gateway=robot_gateway))
     app.include_router(init_robot_state_router(robot_repo=robot_repo, task_repo=task_repo))
     return app
 
@@ -32,12 +32,12 @@ def start_api_server(
     logger: structlog.stdlib.BoundLogger,
     robot_repo: RobotRepo,
     task_repo: TaskRepo,
-    nav_gateway: NavigationGateway,
+    robot_gateway: RobotGateway,
 ):
     host = os.getenv("SYNCAI_API_HOST", "0.0.0.0")
     port = int(os.getenv("SYNCAI_API_PORT", "3000"))
 
-    app = create_app(robot_repo=robot_repo, task_repo=task_repo, nav_gateway=nav_gateway)
+    app = create_app(robot_repo=robot_repo, task_repo=task_repo, robot_gateway=robot_gateway)
 
     def _run():
         logger.info("[APIServer] Starting", host=host, port=port)

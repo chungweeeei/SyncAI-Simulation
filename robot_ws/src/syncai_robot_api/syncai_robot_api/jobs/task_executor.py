@@ -4,7 +4,7 @@ import threading
 
 from syncai_robot_api.repositories.task.task import TaskRepo
 from syncai_robot_api.repositories.task.schema import TaskStatus, StepStatus, StepType
-from syncai_robot_api.gateways.navigation import NavigationGateway
+from syncai_robot_api.gateways.robot import RobotGateway
 
 
 class TaskExecutorJob:
@@ -12,11 +12,11 @@ class TaskExecutorJob:
     def __init__(self,
         logger: structlog.stdlib.BoundLogger,
         task_repo: TaskRepo,
-        nav_gateway: NavigationGateway
+        robot_gateway: RobotGateway
     ):
         self._logger = logger
         self._task_repo = task_repo
-        self._nav_gateway = nav_gateway
+        self._robot_gateway = robot_gateway
 
     def register(self, start_delay: float, interval: float):
         self._logger.info(
@@ -70,8 +70,15 @@ class TaskExecutorJob:
             
             # handle each step type
             if step.type == StepType.MOVE:
-                success, msg = self._nav_gateway.navigate_to_pose(
+                success, msg = self._robot_gateway.navigate_to_pose(
                     x=step.params.x, y=step.params.y, yaw=step.params.r
+                )
+            elif step.type == StepType.DOOR:
+                success, msg = self._robot_gateway.control_door(
+                    cmd_topic="/door/door_01/cmd_topic",
+                    state_topic="/door/door_01/state",
+                    open=step.params.open,
+                    timeout_sec=10.0
                 )
             elif step.type == StepType.WAIT:
                 time.sleep(step.params.durationSec)
@@ -109,7 +116,7 @@ class TaskExecutorJob:
 def init_task_executor_job(
     logger: structlog.stdlib.BoundLogger,
     task_repo: TaskRepo,
-    nav_gateway: NavigationGateway
+    robot_gateway: RobotGateway
 ) -> None:
-    job = TaskExecutorJob(logger=logger, task_repo=task_repo, nav_gateway=nav_gateway)
+    job = TaskExecutorJob(logger=logger, task_repo=task_repo, robot_gateway=robot_gateway)
     job.register(start_delay=2.0, interval=1.0)

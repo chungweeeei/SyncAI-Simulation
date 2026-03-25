@@ -10,12 +10,13 @@ from syncai_robot_api.repositories.task.schema import (
     StepType,
     MoveParams,
     WaitParams,
+    DoorParams,
     Task, 
     TaskPayload, 
     Step,
     TaskStatus
 )
-from syncai_robot_api.gateways.navigation import NavigationGateway
+from syncai_robot_api.gateways.robot import RobotGateway
 
 # --- Request models (from external client) ---
 
@@ -23,8 +24,8 @@ class StepRequest(BaseModel):
     id: str = Field(..., description="Unique identifier of the step", example="step1")
     name: str = Field(..., description="Name of the step", example="Move to point")
     type: StepType = Field(..., description="Type of the step", example="MOVE")
-    params: MoveParams | WaitParams = Field(..., description="Parameters for the step")
-
+    params: MoveParams | WaitParams | DoorParams = Field(..., description="Parameters for the step")
+    
 class TaskPayloadRequest(BaseModel):
     steps: List[StepRequest]
 
@@ -53,7 +54,7 @@ class TaskResponse(BaseModel):
     )
 
 
-def init_task_router(task_repo: TaskRepo, nav_gateway: NavigationGateway) -> APIRouter:
+def init_task_router(task_repo: TaskRepo, robot_gateway: RobotGateway) -> APIRouter:
 
     router = APIRouter(prefix="/api/v1/tasks", tags=["tasks"])
 
@@ -105,7 +106,7 @@ def init_task_router(task_repo: TaskRepo, nav_gateway: NavigationGateway) -> API
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Task is already {task.status}")
 
         task_repo.update_task_status(task_id, TaskStatus.CANCELLED)
-        nav_gateway.cancel_current_goal()
+        robot_gateway.cancel_current_goal()
 
         return TaskResponse(id=task_id, status=TaskStatus.CANCELLED, message="Task cancel requested")
 

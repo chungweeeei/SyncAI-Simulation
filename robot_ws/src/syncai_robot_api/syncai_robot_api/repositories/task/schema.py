@@ -10,6 +10,7 @@ class TaskActionType(str, Enum):
 class StepType(str, Enum):
     MOVE = "MOVE"
     WAIT = "WAIT"
+    DOOR = "DOOR"
 
 class TaskStatus(str, Enum):
     PENDING = "PENDING"
@@ -33,13 +34,15 @@ class MoveParams(BaseModel):
 class WaitParams(BaseModel):
     durationSec: float = Field(..., description="Duration to wait in seconds", example=5.0)
 
+class DoorParams(BaseModel):
+    open: bool = Field(..., description="Whether to open (true) or close (false) the door", example=True)
 
 # --- Internal models (with status tracking) ---
 class Step(BaseModel):
     id: str
     name: str
     type: StepType
-    params: MoveParams | WaitParams
+    params: MoveParams | WaitParams | DoorParams
     status: StepStatus = StepStatus.PENDING
     error_msg: Optional[str] = None
 

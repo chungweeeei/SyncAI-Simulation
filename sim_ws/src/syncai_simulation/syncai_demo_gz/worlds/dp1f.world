@@ -75,43 +75,43 @@
     <!-- Vertex -->
     <include>
       <uri>package://syncai_demo_gz/models/vertex</uri>
-      <name>vertex_01</name>
+      <name>meeting_room_vertex</name>
       <pose>5.0 7.0 0.0 0 0 0</pose>
     </include>
 
     <include>
       <uri>package://syncai_demo_gz/models/vertex</uri>
-      <name>vertex_02</name>
+      <name>point_01</name>
       <pose>2.0 13.0 0.0 0 0 0</pose>
     </include>
 
     <include>
       <uri>package://syncai_demo_gz/models/vertex</uri>
-      <name>vertex_03</name>
+      <name>point_02</name>
       <pose>2.0 18.0 0.0 0 0 0</pose>
     </include>
 
     <include>
       <uri>package://syncai_demo_gz/models/vertex</uri>
-      <name>vertex_04</name>
+      <name>point_03</name>
       <pose>5.0 21.0 0.0 0 0 0</pose>
     </include>
 
     <include>
       <uri>package://syncai_demo_gz/models/vertex</uri>
-      <name>vertex_05</name>
+      <name>point_04</name>
       <pose>10.0 24.0 0.0 0 0 0</pose>
     </include>
 
     <include>
       <uri>package://syncai_demo_gz/models/vertex</uri>
-      <name>vertex_06</name>
+      <name>point_05</name>
       <pose>10.0 17.0 0.0 0 0 0</pose>
     </include>
 
     <include>
       <uri>package://syncai_demo_gz/models/vertex</uri>
-      <name>vertex_07</name>
+      <name>point_06</name>
       <pose>10.0 12.0 0.0 0 0 0</pose>
     </include>
 
