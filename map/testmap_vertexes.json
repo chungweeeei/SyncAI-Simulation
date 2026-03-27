@@ -26,5 +26,9 @@
   {
     "name": "waiting_point_03",
     "pose": { "x": 5.0, "y": -3.0, "theta": 0.0 }
+  },
+  {
+    "name": "charging_station",
+    "pose": { "x": 0.0, "y": 9.5, "theta": 90.0 }
   }
 ]

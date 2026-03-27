@@ -11,6 +11,7 @@ from syncai_robot_api.repositories.task.schema import (
     MoveParams,
     WaitParams,
     DoorParams,
+    ChargeParams,
     Task,
     TaskPayload,
     Step,
@@ -27,7 +28,7 @@ class StepRequest(BaseModel):
     id: str = Field(..., description="Unique identifier of the step", example="step1")
     name: str = Field(..., description="Name of the step", example="Move to point")
     type: StepType = Field(..., description="Type of the step", example="MOVE")
-    params: MoveParams | WaitParams | DoorParams = Field(..., description="Parameters for the step")
+    params: MoveParams | WaitParams | DoorParams | ChargeParams = Field(..., description="Parameters for the step")
     
 class TaskPayloadRequest(BaseModel):
     steps: List[StepRequest]

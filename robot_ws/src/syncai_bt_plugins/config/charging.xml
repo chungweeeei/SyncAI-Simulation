@@ -1,0 +1,10 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence>
+      <NavigateToPose x="{target_x}" y="{target_y}" yaw="{target_yaw}"/>
+      <DockRobot dock_id="{dock_id}" navigate_to_staging="false"/>
+      <Recharge service_name="{recharge_service}"/>
+      <UndockRobot dock_type="{dock_type}"/>
+    </Sequence>
+  </BehaviorTree>
+</root>

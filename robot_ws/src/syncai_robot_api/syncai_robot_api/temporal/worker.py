@@ -41,6 +41,7 @@ def start_temporal_worker(
                 activities.execute_move,
                 activities.execute_wait,
                 activities.execute_door,
+                activities.execute_charge,
             ],
             activity_executor=ThreadPoolExecutor(max_workers=1),
         )

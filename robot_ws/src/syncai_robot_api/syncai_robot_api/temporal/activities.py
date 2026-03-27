@@ -43,6 +43,29 @@ class RobotActivities:
         return StepResult(success=True, message="Wait completed")
 
     @activity.defn
+    def execute_charge(self, input: StepInput) -> StepResult:
+        self.task_repo.update_step_status(input.task_id, input.step_index, StepStatus.IN_PROGRESS)
+        self.task_repo.update_current_step_index(input.task_id, input.step_index)
+
+        import math
+        yaw_rad = math.radians(input.params.get("r", 0.0))
+
+        success, msg = self.robot_gateway.charge(
+            x=input.params["x"],
+            y=input.params["y"],
+            yaw=yaw_rad,
+            dock_id="charging_station",
+            dock_type="simple_charging_dock",
+        )
+
+        status = StepStatus.COMPLETED if success else StepStatus.FAILED
+        self.task_repo.update_step_status(
+            input.task_id, input.step_index, status,
+            error_msg=msg if not success else None
+        )
+        return StepResult(success=success, message=msg)
+
+    @activity.defn
     def execute_door(self, input: StepInput) -> StepResult:
         self.task_repo.update_step_status(input.task_id, input.step_index, StepStatus.IN_PROGRESS)
         self.task_repo.update_current_step_index(input.task_id, input.step_index)

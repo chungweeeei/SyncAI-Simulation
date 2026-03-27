@@ -1,0 +1,71 @@
+{
+  "action": "TASK",
+  "id": "test-task",
+  "timestamp": 0,
+  "payload": {
+    "steps": [
+      {
+        "id": "step 1",
+        "name": "Move to pantry",
+        "type": "MOVE",
+        "params": {
+          "x": -3.0,
+          "y": -2.0,
+          "r": 0.0
+        }
+      },
+      {
+        "id": "step 2",
+        "name": "Wait 10 seconds",
+        "type": "WAIT",
+        "params": {
+          "durationSec": 10
+        }
+      },
+      {
+        "id": "step 3",
+        "name": "Move to door",
+        "type": "Move",
+        "params": {
+          "x": 5.0,
+          "y": 2.0,
+          "r": 0.0
+        }
+      },
+      {
+        "id": "step 4",
+        "name": "Open the door",
+        "type": "DOOR",
+        "params": {
+          "open": true 
+        }
+      },
+      {
+        "id": "step 5",
+        "name": "Wait 5 seconds",
+        "type": "WAIT",
+        "params": {
+          "durationSec": 5
+        }
+      },
+      {
+        "id": "step 6",
+        "name": "Close the door",
+        "type": "DOOR",
+        "params": {
+          "open": false
+        }
+      },
+      {
+        "id": "step 7",
+        "name": "Go to charge",
+        "type": "CHARGE",
+        "params": {
+          "x": 0.0,
+          "y": 9.5,
+          "r": 90.0
+        }
+      }
+    ]
+  }
+}

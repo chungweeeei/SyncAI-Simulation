@@ -10,14 +10,20 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(nav2_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(tf2 REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
 # Generate action interfaces
 rosidl_generate_interfaces(${PROJECT_NAME}
   "action/DoorControl.action"
+  "action/Charging.action"
 )
 
-# BT plugin shared library
+# --- Door Control BT plugin ---
 add_library(syncai_door_control_action_bt_node SHARED
   src/door_control_action.cpp
 )
@@ -32,7 +38,30 @@ ament_target_dependencies(syncai_door_control_action_bt_node
   std_msgs
 )
 
-# Action server executable
+# --- Charging BT plugin (shared library with all charging BT nodes) ---
+add_library(syncai_charging_bt_nodes SHARED
+  src/navigate_to_pose_action.cpp
+  src/dock_robot_action.cpp
+  src/recharge_action.cpp
+  src/undock_robot_action.cpp
+)
+target_include_directories(syncai_charging_bt_nodes PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+target_compile_features(syncai_charging_bt_nodes PUBLIC cxx_std_20)
+ament_target_dependencies(syncai_charging_bt_nodes
+  rclcpp
+  rclcpp_action
+  behaviortree_cpp
+  nav2_msgs
+  geometry_msgs
+  std_srvs
+  sensor_msgs
+  tf2
+)
+
+# --- Door Control action server executable ---
 add_executable(door_control_server src/door_control_server.cpp)
 target_include_directories(door_control_server PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -46,19 +75,43 @@ ament_target_dependencies(door_control_server
   std_msgs
 )
 
-# Link action server to generated action interfaces
+# Link door_control_server to generated action interfaces and BT plugin
 rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} rosidl_typesupport_cpp)
 target_link_libraries(door_control_server "${cpp_typesupport_target}")
 target_link_libraries(door_control_server syncai_door_control_action_bt_node)
 
+# --- Charging action server executable ---
+add_executable(charging_server src/charging_server.cpp)
+target_include_directories(charging_server PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+target_compile_features(charging_server PUBLIC cxx_std_20)
+ament_target_dependencies(charging_server
+  rclcpp
+  rclcpp_action
+  behaviortree_cpp
+  nav2_msgs
+  geometry_msgs
+  std_srvs
+  sensor_msgs
+  tf2
+)
+target_link_libraries(charging_server "${cpp_typesupport_target}")
+target_link_libraries(charging_server syncai_charging_bt_nodes)
+
 # Install
-install(TARGETS syncai_door_control_action_bt_node
+install(TARGETS
+  syncai_door_control_action_bt_node
+  syncai_charging_bt_nodes
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
 
-install(TARGETS door_control_server
+install(TARGETS
+  door_control_server
+  charging_server
   DESTINATION lib/${PROJECT_NAME}
 )
 

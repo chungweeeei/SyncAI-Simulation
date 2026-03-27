@@ -1,0 +1,106 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <model name="charging_station">
+    <static>true</static>
+
+    <!-- Ground platform -->
+    <link name="base_link">
+      <visual name="platform_visual">
+        <pose>0 0 0.01 0 0 0</pose>
+        <geometry>
+          <box><size>0.7 0.6 0.02</size></box>
+        </geometry>
+        <material>
+          <ambient>0.15 0.15 0.15 1</ambient>
+          <diffuse>0.2 0.2 0.2 1</diffuse>
+        </material>
+      </visual>
+      <!-- No collision on platform so robot wheels can drive onto it -->
+
+      <!-- Back wall / docking contact panel -->
+      <visual name="back_panel_visual">
+        <pose>-0.3 0 0.15 0 0 0</pose>
+        <geometry>
+          <box><size>0.05 0.5 0.3</size></box>
+        </geometry>
+        <material>
+          <ambient>0.2 0.2 0.2 1</ambient>
+          <diffuse>0.3 0.3 0.3 1</diffuse>
+        </material>
+      </visual>
+      <collision name="back_panel_collision">
+        <pose>-0.3 0 0.15 0 0 0</pose>
+        <geometry>
+          <box><size>0.05 0.5 0.3</size></box>
+        </geometry>
+      </collision>
+
+      <!-- Left guide rail -->
+      <visual name="left_rail_visual">
+        <pose>-0.05 0.27 0.03 0 0 0</pose>
+        <geometry>
+          <box><size>0.5 0.04 0.06</size></box>
+        </geometry>
+        <material>
+          <ambient>0.6 0.6 0.0 1</ambient>
+          <diffuse>0.8 0.8 0.0 1</diffuse>
+        </material>
+      </visual>
+      <!-- No collision on rails so robot can pass through -->
+
+      <!-- Right guide rail -->
+      <visual name="right_rail_visual">
+        <pose>-0.05 -0.27 0.03 0 0 0</pose>
+        <geometry>
+          <box><size>0.5 0.04 0.06</size></box>
+        </geometry>
+        <material>
+          <ambient>0.6 0.6 0.0 1</ambient>
+          <diffuse>0.8 0.8 0.0 1</diffuse>
+        </material>
+      </visual>
+      <!-- No collision on rails so robot can pass through -->
+
+      <!-- Charging contact plates (on back panel, copper color) -->
+      <visual name="contact_left_visual">
+        <pose>-0.27 0.08 0.15 0 0 0</pose>
+        <geometry>
+          <box><size>0.01 0.06 0.1</size></box>
+        </geometry>
+        <material>
+          <ambient>0.7 0.4 0.1 1</ambient>
+          <diffuse>0.85 0.55 0.2 1</diffuse>
+        </material>
+      </visual>
+      <visual name="contact_right_visual">
+        <pose>-0.27 -0.08 0.15 0 0 0</pose>
+        <geometry>
+          <box><size>0.01 0.06 0.1</size></box>
+        </geometry>
+        <material>
+          <ambient>0.7 0.4 0.1 1</ambient>
+          <diffuse>0.85 0.55 0.2 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Status indicator light -->
+      <visual name="status_light_visual">
+        <pose>-0.3 0 0.32 0 0 0</pose>
+        <geometry>
+          <sphere><radius>0.03</radius></sphere>
+        </geometry>
+        <material>
+          <ambient>0.0 0.6 0.0 1</ambient>
+          <diffuse>0.0 0.8 0.0 1</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!-- Fix to world -->
+    <joint name="world_fix" type="fixed">
+      <parent>world</parent>
+      <child>base_link</child>
+    </joint>
+
+  </model>
+</sdf>

@@ -58,6 +58,13 @@
       </link>
     </model>
 
+    <!-- Charging station -->
+    <include>
+      <uri>package://syncai_demo_gz/models/charging_station</uri>
+      <name>charging_station_01</name>
+      <pose>4.9 25.2 0.0 0 0 -1.57</pose>
+    </include>
+
     <!-- Camera near the door -->
     <include>
       <uri>package://syncai_demo_gz/models/camera</uri>
@@ -114,6 +121,13 @@
       <name>point_06</name>
       <pose>10.0 12.0 0.0 0 0 0</pose>
     </include>
+
+    <include>
+      <uri>package://syncai_demo_gz/models/vertex</uri>
+      <name>charging_station_vertex</name>
+      <pose>5.0 24.0 0.0 0 0 0</pose>
+    </include>
+
 
   </world>
 </sdf>

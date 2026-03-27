@@ -7,9 +7,12 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import PushROSNamespace, SetParameter, Node
+from launch_ros.descriptions import ParameterFile
+from nav2_common.launch import RewrittenYaml
 
 
 def _read_system_ini(data_dir):
+    """Read system.ini and return robot_id."""
     ini_path = os.path.join(data_dir, 'system.ini')
     config = configparser.ConfigParser()
     config.read(ini_path)
@@ -17,15 +20,30 @@ def _read_system_ini(data_dir):
 
 
 def generate_launch_description():
-    pkg_dir = get_package_share_directory('syncai_bt_plugins')
+    bringup_dir = get_package_share_directory('syncai_bringup')
 
     data_dir_default = os.path.expanduser("~/data")
     robot_id = _read_system_ini(data_dir_default)
 
     namespace = LaunchConfiguration('namespace')
     use_sim_time = LaunchConfiguration('use_sim_time')
+    autostart = LaunchConfiguration('autostart')
+    params_file = LaunchConfiguration('params_file')
 
-    bt_xml_file = os.path.join(pkg_dir, 'config', 'door_control.xml')
+    lifecycle_nodes = ['docking_server']
+
+    configured_params = ParameterFile(
+        RewrittenYaml(
+            source_file=params_file,
+            root_key=namespace,
+            param_rewrites={
+                'base_frame': robot_id + '/base_link',
+                'fixed_frame': robot_id + '/odom',
+            },
+            convert_types=True,
+        ),
+        allow_substs=True,
+    )
 
     stdout_linebuf_envvar = SetEnvironmentVariable(
         'RCUTILS_LOGGING_BUFFERED_STREAM', '1'
@@ -43,17 +61,37 @@ def generate_launch_description():
         description='Use simulation (Gazebo) clock if true',
     )
 
+    declare_params_file_cmd = DeclareLaunchArgument(
+        'params_file',
+        default_value=os.path.join(bringup_dir, 'config', 'docking_params.yaml'),
+        description='Full path to the docking server parameters file',
+    )
+
+    declare_autostart_cmd = DeclareLaunchArgument(
+        'autostart',
+        default_value='true',
+        description='Automatically startup the docking server',
+    )
+
     load_nodes = GroupAction(
         actions=[
             PushROSNamespace(namespace),
             SetParameter('use_sim_time', use_sim_time),
             Node(
-                package='syncai_bt_plugins',
-                executable='door_control_server',
-                name='door_control_server',
+                package='opennav_docking',
+                executable='opennav_docking',
+                name='docking_server',
                 output='screen',
-                parameters=[{'bt_xml_file': bt_xml_file}],
+                parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', 'info'],
+            ),
+            Node(
+                package='nav2_lifecycle_manager',
+                executable='lifecycle_manager',
+                name='lifecycle_manager_docking',
+                output='screen',
+                arguments=['--ros-args', '--log-level', 'info'],
+                parameters=[{'autostart': autostart}, {'node_names': lifecycle_nodes}],
             ),
         ],
     )
@@ -63,6 +101,9 @@ def generate_launch_description():
     ld.add_action(stdout_linebuf_envvar)
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_use_sim_time_cmd)
+    ld.add_action(declare_params_file_cmd)
+    ld.add_action(declare_autostart_cmd)
+
     ld.add_action(load_nodes)
 
     return ld

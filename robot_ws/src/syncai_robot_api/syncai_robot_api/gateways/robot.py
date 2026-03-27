@@ -10,7 +10,7 @@ from rclpy.action.client import ClientGoalHandle
 from nav2_msgs.action import NavigateToPose
 from geometry_msgs.msg import PoseStamped
 from action_msgs.msg import GoalStatus
-from syncai_bt_plugins.action import DoorControl
+from syncai_bt_plugins.action import DoorControl, Charging
 
 
 def _wait_for_future(future, timeout: Optional[float] = None) -> bool:
@@ -35,10 +35,15 @@ class RobotGateway:
         door_action_name = f'/{robot_id}/door_control'
         self._door_client = ActionClient(node, DoorControl, door_action_name)
 
+        # Charging action client
+        charging_action_name = f'/{robot_id}/charging'
+        self._charging_client = ActionClient(node, Charging, charging_action_name)
+
         self._logger.info(
             "[RobotGateway] Action clients created",
             nav_action=nav_action_name,
             door_action=door_action_name,
+            charging_action=charging_action_name,
         )
 
     def navigate_to_pose(self, x: float, y: float, yaw: float) -> Tuple[bool, str]:
@@ -128,6 +133,54 @@ class RobotGateway:
             return True, result.result.message
         elif result.status == GoalStatus.STATUS_CANCELED:
             return False, "Door control was cancelled"
+        else:
+            return False, result.result.message
+
+    def charge(
+        self,
+        x: float,
+        y: float,
+        yaw: float,
+        dock_id: str = "charging_station",
+        dock_type: str = "simple_charging_dock",
+        recharge_service: str = "recharge",
+    ) -> Tuple[bool, str]:
+        if not self._charging_client.wait_for_server(timeout_sec=10.0):
+            return False, "Charging action server not available"
+
+        goal_msg = Charging.Goal()
+        goal_msg.target_x = x
+        goal_msg.target_y = y
+        goal_msg.target_yaw = yaw
+        goal_msg.dock_id = dock_id
+        goal_msg.dock_type = dock_type
+        goal_msg.recharge_service = recharge_service
+
+        self._logger.info(
+            "[RobotGateway] Sending charging goal",
+            x=x, y=y, yaw=yaw, dock_id=dock_id,
+        )
+
+        send_goal_future = self._charging_client.send_goal_async(goal_msg)
+        if not _wait_for_future(send_goal_future, timeout=15.0):
+            return False, "Timeout waiting for charging goal acceptance"
+
+        goal_handle = send_goal_future.result()
+
+        if not goal_handle.accepted:
+            return False, "Charging goal rejected"
+
+        self._logger.info("[RobotGateway] Charging goal accepted")
+
+        result_future = goal_handle.get_result_async()
+        _wait_for_future(result_future)
+
+        result = result_future.result()
+
+        if result.status == GoalStatus.STATUS_SUCCEEDED:
+            return True, result.result.message
+        elif result.status == GoalStatus.STATUS_CANCELED:
+            return False, "Charging was cancelled"
         else:
             return False, result.result.message
 
