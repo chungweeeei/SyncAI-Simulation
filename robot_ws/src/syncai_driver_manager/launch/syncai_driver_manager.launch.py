@@ -25,6 +25,11 @@ def generate_launch_description():
             description="Battery discharge rate in percentage per second"
         ),
         DeclareLaunchArgument(
+            "battery_charge_rate",
+            default_value="0.5",
+            description="Battery charge rate in percentage per second"
+        ),
+        DeclareLaunchArgument(
             "battery_publish_rate",
             default_value="1.0",
             description="Rate at which battery status is published (Hz)"
@@ -49,6 +54,7 @@ def generate_launch_description():
             parameters=[
                 {"battery_initial_level": LaunchConfiguration("battery_initial_level")},
                 {"battery_discharge_rate": LaunchConfiguration("battery_discharge_rate")},
+                {"battery_charge_rate": LaunchConfiguration("battery_charge_rate")},
                 {"battery_publish_rate": LaunchConfiguration("battery_publish_rate")},
                 {"robot_frame_id": LaunchConfiguration("robot_frame_id")},
                 {"use_sim_time": LaunchConfiguration("use_sim_time")},

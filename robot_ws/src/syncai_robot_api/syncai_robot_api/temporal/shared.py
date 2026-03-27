@@ -1,6 +1,6 @@
 import os
 
-TEMPORAL_SERVER_URL = os.getenv("TEMPORAL_ADDRESS", "localhost:7233")
+TEMPORAL_SERVER_URL = os.getenv("TEMPORAL_ADDRESS", "temporal:7233")
 
 
 def get_task_queue(robot_id: str) -> str:

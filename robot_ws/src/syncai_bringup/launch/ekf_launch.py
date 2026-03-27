@@ -28,11 +28,14 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     params_file = LaunchConfiguration('params_file')
 
+    # Step 1: Replace <robot_namespace> placeholders (for frame IDs)
     replaced_params_file = ReplaceString(
         source_file=params_file,
         replacements={'<robot_namespace>': namespace},
     )
 
+    # Step 2: Wrap YAML under namespace key so it matches
+    #         /<namespace>/ekf_filter_node when using PushROSNamespace
     configured_params = ParameterFile(
         RewrittenYaml(
             source_file=replaced_params_file,

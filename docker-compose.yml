@@ -29,11 +29,10 @@ services:
       - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ubuntu/.Xauthority:ro
       - ./sim_ws:/home/ubuntu/sim_ws
       - ./data:/home/ubuntu/data
+
     
-    # devices:
-    #   - /dev/dri:/dev/dri
-    
-    network_mode: host
+    networks:
+      - syncai
     stdin_open: true
     tty: true
     restart: unless-stopped
@@ -60,6 +59,7 @@ services:
       - CYCLONEDDS_URI=file:///home/ubuntu/data/cyclonedds.xml
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
       - SYNCAI_DATA_DIR=/home/ubuntu/data
+      - SYNCAI_API_KEY=${SYNCAI_API_KEY}
 
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
@@ -68,8 +68,11 @@ services:
       - ./data/robot01:/home/ubuntu/data
       - ./map:/home/ubuntu/map
       - ./params:/home/ubuntu/params
-    
-    network_mode: host
+
+    ports:
+      - 3000:3000
+    networks:
+      - syncai
     stdin_open: true
     tty: true
     restart: unless-stopped
@@ -87,6 +90,8 @@ services:
     tmpfs:
       - /tmp
       - /run
+    networks:
+      - syncai
     restart: unless-stopped
 
   temporal:
@@ -107,6 +112,8 @@ services:
     tmpfs:
       - /tmp
       - /run
+    networks:
+      - syncai
     restart: unless-stopped
 
   temporal-ui:
@@ -124,4 +131,10 @@ services:
     tmpfs:
       - /tmp
       - /run
+    networks:
+      - syncai
     restart: unless-stopped
+
+networks:
+  syncai:
+    driver: bridge

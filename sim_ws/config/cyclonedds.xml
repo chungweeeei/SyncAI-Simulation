@@ -5,6 +5,24 @@
   xsi:schemaLocation="https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd"
 >
     <Domain Id="0">
+        <General>
+            <Interfaces>
+                <NetworkInterface autodetermine="true" multicast="false" />
+            </Interfaces>
+            <AllowMulticast>false</AllowMulticast>
+        </General>
+        <Discovery>
+            <ParticipantIndex>auto</ParticipantIndex>
+            <MaxAutoParticipantIndex>20</MaxAutoParticipantIndex>
+            <Peers>
+                <Peer address="syncai-simulation"/>
+                <Peer address="syncai-robot01"/>
+                <Peer address="syncai-robot02"/>
+            </Peers>
+        </Discovery>
+        <SharedMemory>
+            <Enable>false</Enable>
+        </SharedMemory>
         <Tracing>
             <Verbosity>config</Verbosity>
             <OutputFile>stdout</OutputFile>

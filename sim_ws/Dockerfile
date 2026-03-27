@@ -54,6 +54,9 @@ RUN chmod +x /home/ubuntu/entrypoint.sh
 RUN echo "ubuntu ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 USER ubuntu
+
+RUN echo 'source /opt/ros/jazzy/setup.bash' >> ~/.bashrc && \
+    echo '[ -f ~/sim_ws/install/setup.bash ] && source ~/sim_ws/install/setup.bash' >> ~/.bashrc
 WORKDIR /home/ubuntu
 
 ENTRYPOINT [ "/home/ubuntu/entrypoint.sh" ]

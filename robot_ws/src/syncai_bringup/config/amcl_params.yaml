@@ -2,15 +2,15 @@ amcl:
   ros__parameters:
     use_sim_time: true
     # Motion model noise
-    # alpha1: rotation from rotation — slightly higher to allow scan matching correction
-    alpha1: 0.02
+    # alpha1: rotation from rotation — higher to spread particles during spin
+    alpha1: 0.05
     # alpha2: rotation from translation
-    alpha2: 0.05
+    alpha2: 0.02
     # alpha3: translation from translation
-    alpha3: 0.05
-    # alpha4: translation from rotation
-    alpha4: 0.03
-    alpha5: 0.05
+    alpha3: 0.02
+    # alpha4: translation from rotation — higher so particles expect some drift during spin
+    alpha4: 0.05
+    alpha5: 0.02
     beam_skip_distance: 0.5
     beam_skip_error_threshold: 0.9
     beam_skip_threshold: 0.3
@@ -20,24 +20,24 @@ amcl:
     laser_likelihood_max_dist: 2.0
     laser_max_range: 25.0
     laser_min_range: 0.12
-    laser_model_type: "likelihood_field"
+    laser_model_type: "likelihood_field_prob"
     # More beams = more accurate scan matching during rotation
     max_beams: 240
     # More particles = more stable localization during fast motion
-    max_particles: 8000
-    min_particles: 3000
-    pf_err: 0.01
-    pf_z: 0.99
+    max_particles: 5000
+    min_particles: 2000
+    pf_err: 0.02
+    pf_z: 0.85
     recovery_alpha_fast: 0.1
     recovery_alpha_slow: 0.001
-    resample_interval: 2
+    resample_interval: 1
     robot_model_type: "nav2_amcl::DifferentialMotionModel"
     save_pose_rate: 0.5
     sigma_hit: 0.2
     tf_broadcast: true
-    transform_tolerance: 0.5
+    transform_tolerance: 0.2
     # Update very frequently during rotation - critical for fast spin
-    update_min_a: 0.01
+    update_min_a: 0.05
     update_min_d: 0.05
     # Increase z_hit weight = trust laser matching more
     z_hit: 0.8
