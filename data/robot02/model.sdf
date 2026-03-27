@@ -22,10 +22,10 @@
       </collision>
 
       <sensor name="imu_sensor" type="imu">
-        <topic>robot01/imu</topic>
+        <topic>robot02/imu</topic>
         <update_rate>100</update_rate>
         <always_on>1</always_on>
-        <gz_frame_id>robot01/imu</gz_frame_id>
+        <gz_frame_id>robot02/imu</gz_frame_id>
         <imu>
           <angular_velocity>
             <x><noise type="gaussian"><mean>0</mean><stddev>0.0002</stddev></noise></x>
@@ -301,10 +301,10 @@
         </inertia>
       </inertial>
 
-      <sensor name="robot01_lidar" type="gpu_lidar">
-        <topic>robot01/scan</topic>
+      <sensor name="robot02_lidar" type="gpu_lidar">
+        <topic>robot02/scan</topic>
         <update_rate>20</update_rate>
-        <gz_frame_id>robot01/laser</gz_frame_id>
+        <gz_frame_id>robot02/laser</gz_frame_id>
         <lidar>
           <scan>
             <horizontal>
@@ -338,15 +338,11 @@
       <max_linear_acceleration>0.5</max_linear_acceleration>
       <max_angular_acceleration>1.0</max_angular_acceleration>
       <odom_publish_frequency>30</odom_publish_frequency>
-      <topic>robot01/cmd_vel</topic>
-      <odom_topic>robot01/odom</odom_topic>
+      <topic>robot02/cmd_vel</topic>
+      <odom_topic>robot02/odom</odom_topic>
       <tf_topic>tf</tf_topic>
-      <frame_id>robot01/odom</frame_id>
-      <child_frame_id>robot01/base_link</child_frame_id>
-    </plugin>
-
-    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
-      <render_engine>ogre2</render_engine>
+      <frame_id>robot02/odom</frame_id>
+      <child_frame_id>robot02/base_link</child_frame_id>
     </plugin>
 
   </model>

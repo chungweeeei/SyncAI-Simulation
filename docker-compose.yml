@@ -70,7 +70,47 @@ services:
       - ./params:/home/ubuntu/params
 
     ports:
-      - 3000:3000
+      - 3001:3000
+    networks:
+      - syncai
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+  robot02:
+    build:
+      context: ./robot_ws
+      dockerfile: Dockerfile
+    image: syncai-robot-base-image:latest
+    container_name: syncai-robot02
+
+    runtime: nvidia
+
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - XAUTHORITY=/home/ubuntu/.Xauthority
+
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+
+      # ROS 2 DDS
+      - ROS_DOMAIN_ID=0
+      - CYCLONEDDS_URI=file:///home/ubuntu/data/cyclonedds.xml
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      - SYNCAI_DATA_DIR=/home/ubuntu/data
+      - SYNCAI_API_KEY=${SYNCAI_API_KEY}
+
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ubuntu/.Xauthority:ro
+      - ./robot_ws:/home/ubuntu/robot_ws
+      - ./data/robot02:/home/ubuntu/data
+      - ./map:/home/ubuntu/map
+      - ./params:/home/ubuntu/params
+
+    ports:
+      - 3002:3000
     networks:
       - syncai
     stdin_open: true
