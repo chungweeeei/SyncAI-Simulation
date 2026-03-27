@@ -59,3 +59,4 @@ class Task(BaseModel):
     status: TaskStatus = TaskStatus.PENDING
     current_step_index: int = 0
     error_msg: Optional[str] = None
+    workflow_id: Optional[str] = None

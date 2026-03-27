@@ -89,14 +89,11 @@ class TaskRepo:
             
             task.current_step_index = index
 
-    def get_next_pending_task(self) -> Optional[Task]:
+    def update_workflow_id(self, task_id: str, workflow_id: str):
         with self._lock:
-            if self._active_task_id is not None:
-                return None
-            for task in self._tasks.values():
-                if task.status == TaskStatus.PENDING:
-                    return task
-            return None
+            task = self._tasks.get(task_id)
+            if task:
+                task.workflow_id = workflow_id
 
 
 def init_task_repo(logger: structlog.stdlib.BoundLogger) -> TaskRepo:

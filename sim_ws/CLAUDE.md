@@ -14,27 +14,43 @@ cd /home/syncrobotic/Documents/SyncAI-Simulation/sim_ws
 source /opt/ros/jazzy/setup.bash
 colcon build --packages-select syncai_demo_gz
 
+# Build IoT collector
+colcon build --packages-select syncai_iot_collector
+
 # Source and launch
 source install/setup.bash
 ros2 launch syncai_demo_gz simulation.launch.py
 
 # Build a single package (from sim_ws root)
 colcon build --packages-select <package_name>
+
+# NOTE: CMake cache built inside Docker may conflict on host.
+# If you see "CMakeCache.txt is different than the directory" errors:
+rm -rf build/<package_name> && colcon build --packages-select <package_name>
 ```
 
 ## Architecture
 
 ### Workspaces
-- **sim_ws/** — Gazebo simulation (this workspace)
+- **sim_ws/** — Gazebo simulation (this workspace), two packages: `syncai_demo_gz` (C++/ament_cmake) and `syncai_iot_collector` (Python/ament_python)
 - **robot_ws/** — Robot control packages (syncai_common, syncai_robot_api, syncai_driver_manager, syncai_robot_state)
 - **data/** — Per-robot configs (`system.ini`, `model.sdf`, `cyclonedds.xml`), read at launch time. **Robot models are spawned from `data/{robot_id}/model.sdf`**, not from `models/slotcar/`. Sensor or plugin changes to robots must be made in the `data/` directory.
 
 ### Simulation Package (`syncai_demo_gz`)
 - **Custom Gazebo plugins** are built as shared libraries and installed to `lib/syncai_demo_gz/`. The launch file sets `GZ_SIM_SYSTEM_PLUGIN_PATH` automatically.
-- **DoorPlugin** (`src/DoorPlugin.cc`) — Sliding door system plugin controlling two prismatic joints via gz-transport service (`/door/<name>/cmd`) and topic (`/door/<name>/cmd_topic`). State published on `/door/<name>/state` as `gz.msgs.StringMsg`. Bridged to ROS 2 via `ros_gz_bridge`.
-- **Models** (`models/`) — Reusable SDF models (door, camera, slotcar). Models referenced via `<include>` in world files must have a `model.config` alongside `model.sdf`, and use `package://syncai_demo_gz/models/<name>` URIs.
-- **Robot spawning** is dynamic: `simulation.launch.py` reads `~/data/*/system.ini` to discover robots, spawn their SDF models, and create per-robot bridge topics.
+- **DoorPlugin** (`src/DoorPlugin.cc`) — Sliding door controlling two prismatic joints via gz-transport. Topics: `/door/<name>/cmd_topic` (Bool), `/door/<name>/state` (StringMsg: open/opening/closed/closing). Bridged to ROS 2.
+- **AlarmPlugin** (`src/AlarmPlugin.cc`) — Alarm beacon with proximity detection and visual flashing. Uses `VisualCmd` component for runtime color changes on `lens_visual`. Topics: `/alarm/<name>/cmd_topic` (Bool), `/alarm/<name>/state` (StringMsg: active/inactive). Bridged to ROS 2.
+- **VertexPlugin** (`src/VertexPlugin.cc`) — Ground vertex point that lights up (green) when a robot is on it. Pure Gazebo visual only (no ROS 2 bridging). Uses 2D (XY) proximity detection. Configured via `config/vertexes.yaml`.
+- **Models** (`models/`) — Reusable SDF models (door, camera, alarm, vertex, slotcar). Models referenced via `<include>` in world files must have a `model.config` alongside `model.sdf`, and use `package://syncai_demo_gz/models/<name>` URIs.
+- **Dynamic spawning**: `simulation.launch.py` reads `~/data/*/system.ini` for robots, `iot_devices.yaml` for IoT devices, and `config/vertexes.yaml` for vertex points. Each `ros_gz_sim::create` node must have a unique `name` parameter to avoid node name collisions.
 - **Topic bridging** (ROS 2 ↔ Gazebo) is consolidated into a single `parameter_bridge` node. Bridge direction: `]` = ROS2→GZ, `[` = GZ→ROS2, `@` = bidirectional.
+
+### IoT Collector Package (`syncai_iot_collector`)
+- **Python ROS 2 node** that subscribes to IoT device state topics and publishes building events to Kafka.
+- **Config-driven**: reads `config/iot_devices.yaml` to dynamically register subscribers per device type (alarm, door).
+- **Kafka gateway** (`gateways/agent.py`): Confluent Kafka producer, broker via `KAFKA_BROKER` env var (default: `10.8.101.86`), publishes to `building-events` topic.
+- **Pydantic schema** (`gateways/agent_schema.py`): `BuildingEvent` model with alias fields (`schemaVersion`, `eventType`). Use alias names in constructors.
+- **Subscribers** (`subscribers/`): `AlarmSubscriber` and `DoorSubscriber` accept `device_id` parameter for dynamic topic registration.
 
 ### Environment Variables (set automatically by launch file)
 - `GZ_SIM_SYSTEM_PLUGIN_PATH` — Points to `install/syncai_demo_gz/lib/syncai_demo_gz/` for custom plugins
@@ -47,12 +63,23 @@ colcon build --packages-select <package_name>
 - `docker-compose.yml` at repo root orchestrates `sim` (GPU/X11) and `robot01` containers
 - `sim` container volume-mounts `sim_ws/` and `data/`
 
+## Gazebo Plugin Patterns
+
+All custom plugins follow the same structure:
+- Inherit from `gz::sim::System`, `ISystemConfigure`, `ISystemPreUpdate`
+- **Configure()**: Read SDF parameters, set up gz-transport topics/services
+- **PreUpdate()**: Runs every simulation step. Use deferred entity search on first call (visual entities aren't available during Configure when loaded via `<include>`)
+- **Visual color changes**: Use `gz::sim::components::VisualCmd` with `gz::msgs::Visual` → `mutable_material()`. Do NOT use `MaterialColor` (doesn't exist in gz-sim8) or `Light`/`LightCmd` (unreliable with `<include>` models).
+- **Proximity detection**: Use `gz::sim::worldPose()` and `_ecm.Each<Model, Pose, Static>()` to iterate non-static models. Skip self and static entities.
+- **Thread safety**: Protect command state with `std::mutex` when using gz-transport callbacks.
+- **Plugin registration**: `GZ_ADD_PLUGIN(namespace::Plugin, gz::sim::System, namespace::Plugin::ISystemConfigure, namespace::Plugin::ISystemPreUpdate)`
+
 ## Coding Conventions
 
 - **ROS 2 Jazzy**, C++20 or Python 3.10+
 - **Build system**: `ament_cmake` (C++) or `ament_python` (Python), built with `colcon`
 - **C++**: Inherit from `rclcpp::Node`, use `std::shared_ptr`, log via `RCLCPP_INFO/WARN/ERROR` macros, CamelCase classes, snake_case functions/variables
-- **Python**: Type hints required, log via `node.get_logger()` not `print()`
+- **Python**: Type hints required, log via `node.get_logger()` with f-strings (RcutilsLogger does not support keyword args like structlog)
 - **Launch files**: Python-based, placed in `launch/` directory
 - **Gazebo plugins**: Pure gz-sim system plugins (no ROS 2 dependency in plugin code). ROS 2 integration via `ros_gz_bridge` in launch files.
 - **Gazebo models**: Each model directory needs `model.sdf` + `model.config`. World files reference them via `package://` URIs. SDF inertia values must satisfy the triangle inequality (`Ixx+Iyy >= Izz`, etc.) — use the box formula `I = 1/12 * m * (a² + b²)`.

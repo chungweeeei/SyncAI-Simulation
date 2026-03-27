@@ -4,10 +4,17 @@ import os
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable
+from launch.actions import (
+    DeclareLaunchArgument, EmitEvent, GroupAction,
+    RegisterEventHandler, SetEnvironmentVariable,
+)
+from launch.events import matches_action
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import PushROSNamespace, SetParameter, Node
+from launch_ros.actions import LifecycleNode, PushROSNamespace, SetParameter
 from launch_ros.descriptions import ParameterFile
+from launch_ros.event_handlers import OnStateTransition
+from launch_ros.events.lifecycle import ChangeState
+from lifecycle_msgs.msg import Transition
 from nav2_common.launch import ReplaceString, RewrittenYaml
 
 
@@ -65,20 +72,36 @@ def generate_launch_description():
         description='Full path to the SLAM Toolbox parameters file',
     )
 
-    load_nodes = GroupAction(
-        actions=[
-            PushROSNamespace(namespace),
-            SetParameter('use_sim_time', use_sim_time),
-            Node(
-                package='slam_toolbox',
-                executable='sync_slam_toolbox_node',
-                name='slam_toolbox',
-                output='screen',
-                parameters=[configured_params],
-                remappings=[('map', 'mapping')],
-                arguments=['--ros-args', '--log-level', 'info'],
-            ),
-        ],
+    slam_node = LifecycleNode(
+        package='slam_toolbox',
+        executable='sync_slam_toolbox_node',
+        name='slam_toolbox',
+        output='screen',
+        namespace=namespace,
+        parameters=[configured_params],
+        remappings=[('map', 'mapping')],
+        arguments=['--ros-args', '--log-level', 'info'],
+    )
+
+    configure_event = EmitEvent(
+        event=ChangeState(
+            lifecycle_node_matcher=matches_action(slam_node),
+            transition_id=Transition.TRANSITION_CONFIGURE,
+        ),
+    )
+
+    activate_event = RegisterEventHandler(
+        OnStateTransition(
+            target_lifecycle_node=slam_node,
+            start_state='configuring',
+            goal_state='inactive',
+            entities=[
+                EmitEvent(event=ChangeState(
+                    lifecycle_node_matcher=matches_action(slam_node),
+                    transition_id=Transition.TRANSITION_ACTIVATE,
+                )),
+            ],
+        ),
     )
 
     ld = LaunchDescription()
@@ -87,6 +110,8 @@ def generate_launch_description():
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_params_file_cmd)
-    ld.add_action(load_nodes)
+    ld.add_action(slam_node)
+    ld.add_action(configure_event)
+    ld.add_action(activate_event)
 
     return ld

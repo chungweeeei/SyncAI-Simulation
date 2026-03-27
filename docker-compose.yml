@@ -29,11 +29,10 @@ services:
       - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ubuntu/.Xauthority:ro
       - ./sim_ws:/home/ubuntu/sim_ws
       - ./data:/home/ubuntu/data
+
     
-    # devices:
-    #   - /dev/dri:/dev/dri
-    
-    network_mode: host
+    networks:
+      - syncai
     stdin_open: true
     tty: true
     restart: unless-stopped
@@ -60,6 +59,7 @@ services:
       - CYCLONEDDS_URI=file:///home/ubuntu/data/cyclonedds.xml
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
       - SYNCAI_DATA_DIR=/home/ubuntu/data
+      - SYNCAI_API_KEY=${SYNCAI_API_KEY}
 
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
@@ -68,16 +68,73 @@ services:
       - ./data/robot01:/home/ubuntu/data
       - ./map:/home/ubuntu/map
       - ./params:/home/ubuntu/params
-    
-    extra_hosts:
-      - "kafka:10.8.101.86"
 
-    network_mode: host
+    ports:
+      - 3000:3000
+    networks:
+      - syncai
     stdin_open: true
     tty: true
     restart: unless-stopped
-  
 
+  postgresql:
+    container_name: postgresql
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_USER: ${POSTGRES_USER}
+    image: postgres:18
+    ports:
+      - 5432:5432
+    volumes:
+      - ./data/db_data:/var/lib/postgresql
+    tmpfs:
+      - /tmp
+      - /run
+    networks:
+      - syncai
+    restart: unless-stopped
 
+  temporal:
+    container_name: temporal
+    depends_on:
+      - postgresql
+    environment:
+      - DB=${TEMPORAL_DB}
+      - DB_PORT=${TEMPORAL_DB_PORT}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PWD=${POSTGRES_PASSWORD}
+      - POSTGRES_SEEDS=postgresql
+      - TEMPORAL_ADDRESS=${TEMPORAL_ADDRESS}
+      - TEMPORAL_CLI_ADDRESS=${TEMPORAL_CLI_ADDRESS}
+    image: temporalio/auto-setup:${TEMPORAL_VERSION}
+    ports:
+      - 7233:7233
+    tmpfs:
+      - /tmp
+      - /run
+    networks:
+      - syncai
+    restart: unless-stopped
 
-      
+  temporal-ui:
+    container_name: temporal-ui
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=${TEMPORAL_ADDRESS}
+      - TEMPORAL_CORS_ORIGINS=${TEMPORAL_CORS_ORIGINS}
+      - TEMPORAL_UI_AUTH_DISABLED=true
+      - TEMPORAL_UI_CSRF_COOKIE_INSECURE=true
+    image: temporalio/ui:${TEMPORAL_UI_VERSION}
+    ports:
+      - ${TEMPORAL_UI_PORT}:8080
+    tmpfs:
+      - /tmp
+      - /run
+    networks:
+      - syncai
+    restart: unless-stopped
+
+networks:
+  syncai:
+    driver: bridge

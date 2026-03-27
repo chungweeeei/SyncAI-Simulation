@@ -2,7 +2,7 @@ from typing import List
 
 from pydantic import BaseModel, Field
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 
 from syncai_robot_api.repositories.task.task import TaskRepo
 from syncai_robot_api.repositories.task.schema import (
@@ -11,12 +11,15 @@ from syncai_robot_api.repositories.task.schema import (
     MoveParams,
     WaitParams,
     DoorParams,
-    Task, 
-    TaskPayload, 
+    Task,
+    TaskPayload,
     Step,
     TaskStatus
 )
 from syncai_robot_api.gateways.robot import RobotGateway
+from syncai_robot_api.temporal.workflows import TaskWorkflow
+from syncai_robot_api.temporal.converters import TaskWorkflowInput
+from syncai_robot_api.temporal.shared import get_task_queue, get_workflow_id
 
 # --- Request models (from external client) ---
 
@@ -54,12 +57,12 @@ class TaskResponse(BaseModel):
     )
 
 
-def init_task_router(task_repo: TaskRepo, robot_gateway: RobotGateway) -> APIRouter:
+def init_task_router(task_repo: TaskRepo, robot_gateway: RobotGateway, robot_id: str) -> APIRouter:
 
     router = APIRouter(prefix="/api/v1/tasks", tags=["tasks"])
 
     @router.post("/", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
-    async def create_task(req: TaskRequest):
+    async def create_task(req: TaskRequest, request: Request):
         # Step1: Validate and convert request to internal Task model
         task = Task(
             action=req.action,
@@ -76,11 +79,22 @@ def init_task_router(task_repo: TaskRepo, robot_gateway: RobotGateway) -> APIRou
                 ]
             )
         )
-        
-        # Step2: Start add task to repository
+
+        # Step2: Add task to repository
         success = task_repo.add_task(task)
         if not success:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Task {task.id} already exists")
+
+        # Step3: Start Temporal workflow
+        workflow_id = get_workflow_id(task.id)
+        temporal_client = request.app.state.temporal_client
+        await temporal_client.start_workflow(
+            TaskWorkflow.run,
+            TaskWorkflowInput.from_task(task),
+            id=workflow_id,
+            task_queue=get_task_queue(robot_id),
+        )
+        task_repo.update_workflow_id(task.id, workflow_id)
 
         return TaskResponse(id=task.id, status=TaskStatus.PENDING, message="Task created successfully")
 
@@ -96,7 +110,7 @@ def init_task_router(task_repo: TaskRepo, robot_gateway: RobotGateway) -> APIRou
         return task
     
     @router.delete("/{task_id}", response_model=TaskResponse)
-    async def cancel_task(task_id: str):
+    async def cancel_task(task_id: str, request: Request):
 
         task = task_repo.get_task(task_id=task_id)
         if task is None:
@@ -106,6 +120,16 @@ def init_task_router(task_repo: TaskRepo, robot_gateway: RobotGateway) -> APIRou
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Task is already {task.status}")
 
         task_repo.update_task_status(task_id, TaskStatus.CANCELLED)
+
+        # Cancel Temporal workflow
+        temporal_client = request.app.state.temporal_client
+        try:
+            handle = temporal_client.get_workflow_handle(get_workflow_id(task_id))
+            await handle.cancel()
+        except Exception:
+            pass
+
+        # Immediately cancel in-flight ROS action
         robot_gateway.cancel_current_goal()
 
         return TaskResponse(id=task_id, status=TaskStatus.CANCELLED, message="Task cancel requested")

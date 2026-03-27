@@ -17,6 +17,7 @@ void DriverManagerNode::declare_parameters()
 {
     this->declare_parameter("battery_initial_level", 100.0);
     this->declare_parameter("battery_discharge_rate", 0.1); // % per second
+    this->declare_parameter("battery_charge_rate", 0.5);    // % per second
     this->declare_parameter("battery_publish_rate", 1.0);   // Hz
     this->declare_parameter("robot_frame_id", "base_link");
 }
@@ -28,6 +29,11 @@ void DriverManagerNode::get_parameters()
 
     battery_discharge_rate_ = this->get_parameter("battery_discharge_rate").as_double();
     RCLCPP_INFO(this->get_logger(), "[DriverManagerNode][get_parameters] battery_discharge_rate: %f", battery_discharge_rate_);
+
+    battery_charge_rate_ = this->get_parameter("battery_charge_rate").as_double();
+    RCLCPP_INFO(this->get_logger(), "[DriverManagerNode][get_parameters] battery_charge_rate: %f", battery_charge_rate_);
+
+    is_charging_ = false;
 
     battery_publish_rate_ = this->get_parameter("battery_publish_rate").as_double();
     RCLCPP_INFO(this->get_logger(), "[DriverManagerNode][get_parameters] battery_publish_rate: %f", battery_publish_rate_);
@@ -54,9 +60,17 @@ void DriverManagerNode::init_pub_sub()
 
 void DriverManagerNode::battery_timer_callback()
 {
-    // Simulate discharge
-    battery_level_ -= battery_discharge_rate_ / battery_publish_rate_;
-    battery_level_ = std::max(0.0, battery_level_);
+    if (is_charging_) {
+        battery_level_ += battery_charge_rate_ / battery_publish_rate_;
+        battery_level_ = std::min(100.0, battery_level_);
+        if (battery_level_ >= 100.0) {
+            is_charging_ = false;
+            RCLCPP_INFO(this->get_logger(), "[DriverManagerNode] Battery fully charged, charging stopped");
+        }
+    } else {
+        battery_level_ -= battery_discharge_rate_ / battery_publish_rate_;
+        battery_level_ = std::max(0.0, battery_level_);
+    }
 
     sensor_msgs::msg::BatteryState msg;
     msg.header.stamp = this->now();
@@ -67,9 +81,17 @@ void DriverManagerNode::battery_timer_callback()
     msg.current = 2.5f;
     msg.temperature = 35.0f;
 
+    if (is_charging_) {
+        msg.power_supply_status = sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_CHARGING;
+    } else if (battery_level_ >= 100.0) {
+        msg.power_supply_status = sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_FULL;
+    } else {
+        msg.power_supply_status = sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_DISCHARGING;
+    }
+
     battery_pub_->publish(msg);
 
-    if(battery_level_ < 20.0 && battery_level_ > 0.0){
+    if (!is_charging_ && battery_level_ < 20.0 && battery_level_ > 0.0) {
         RCLCPP_WARN(this->get_logger(), "Low battery: %.1f%%", battery_level_);
     }
 }
@@ -78,10 +100,15 @@ void DriverManagerNode::recharge_callback(
     const std::shared_ptr<std_srvs::srv::Trigger::Request> /*request*/,
     std::shared_ptr<std_srvs::srv::Trigger::Response> response)
 {
-    battery_level_ = 100.0;
+    is_charging_ = !is_charging_;
     response->success = true;
-    response->message = "Battery recharged to 100%";
-    RCLCPP_INFO(this->get_logger(), "[DriverManagerNode] Battery recharged to 100%%");
+    if (is_charging_) {
+        response->message = "Charging started";
+        RCLCPP_INFO(this->get_logger(), "[DriverManagerNode] Charging started at %.1f%%", battery_level_);
+    } else {
+        response->message = "Charging stopped";
+        RCLCPP_INFO(this->get_logger(), "[DriverManagerNode] Charging stopped at %.1f%%", battery_level_);
+    }
 }
 
 }// namespace syncai_driver_manager

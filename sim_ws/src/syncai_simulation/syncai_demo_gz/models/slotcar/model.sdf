@@ -105,7 +105,7 @@
     <joint name="drivewhl_l_joint" type="revolute">
       <parent>base_link</parent>
       <child>drivewhl_l_link</child>
-      <pose relative_to="base_link">-0.12 0.18 -0.05 0 0 0</pose>
+      <pose relative_to="base_link">0.0 0.18 -0.05 0 0 0</pose>
       <axis>
         <xyz>0 1 0</xyz>
         <limit>
@@ -157,7 +157,7 @@
     <joint name="drivewhl_r_joint" type="revolute">
       <parent>base_link</parent>
       <child>drivewhl_r_link</child>
-      <pose relative_to="base_link">-0.12 -0.18 -0.05 0 0 0</pose>
+      <pose relative_to="base_link">0.0 -0.18 -0.05 0 0 0</pose>
       <axis>
         <xyz>0 1 0</xyz>
         <limit>
@@ -213,6 +213,54 @@
       <parent>base_link</parent>
       <child>front_caster</child>
       <pose relative_to="base_link">0.14 0.0 -0.09 0 0 0</pose>
+    </joint>
+
+    <!-- Rear Caster -->
+    <link name="rear_caster">
+      <pose relative_to="rear_caster_joint"/>
+      <visual name="rear_caster_visual">
+        <geometry>
+          <sphere>
+            <radius>0.06</radius>
+          </sphere>
+        </geometry>
+        <material>
+          <ambient>0 1 1 1</ambient>
+          <diffuse>0 1 1 1</diffuse>
+        </material>
+      </visual>
+      <collision name="rear_caster_collision">
+        <geometry>
+          <sphere>
+            <radius>0.06</radius>
+          </sphere>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>0.0</mu>
+              <mu2>0.0</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <inertial>
+        <mass>0.5</mass>
+        <inertia>
+          <ixx>0.00072</ixx>
+          <ixy>0.0</ixy>
+          <ixz>0.0</ixz>
+          <iyy>0.00072</iyy>
+          <iyz>0.0</iyz>
+          <izz>0.00072</izz>
+        </inertia>
+      </inertial>
+    </link>
+
+    <joint name="rear_caster_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>rear_caster</child>
+      <pose relative_to="base_link">-0.14 0.0 -0.09 0 0 0</pose>
     </joint>
 
     <joint name="lidar_joint" type="fixed">

@@ -9,11 +9,39 @@ from confluent_kafka import Producer
 from pathlib import Path
 from typing import Optional
 
+from pydantic import BaseModel, ConfigDict, Field
+
 from syncai_robot_api.repositories.robot.schema import RobotState
 from syncai_robot_api.repositories.task.schema import Task
 from syncai_robot_api.gateways.agent_schema import build_external_robot_state
 
 from syncai_robot_api.helpers.map_helper import read_pgm_size
+
+class BaseSchema(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+class Pose(BaseSchema):
+    x: float = 0.0
+    y: float = 0.0
+    theta: float = 0.0
+
+
+class MapMetadata(BaseSchema):
+    map_id: str = Field(..., description="Unique identifier for the map", alias="mapId")
+    origin: Pose = Field(..., description="Origin of the map", default_factory=Pose)
+    resolution: float = Field(..., description="Resolution of the map", example=0.05)
+    width: int = Field(..., description="Width of the map", example=100)
+    height: int = Field(..., description="Height of the map", example=100)
+
+
+class Vertex(BaseSchema):
+    name: str = Field("", description="Name of the vertex")
+    pose: Pose = Field(default_factory=Pose, description="Pose of the vertex")
+
+
+class MapPayload(BaseSchema):
+    map_metadata: MapMetadata = Field(..., alias="mapMetadata")
+    vertexes: list[Vertex] = Field(default_factory=list)
 
 class AgentGateway:
 
@@ -87,25 +115,32 @@ class AgentGateway:
             with open(vertexes_path) as f:
                 vertexes = json.load(f)
 
-        payload = {
-            "map_metadata": {
-                "map_id": map_id,
-                "origin": {"x": origin[0], "y": origin[1], "theta": origin[2]},
-                "resolution": map_config.get("resolution", 0.05),
-                "width": width,
-                "height": height,
-            },
-            "vertexes": vertexes,
-        }
+        payload = MapPayload(
+            map_metadata=MapMetadata(
+                map_id=map_id,
+                origin=Pose(x=origin[0], y=origin[1], theta=origin[2]),
+                resolution=map_config.get("resolution", 0.05),
+                width=width,
+                height=height,
+            ),
+            vertexes=[Vertex(name=v["name"], pose=Pose(**v["pose"])) for v in vertexes]
+        )
 
-        url = f"http://{self._server_ip}:8000/api/v1/map"
+        url = f"http://{self._server_ip}:8000/api/v1/maps"
         try:
-            resp = requests.post(url, json=payload, timeout=5.0)
+            resp = requests.post(
+                url=url, 
+                headers={
+                    "x-api-key": os.getenv("SYNCAI_API_KEY", "")
+                },
+                json=payload.model_dump_json(by_alias=True), 
+                timeout=5.0
+            )
             resp.raise_for_status()
             self._logger.info("[AgentGateway] Map info sent", url=url, status=resp.status_code)
         except Exception as err:
             self._logger.warning("[AgentGateway] Failed to send map info", url=url, error=str(err))
-
+    
     def disconnect(self):
         if self._producer:
             self._producer.flush(timeout=5.0)

@@ -34,7 +34,9 @@ private:
     // Battery parameters
     double battery_level_;
     double battery_discharge_rate_;  // % per second
+    double battery_charge_rate_;     // % per second
     double battery_publish_rate_;    // Hz
+    bool is_charging_;
     std::string robot_frame_id_;
 };
 } // namespace syncai_driver_manager
