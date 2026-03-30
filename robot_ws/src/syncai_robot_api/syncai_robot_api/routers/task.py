@@ -5,6 +5,8 @@ from pydantic import BaseModel, Field
 
 from fastapi import APIRouter, HTTPException, Request, status
 
+from temporalio.client import WorkflowFailureError
+
 from syncai_robot_api.repositories.task.task import TaskRepo
 from syncai_robot_api.repositories.task.schema import (
     TaskActionType,
@@ -21,7 +23,7 @@ from syncai_robot_api.repositories.task.schema import (
 )
 from syncai_robot_api.gateways.robot import RobotGateway
 from syncai_robot_api.temporal.workflows import TaskWorkflow
-from syncai_robot_api.temporal.converters import TaskWorkflowInput, StepResult
+from syncai_robot_api.temporal.converters import TaskWorkflowInput
 from syncai_robot_api.temporal.shared import get_task_queue, get_workflow_id
 
 # --- Request models (from external client) ---
@@ -115,19 +117,26 @@ def init_task_router(task_repo: TaskRepo, robot_gateway: RobotGateway, robot_id:
 
         async def _on_workflow_complete(wf_handle, tid: str):
             try:
-                result: StepResult = await wf_handle.result()
-                if result.success:
-                    task_repo.update_task_status(tid, TaskStatus.COMPLETED)
-                else:
-                    task_repo.update_task_status(tid, TaskStatus.FAILED, error_msg=result.message)
-                    # Cancel remaining pending steps
-                    t = task_repo.get_task(tid)
-                    if t:
-                        for i, step in enumerate(t.payload.steps):
-                            if step.status == StepStatus.PENDING:
-                                task_repo.update_step_status(tid, i, StepStatus.CANCELLED)
+                await wf_handle.result()
+                task_repo.update_task_status(tid, TaskStatus.COMPLETED)
+            except WorkflowFailureError as e:
+                # Skip if already cancelled by cancel_task()
+                t = task_repo.get_task(tid)
+                if t and t.status == TaskStatus.CANCELLED:
+                    return
+
+                error_msg = e.cause.message if e.cause else str(e)
+                task_repo.update_task_status(tid, TaskStatus.FAILED, error_msg=error_msg)
+                # Cancel remaining pending steps
+                t = task_repo.get_task(tid)
+                if t:
+                    for i, step in enumerate(t.payload.steps):
+                        if step.status == StepStatus.PENDING:
+                            task_repo.update_step_status(tid, i, StepStatus.CANCELLED)
+
             except Exception as e:
                 task_repo.update_task_status(tid, TaskStatus.FAILED, error_msg=str(e))
+
             finally:
                 task_repo.set_completed_at(tid)
                 task_repo.clear_active_task()

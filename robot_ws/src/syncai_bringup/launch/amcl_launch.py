@@ -39,8 +39,6 @@ def generate_launch_description():
     initial_pose_y = LaunchConfiguration('initial_pose_y')
     initial_pose_yaw = LaunchConfiguration('initial_pose_yaw')
 
-    lifecycle_nodes = ['amcl']
-
     configured_params = ParameterFile(
         RewrittenYaml(
             source_file=params_file,
@@ -130,7 +128,10 @@ def generate_launch_description():
                 name='lifecycle_manager_amcl',
                 output='screen',
                 arguments=['--ros-args', '--log-level', 'info'],
-                parameters=[{'autostart': autostart}, {'node_names': lifecycle_nodes}],
+                parameters=[
+                    {'autostart': autostart}, 
+                    {'node_names': ['amcl']}
+                ],
             ),
         ],
     )

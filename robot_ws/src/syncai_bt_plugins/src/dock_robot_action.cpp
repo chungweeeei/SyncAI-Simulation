@@ -24,13 +24,16 @@ BT::NodeStatus DockRobotAction::onStart()
   goal_success_ = false;
   goal_handle_ = nullptr;
 
+  // register dock robot ros2 action client
   action_client_ = rclcpp_action::create_client<DockRobot>(node_, "dock_robot");
 
+  // wait for the action server to be available, right now we use opennav_docking this docking package
   if (!action_client_->wait_for_action_server(std::chrono::seconds(10))) {
     RCLCPP_ERROR(node_->get_logger(), "[DockRobot] Action server not available");
     return BT::NodeStatus::FAILURE;
   }
 
+  // create and send action goal
   auto goal = DockRobot::Goal();
   goal.use_dock_id = true;
   goal.dock_id = dock_id;
@@ -65,16 +68,17 @@ BT::NodeStatus DockRobotAction::onStart()
 
 BT::NodeStatus DockRobotAction::onRunning()
 {
-  if (goal_done_) {
-    if (goal_success_) {
-      RCLCPP_INFO(node_->get_logger(), "[DockRobot] Succeeded");
-      return BT::NodeStatus::SUCCESS;
-    } else {
-      RCLCPP_WARN(node_->get_logger(), "[DockRobot] Failed");
-      return BT::NodeStatus::FAILURE;
-    }
+  if(!goal_done_){
+    return BT::NodeStatus::RUNNING;
   }
-  return BT::NodeStatus::RUNNING;
+
+  if(!goal_success_){
+    RCLCPP_WARN(node_->get_logger(), "[DockRobot] Failed");
+    return BT::NodeStatus::FAILURE;
+  }
+
+  RCLCPP_INFO(node_->get_logger(), "[DockRobot] Succeeded");
+  return BT::NodeStatus::SUCCESS;
 }
 
 void DockRobotAction::onHalted()

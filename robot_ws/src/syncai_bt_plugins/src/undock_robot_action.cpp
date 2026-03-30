@@ -60,16 +60,17 @@ BT::NodeStatus UndockRobotAction::onStart()
 
 BT::NodeStatus UndockRobotAction::onRunning()
 {
-  if (goal_done_) {
-    if (goal_success_) {
-      RCLCPP_INFO(node_->get_logger(), "[UndockRobot] Succeeded");
-      return BT::NodeStatus::SUCCESS;
-    } else {
-      RCLCPP_WARN(node_->get_logger(), "[UndockRobot] Failed");
-      return BT::NodeStatus::FAILURE;
-    }
+  if (!goal_done_) {
+    return BT::NodeStatus::RUNNING;
   }
-  return BT::NodeStatus::RUNNING;
+
+  if (!goal_success_) {
+    RCLCPP_WARN(node_->get_logger(), "[UndockRobot] Failed");
+    return BT::NodeStatus::FAILURE;
+  }
+  
+  RCLCPP_INFO(node_->get_logger(), "[UndockRobot] Succeeded");
+  return BT::NodeStatus::SUCCESS;
 }
 
 void UndockRobotAction::onHalted()

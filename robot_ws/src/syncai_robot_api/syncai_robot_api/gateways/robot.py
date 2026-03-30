@@ -117,17 +117,19 @@ class RobotGateway:
         if not _wait_for_future(send_goal_future, timeout=15.0):
             return False, "Timeout waiting for door control goal acceptance"
 
-        goal_handle = send_goal_future.result()
+        self._current_goal_handle = send_goal_future.result()
 
-        if not goal_handle.accepted:
+        if not self._current_goal_handle.accepted:
+            self._current_goal_handle = None
             return False, "Door control goal rejected"
 
         self._logger.info(f"[RobotGateway] Door {action_str} goal accepted")
 
-        result_future = goal_handle.get_result_async()
+        result_future = self._current_goal_handle.get_result_async()
         _wait_for_future(result_future, timeout=timeout_sec + 5.0)
 
         result = result_future.result()
+        self._current_goal_handle = None
 
         if result.status == GoalStatus.STATUS_SUCCEEDED:
             return True, result.result.message
@@ -165,17 +167,19 @@ class RobotGateway:
         if not _wait_for_future(send_goal_future, timeout=15.0):
             return False, "Timeout waiting for charging goal acceptance"
 
-        goal_handle = send_goal_future.result()
+        self._current_goal_handle = send_goal_future.result()
 
-        if not goal_handle.accepted:
+        if not self._current_goal_handle.accepted:
+            self._current_goal_handle = None
             return False, "Charging goal rejected"
 
         self._logger.info("[RobotGateway] Charging goal accepted")
 
-        result_future = goal_handle.get_result_async()
+        result_future = self._current_goal_handle.get_result_async()
         _wait_for_future(result_future)
 
         result = result_future.result()
+        self._current_goal_handle = None
 
         if result.status == GoalStatus.STATUS_SUCCEEDED:
             return True, result.result.message

@@ -1,8 +1,10 @@
+import math
 import asyncio
 from dataclasses import dataclass
 
 import structlog
 from temporalio import activity
+from temporalio.exceptions import ApplicationError
 
 from syncai_robot_api.gateways.robot import RobotGateway
 from syncai_robot_api.repositories.task.task import TaskRepo
@@ -30,6 +32,7 @@ class RobotActivities:
             input.task_id, input.step_index, status,
             error_msg=msg if not success else None
         )
+
         return StepResult(success=success, message=msg)
 
     @activity.defn
@@ -47,7 +50,6 @@ class RobotActivities:
         self.task_repo.update_step_status(input.task_id, input.step_index, StepStatus.IN_PROGRESS)
         self.task_repo.update_current_step_index(input.task_id, input.step_index)
 
-        import math
         yaw_rad = math.radians(input.params.get("r", 0.0))
 
         success, msg = self.robot_gateway.charge(
@@ -63,6 +65,7 @@ class RobotActivities:
             input.task_id, input.step_index, status,
             error_msg=msg if not success else None
         )
+            
         return StepResult(success=success, message=msg)
 
     @activity.defn
@@ -82,4 +85,5 @@ class RobotActivities:
             input.task_id, input.step_index, status,
             error_msg=msg if not success else None
         )
+
         return StepResult(success=success, message=msg)
