@@ -50,10 +50,6 @@ class SyncAIRobotAPI(Node):
         agent_gateway = init_agent_gateway(logger=logger)
         robot_gateway = init_robot_gateway(logger=logger, node=self, robot_id=robot_config.robot_id)
 
-        # Send map info when system starts.
-        # TODO: need to consider server is offline case
-        agent_gateway.send_map_info(map=robot_config.map)
-
         # Register subscribers
         init_robot_state_subscriber(logger=logger, node=self, robot_repo=robot_repo)
 
@@ -70,6 +66,7 @@ class SyncAIRobotAPI(Node):
             task_repo=task_repo,
             robot_gateway=robot_gateway,
             robot_id=robot_config.robot_id,
+            map_name=robot_config.map,
         )
 
 

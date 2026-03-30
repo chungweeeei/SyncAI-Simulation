@@ -10,6 +10,7 @@ from temporalio.client import Client
 
 from syncai_robot_api.routers.task import init_task_router
 from syncai_robot_api.routers.robot_state import init_robot_state_router
+from syncai_robot_api.routers.map import init_map_router
 from syncai_robot_api.repositories.robot.robot import RobotRepo
 from syncai_robot_api.repositories.task.task import TaskRepo
 from syncai_robot_api.gateways.robot import RobotGateway
@@ -21,6 +22,7 @@ def create_app(
     task_repo: TaskRepo,
     robot_gateway: RobotGateway,
     robot_id: str,
+    map_name: str,
 ) -> FastAPI:
 
     @asynccontextmanager
@@ -39,6 +41,7 @@ def create_app(
 
     app.include_router(init_task_router(task_repo=task_repo, robot_gateway=robot_gateway, robot_id=robot_id))
     app.include_router(init_robot_state_router(robot_repo=robot_repo, task_repo=task_repo))
+    app.include_router(init_map_router(map_name=map_name))
     return app
 
 
@@ -48,11 +51,12 @@ def start_api_server(
     task_repo: TaskRepo,
     robot_gateway: RobotGateway,
     robot_id: str,
+    map_name: str,
 ):
     host = os.getenv("SYNCAI_API_HOST", "0.0.0.0")
     port = int(os.getenv("SYNCAI_API_PORT", "3000"))
 
-    app = create_app(robot_repo=robot_repo, task_repo=task_repo, robot_gateway=robot_gateway, robot_id=robot_id)
+    app = create_app(robot_repo=robot_repo, task_repo=task_repo, robot_gateway=robot_gateway, robot_id=robot_id, map_name=map_name)
 
     def _run():
         logger.info("[APIServer] Starting", host=host, port=port)

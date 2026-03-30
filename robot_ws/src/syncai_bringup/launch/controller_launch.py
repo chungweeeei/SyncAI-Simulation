@@ -24,11 +24,18 @@ def _generate_namespaced_params(params_file, robot_id):
     with open(params_file, 'r') as f:
         params = yaml.safe_load(f)
 
-    # Inject namespace into local_costmap frame IDs
+    # Inject namespace into local_costmap frame IDs and scan topic
     if 'local_costmap' in params:
         costmap = params['local_costmap']['local_costmap']['ros__parameters']
         costmap['global_frame'] = robot_id + '/odom'
         costmap['robot_base_frame'] = robot_id + '/base_link'
+        # Fix scan topic: sub-node resolves relative 'scan' to /<ns>/local_costmap/scan
+        for layer_key in ['voxel_layer', 'obstacle_layer']:
+            layer = costmap.get(layer_key, {})
+            for src_name in layer.get('observation_sources', '').split():
+                src = layer.get(src_name, {})
+                if src.get('topic') == 'scan':
+                    src['topic'] = '/' + robot_id + '/scan'
 
     # Wrap under namespace so the namespaced node can find its params
     namespaced_params = {robot_id: params}

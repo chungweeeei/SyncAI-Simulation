@@ -1,3 +1,4 @@
+import asyncio
 from typing import List
 
 from pydantic import BaseModel, Field
@@ -8,6 +9,7 @@ from syncai_robot_api.repositories.task.task import TaskRepo
 from syncai_robot_api.repositories.task.schema import (
     TaskActionType,
     StepType,
+    StepStatus,
     MoveParams,
     WaitParams,
     DoorParams,
@@ -19,7 +21,7 @@ from syncai_robot_api.repositories.task.schema import (
 )
 from syncai_robot_api.gateways.robot import RobotGateway
 from syncai_robot_api.temporal.workflows import TaskWorkflow
-from syncai_robot_api.temporal.converters import TaskWorkflowInput
+from syncai_robot_api.temporal.converters import TaskWorkflowInput, StepResult
 from syncai_robot_api.temporal.shared import get_task_queue, get_workflow_id
 
 # --- Request models (from external client) ---
@@ -84,20 +86,55 @@ def init_task_router(task_repo: TaskRepo, robot_gateway: RobotGateway, robot_id:
         # Step2: Add task to repository
         success = task_repo.add_task(task)
         if not success:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Task {task.id} already exists")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, 
+                detail=f"Task {task.id} already exists"
+            )
 
         # Step3: Start Temporal workflow
         workflow_id = get_workflow_id(task.id)
         temporal_client = request.app.state.temporal_client
-        await temporal_client.start_workflow(
-            TaskWorkflow.run,
-            TaskWorkflowInput.from_task(task),
-            id=workflow_id,
-            task_queue=get_task_queue(robot_id),
-        )
+        try:
+            handle = await temporal_client.start_workflow(
+                TaskWorkflow.run,
+                TaskWorkflowInput.from_task(task),
+                id=workflow_id,
+                task_queue=get_task_queue(robot_id),
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                detail=f"Failed to start workflow: {str(e)}"
+            )
+
         task_repo.update_workflow_id(task.id, workflow_id)
 
-        return TaskResponse(id=task.id, status=TaskStatus.PENDING, message="Task created successfully")
+        # Step4: Mark task as IN_PROGRESS and track completion in background
+        task_repo.update_task_status(task.id, TaskStatus.IN_PROGRESS)
+        task_repo.set_active_task(task.id)
+
+        async def _on_workflow_complete(wf_handle, tid: str):
+            try:
+                result: StepResult = await wf_handle.result()
+                if result.success:
+                    task_repo.update_task_status(tid, TaskStatus.COMPLETED)
+                else:
+                    task_repo.update_task_status(tid, TaskStatus.FAILED, error_msg=result.message)
+                    # Cancel remaining pending steps
+                    t = task_repo.get_task(tid)
+                    if t:
+                        for i, step in enumerate(t.payload.steps):
+                            if step.status == StepStatus.PENDING:
+                                task_repo.update_step_status(tid, i, StepStatus.CANCELLED)
+            except Exception as e:
+                task_repo.update_task_status(tid, TaskStatus.FAILED, error_msg=str(e))
+            finally:
+                task_repo.set_completed_at(tid)
+                task_repo.clear_active_task()
+
+        asyncio.create_task(_on_workflow_complete(handle, task.id))
+
+        return TaskResponse(id=task.id, status=TaskStatus.IN_PROGRESS, message="Task created successfully")
 
     @router.get("/", response_model=List[Task])
     async def get_all_tasks():
@@ -121,6 +158,15 @@ def init_task_router(task_repo: TaskRepo, robot_gateway: RobotGateway, robot_id:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Task is already {task.status}")
 
         task_repo.update_task_status(task_id, TaskStatus.CANCELLED)
+        task_repo.clear_active_task()
+        task_repo.set_completed_at(task_id)
+
+        # Cancel remaining PENDING/IN_PROGRESS steps
+        task = task_repo.get_task(task_id)
+        if task:
+            for i, step in enumerate(task.payload.steps):
+                if step.status in (StepStatus.PENDING, StepStatus.IN_PROGRESS):
+                    task_repo.update_step_status(task_id, i, StepStatus.CANCELLED)
 
         # Cancel Temporal workflow
         temporal_client = request.app.state.temporal_client
