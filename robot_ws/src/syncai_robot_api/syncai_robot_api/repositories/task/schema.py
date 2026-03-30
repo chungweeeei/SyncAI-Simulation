@@ -66,3 +66,4 @@ class Task(BaseModel):
     current_step_index: int = 0
     error_msg: Optional[str] = None
     workflow_id: Optional[str] = None
+    completed_at: Optional[float] = None
