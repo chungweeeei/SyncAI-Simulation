@@ -27,6 +27,7 @@ def generate_launch_description():
 
     door_control_bt_xml = os.path.join(pkg_dir, 'config', 'door_control.xml')
     charging_bt_xml = os.path.join(pkg_dir, 'config', 'charging.xml')
+    navigate_through_door_bt_xml = os.path.join(pkg_dir, 'config', 'navigate_through_door.xml')
 
     stdout_linebuf_envvar = SetEnvironmentVariable(
         'RCUTILS_LOGGING_BUFFERED_STREAM', '1'
@@ -62,6 +63,14 @@ def generate_launch_description():
                 name='charging_server',
                 output='screen',
                 parameters=[{'bt_xml_file': charging_bt_xml}],
+                arguments=['--ros-args', '--log-level', 'info'],
+            ),
+            Node(
+                package='syncai_bt_plugins',
+                executable='navigate_through_door_server',
+                name='navigate_through_door_server',
+                output='screen',
+                parameters=[{'bt_xml_file': navigate_through_door_bt_xml}],
                 arguments=['--ros-args', '--log-level', 'info'],
             ),
         ],

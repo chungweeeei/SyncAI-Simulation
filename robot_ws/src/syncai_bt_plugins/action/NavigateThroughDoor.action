@@ -1,0 +1,15 @@
+# Goal
+float64 target_x
+float64 target_y
+float64 target_yaw 0.0
+string cmd_topic
+string state_topic
+bool open true
+float64 timeout_sec 30.0
+---
+# Result
+bool success
+string message
+---
+# Feedback
+string current_step
