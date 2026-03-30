@@ -1,3 +1,4 @@
+import time
 import structlog
 import threading
 
@@ -7,6 +8,8 @@ from syncai_robot_api.repositories.task.schema import Task, TaskStatus, StepStat
 
 
 class TaskRepo:
+
+    TASK_TTL_SECONDS = 3600  # evict terminal tasks older than 1 hour
 
     def __init__(self, logger: structlog.BoundLogger):
         self._logger = logger
@@ -19,14 +22,23 @@ class TaskRepo:
         with self._lock:
             if task.id in self._tasks:
                 return False
-            
-            self._tasks = {
-                tid: t for tid, t in self._tasks.items()
-                if t.status != TaskStatus.CANCELLED
-            }
-            
+
+            self._cleanup_expired_tasks()
             self._tasks[task.id] = task
             return True
+
+    def _cleanup_expired_tasks(self):
+        """Remove terminal tasks where completed_at is older than TTL. Called under lock."""
+        now = time.time()
+        terminal = (TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED)
+        self._tasks = {
+            tid: t for tid, t in self._tasks.items()
+            if not (
+                t.status in terminal
+                and t.completed_at is not None
+                and now - t.completed_at > self.TASK_TTL_SECONDS
+            )
+        }
 
     def get_task(self, task_id: str) -> Optional[Task]:
         with self._lock:
@@ -94,6 +106,12 @@ class TaskRepo:
             task = self._tasks.get(task_id)
             if task:
                 task.workflow_id = workflow_id
+
+    def set_completed_at(self, task_id: str):
+        with self._lock:
+            task = self._tasks.get(task_id)
+            if task:
+                task.completed_at = time.time()
 
 
 def init_task_repo(logger: structlog.stdlib.BoundLogger) -> TaskRepo:
