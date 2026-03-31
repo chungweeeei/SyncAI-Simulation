@@ -58,6 +58,13 @@
       </link>
     </model>
 
+    <!-- Water pool -->
+    <include>
+      <uri>package://syncai_demo_gz/models/water_pool</uri>
+      <name>water_pool_01</name>
+      <pose>7.0 22.85 0 0 0 0</pose>
+    </include>
+
     <!-- Charging station -->
     <include>
       <uri>package://syncai_demo_gz/models/charging_station</uri>

@@ -24,7 +24,7 @@ class AgentGateway:
 
         try:
             self._producer = Producer({
-                "bootstrap.servers": f"{self._server_ip}:9092",
+                "bootstrap.servers": f"{self._server_ip}:19092",
                 "client.id": "syncai-robot-api",
             })
             self._logger.info("[AgentGateway] Kafka producer created", broker=self._server_ip)

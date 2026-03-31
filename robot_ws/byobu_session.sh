@@ -16,6 +16,9 @@ byobu send-keys -t "$SESSION_NAME:localization" \
 byobu split-window -v -t "$SESSION_NAME:localization"
 byobu send-keys -t "$SESSION_NAME:localization.1" \
   "ros2 launch syncai_bringup map_server_launch.py" Enter
+byobu split-window -v -t "$SESSION_NAME:localization"
+byobu send-keys -t "$SESSION_NAME:localization.2" \
+  "ros2 launch syncai_bringup costmap_filter_launch.py" Enter
 
 # ---------- Window 1: amcl ----------
 byobu new-window -t "$SESSION_NAME" -n "amcl"

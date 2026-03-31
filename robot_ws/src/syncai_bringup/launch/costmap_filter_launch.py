@@ -1,14 +1,14 @@
 import configparser
 import os
-import tempfile
 
-import yaml
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import PushROSNamespace, SetParameter, Node
+from launch_ros.descriptions import ParameterFile
+from nav2_common.launch import ReplaceString, RewrittenYaml
 
 
 def _read_system_ini(data_dir):
@@ -19,54 +19,33 @@ def _read_system_ini(data_dir):
     return config.get('identity', 'robot_id', fallback='')
 
 
-def _generate_namespaced_params(params_file, robot_id):
-    """Read yaml, inject namespace into frame IDs, write to temp file."""
-    with open(params_file, 'r') as f:
-        params = yaml.safe_load(f)
-
-    # Inject namespace into local_costmap frame IDs and scan topic
-    if 'local_costmap' in params:
-        costmap = params['local_costmap']['local_costmap']['ros__parameters']
-        costmap['global_frame'] = robot_id + '/odom'
-        costmap['robot_base_frame'] = robot_id + '/base_link'
-        # Fix keepout_filter topic: resolve to absolute namespace path
-        keepout = costmap.get('keepout_filter', {})
-        if 'filter_info_topic' in keepout:
-            keepout['filter_info_topic'] = '/' + robot_id + '/costmap_filter_info'
-
-        # Fix scan topic: sub-node resolves relative 'scan' to /<ns>/local_costmap/scan
-        for layer_key in ['voxel_layer', 'obstacle_layer']:
-            layer = costmap.get(layer_key, {})
-            for src_name in layer.get('observation_sources', '').split():
-                src = layer.get(src_name, {})
-                if src.get('topic') == 'scan':
-                    src['topic'] = '/' + robot_id + '/scan'
-
-    # Wrap under namespace so the namespaced node can find its params
-    namespaced_params = {robot_id: params}
-
-    tmp = tempfile.NamedTemporaryFile(
-        mode='w', suffix='.yaml', prefix='controller_', delete=False
-    )
-    yaml.dump(namespaced_params, tmp, default_flow_style=False)
-    tmp.close()
-    return tmp.name
-
-
 def generate_launch_description():
     bringup_dir = get_package_share_directory('syncai_bringup')
 
-    data_dir_default = os.path.expanduser("~/data")
-    robot_id = _read_system_ini(data_dir_default)
-
-    default_params_file = os.path.join(bringup_dir, 'config', 'controller_params.yaml')
-    namespaced_params_file = _generate_namespaced_params(default_params_file, robot_id)
+    # Read system.ini at launch-time evaluation
+    robot_id = _read_system_ini(os.path.expanduser("~/data"))
 
     namespace = LaunchConfiguration('namespace')
     use_sim_time = LaunchConfiguration('use_sim_time')
     autostart = LaunchConfiguration('autostart')
+    params_file = LaunchConfiguration('params_file')
 
-    lifecycle_nodes = ['controller_server']
+    lifecycle_nodes = ['filter_mask_server', 'costmap_filter_info_server']
+
+    replaced_params_file = ReplaceString(
+        source_file=params_file,
+        replacements={'<robot_namespace>': namespace},
+    )
+
+    configured_params = ParameterFile(
+        RewrittenYaml(
+            source_file=replaced_params_file,
+            root_key=namespace,
+            param_rewrites={},
+            convert_types=True,
+        ),
+        allow_substs=True,
+    )
 
     stdout_linebuf_envvar = SetEnvironmentVariable(
         'RCUTILS_LOGGING_BUFFERED_STREAM', '1'
@@ -84,10 +63,16 @@ def generate_launch_description():
         description='Use simulation (Gazebo) clock if true',
     )
 
+    declare_params_file_cmd = DeclareLaunchArgument(
+        'params_file',
+        default_value=os.path.join(bringup_dir, 'config', 'costmap_filter_params.yaml'),
+        description='Full path to the costmap filter parameters file',
+    )
+
     declare_autostart_cmd = DeclareLaunchArgument(
         'autostart',
         default_value='true',
-        description='Automatically startup the controller server',
+        description='Automatically startup the costmap filter nodes',
     )
 
     load_nodes = GroupAction(
@@ -95,16 +80,26 @@ def generate_launch_description():
             PushROSNamespace(namespace),
             SetParameter('use_sim_time', use_sim_time),
             Node(
-                package='nav2_controller',
-                executable='controller_server',
+                package='nav2_map_server',
+                executable='map_server',
+                name='filter_mask_server',
                 output='screen',
-                parameters=[namespaced_params_file],
-                arguments=['--ros-args', '--log-level', 'info']
+                parameters=[configured_params],
+                remappings=[('map', 'filter_mask')],
+                arguments=['--ros-args', '--log-level', 'info'],
+            ),
+            Node(
+                package='nav2_map_server',
+                executable='costmap_filter_info_server',
+                name='costmap_filter_info_server',
+                output='screen',
+                parameters=[configured_params],
+                arguments=['--ros-args', '--log-level', 'info'],
             ),
             Node(
                 package='nav2_lifecycle_manager',
                 executable='lifecycle_manager',
-                name='lifecycle_manager_controller',
+                name='lifecycle_manager_costmap_filter',
                 output='screen',
                 arguments=['--ros-args', '--log-level', 'info'],
                 parameters=[{'autostart': autostart}, {'node_names': lifecycle_nodes}],
@@ -115,8 +110,10 @@ def generate_launch_description():
     ld = LaunchDescription()
 
     ld.add_action(stdout_linebuf_envvar)
+
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_use_sim_time_cmd)
+    ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_autostart_cmd)
 
     ld.add_action(load_nodes)
