@@ -143,8 +143,6 @@ class RobotGateway:
         x: float,
         y: float,
         yaw: float,
-        dock_id: str = "charging_station",
-        dock_type: str = "simple_charging_dock",
         recharge_service: str = "recharge",
     ) -> Tuple[bool, str]:
         if not self._charging_client.wait_for_server(timeout_sec=10.0):
@@ -154,13 +152,11 @@ class RobotGateway:
         goal_msg.target_x = x
         goal_msg.target_y = y
         goal_msg.target_yaw = yaw
-        goal_msg.dock_id = dock_id
-        goal_msg.dock_type = dock_type
         goal_msg.recharge_service = recharge_service
 
         self._logger.info(
             "[RobotGateway] Sending charging goal",
-            x=x, y=y, yaw=yaw, dock_id=dock_id,
+            x=x, y=y, yaw=yaw,
         )
 
         send_goal_future = self._charging_client.send_goal_async(goal_msg)

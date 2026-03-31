@@ -56,8 +56,6 @@ class RobotActivities:
             x=input.params["x"],
             y=input.params["y"],
             yaw=yaw_rad,
-            dock_id="charging_station",
-            dock_type="simple_charging_dock",
         )
 
         status = StepStatus.COMPLETED if success else StepStatus.FAILED

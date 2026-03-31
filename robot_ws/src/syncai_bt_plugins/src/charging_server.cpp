@@ -84,8 +84,6 @@ private:
     blackboard->set<double>("target_x", goal->target_x);
     blackboard->set<double>("target_y", goal->target_y);
     blackboard->set<double>("target_yaw", goal->target_yaw);
-    blackboard->set<std::string>("dock_id", goal->dock_id);
-    blackboard->set<std::string>("dock_type", goal->dock_type);
     blackboard->set<std::string>("recharge_service", goal->recharge_service);
 
     // Create BT from XML
@@ -106,10 +104,10 @@ private:
 
     // Step names for feedback
     const std::vector<std::string> steps = {
-      "MOVING", "DOCKING", "CHARGING", "UNDOCKING"
+      "DOCKING", "CHARGING", "UNDOCKING"
     };
 
-    feedback->current_step = "MOVING";
+    feedback->current_step = "DOCKING";
     goal_handle->publish_feedback(feedback);
 
     while (rclcpp::ok() && status == BT::NodeStatus::RUNNING) {
@@ -129,14 +127,12 @@ private:
         if (node->status() == BT::NodeStatus::RUNNING) {
           std::string name = node->name();
           std::string step;
-          if (name == "NavigateToPose") {
+          if (name == "Dock") {
             step = steps[0];
-          } else if (name == "Dock") {
-            step = steps[1];
           } else if (name == "Recharge") {
-            step = steps[2];
+            step = steps[1];
           } else if (name == "Undock") {
-            step = steps[3];
+            step = steps[2];
           }
           if (!step.empty() && feedback->current_step != step) {
             feedback->current_step = step;

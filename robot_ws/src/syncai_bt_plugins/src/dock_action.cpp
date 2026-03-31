@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "syncai_bt_plugins/dock_action.hpp"
 
 namespace syncai_bt_plugins
@@ -15,10 +17,12 @@ BT::NodeStatus DockAction::onStart()
     throw BT::RuntimeError("Missing 'node' in blackboard");
   }
 
-  std::string dock_id;
-  bool navigate_to_staging = false;
-  getInput("dock_id", dock_id);
-  getInput("navigate_to_staging", navigate_to_staging);
+  double dock_x, dock_y, dock_yaw;
+  std::string dock_frame;
+  getInput("dock_x", dock_x);
+  getInput("dock_y", dock_y);
+  getInput("dock_yaw", dock_yaw);
+  getInput("dock_frame", dock_frame);
 
   goal_done_ = false;
   goal_success_ = false;
@@ -33,15 +37,23 @@ BT::NodeStatus DockAction::onStart()
     return BT::NodeStatus::FAILURE;
   }
 
-  // create and send action goal
+  // create and send action goal with pose-based docking
   auto goal = DockRobot::Goal();
-  goal.use_dock_id = true;
-  goal.dock_id = dock_id;
-  goal.navigate_to_staging_pose = navigate_to_staging;
+  goal.use_dock_id = false;
+  goal.dock_type = "simple_charging_dock";
+  goal.navigate_to_staging_pose = true;
+
+  goal.dock_pose.header.frame_id = dock_frame;
+  goal.dock_pose.header.stamp = node_->get_clock()->now();
+  goal.dock_pose.pose.position.x = dock_x;
+  goal.dock_pose.pose.position.y = dock_y;
+  goal.dock_pose.pose.position.z = 0.0;
+  goal.dock_pose.pose.orientation.z = std::sin(dock_yaw / 2.0);
+  goal.dock_pose.pose.orientation.w = std::cos(dock_yaw / 2.0);
 
   RCLCPP_INFO(node_->get_logger(),
-    "[Dock] Sending goal: dock_id=%s, nav_to_staging=%s",
-    dock_id.c_str(), navigate_to_staging ? "true" : "false");
+    "[Dock] Sending goal: pose=(%.2f, %.2f, %.2f) frame=%s nav_to_staging=true",
+    dock_x, dock_y, dock_yaw, dock_frame.c_str());
 
   auto send_goal_options = rclcpp_action::Client<DockRobot>::SendGoalOptions();
   send_goal_options.result_callback =

@@ -15,9 +15,6 @@ BT::NodeStatus UndockAction::onStart()
     throw BT::RuntimeError("Missing 'node' in blackboard");
   }
 
-  std::string dock_type;
-  getInput("dock_type", dock_type);
-
   goal_done_ = false;
   goal_success_ = false;
   goal_handle_ = nullptr;
@@ -30,10 +27,7 @@ BT::NodeStatus UndockAction::onStart()
   }
 
   auto goal = UndockRobot::Goal();
-  goal.dock_type = dock_type;
-
-  RCLCPP_INFO(node_->get_logger(),
-    "[Undock] Sending goal: dock_type=%s", dock_type.c_str());
+  goal.dock_type = "simple_charging_dock";
 
   auto send_goal_options = rclcpp_action::Client<UndockRobot>::SendGoalOptions();
   send_goal_options.result_callback =

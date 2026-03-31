@@ -25,13 +25,6 @@ docking_server:
       use_stall_detection: false
       filter_coef: 0.1
 
-    # Dock instances
-    docks: ['charging_station']
-    charging_station:
-      type: 'simple_charging_dock'
-      frame: map
-      pose: [0.0, 10.1, 1.57]
-
     # Internal controller for dock approach
     controller:
       k_phi: 1.5

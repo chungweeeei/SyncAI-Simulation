@@ -2,8 +2,6 @@
 float64 target_x
 float64 target_y
 float64 target_yaw
-string dock_id "charging_station"
-string dock_type "simple_charging_dock"
 string recharge_service "recharge"
 ---
 # Result

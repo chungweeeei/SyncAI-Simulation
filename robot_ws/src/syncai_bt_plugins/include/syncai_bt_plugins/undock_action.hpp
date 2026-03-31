@@ -22,9 +22,7 @@ public:
 
   static BT::PortsList providedPorts()
   {
-    return {
-      BT::InputPort<std::string>("dock_type", "simple_charging_dock", "Type of dock to undock from"),
-    };
+    return {};
   }
 
   BT::NodeStatus onStart() override;

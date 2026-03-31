@@ -23,8 +23,10 @@ public:
   static BT::PortsList providedPorts()
   {
     return {
-      BT::InputPort<std::string>("dock_id", "charging_station", "Dock ID from database"),
-      BT::InputPort<bool>("navigate_to_staging", false, "Navigate to staging pose before docking"),
+      BT::InputPort<double>("dock_x", "Dock X position"),
+      BT::InputPort<double>("dock_y", "Dock Y position"),
+      BT::InputPort<double>("dock_yaw", "Dock yaw orientation"),
+      BT::InputPort<std::string>("dock_frame", "map", "Frame for dock pose"),
     };
   }
 

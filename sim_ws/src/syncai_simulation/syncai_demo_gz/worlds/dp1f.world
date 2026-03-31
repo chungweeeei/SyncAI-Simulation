@@ -122,12 +122,5 @@
       <pose>10.0 12.0 0.0 0 0 0</pose>
     </include>
 
-    <include>
-      <uri>package://syncai_demo_gz/models/vertex</uri>
-      <name>charging_station_vertex</name>
-      <pose>5.0 24.0 0.0 0 0 0</pose>
-    </include>
-
-
   </world>
 </sdf>
