@@ -20,6 +20,7 @@ class TaskWorkflow:
             "WAIT": RobotActivities.execute_wait,
             "DOOR": RobotActivities.execute_door,
             "CHARGE": RobotActivities.execute_charge,
+            "NAVIGATE_WITH_ALERT": RobotActivities.execute_navigate_with_alert,
         }
 
         try:
