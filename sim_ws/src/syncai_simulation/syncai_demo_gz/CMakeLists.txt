@@ -39,6 +39,15 @@ target_link_libraries(VertexPlugin
   gz-msgs10::gz-msgs10
 )
 
+# Robot LED Plugin
+add_library(RobotLedPlugin SHARED src/RobotLedPlugin.cc)
+target_link_libraries(RobotLedPlugin
+  gz-sim8::gz-sim8
+  gz-plugin2::gz-plugin2-register
+  gz-transport13::gz-transport13
+  gz-msgs10::gz-msgs10
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
@@ -51,7 +60,7 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-install(TARGETS DoorPlugin AlarmPlugin VertexPlugin
+install(TARGETS DoorPlugin AlarmPlugin VertexPlugin RobotLedPlugin
   DESTINATION lib/${PROJECT_NAME}
 )
 

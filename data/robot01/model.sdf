@@ -21,6 +21,18 @@
         </geometry>
       </collision>
 
+      <!-- LED Strip (front) -->
+      <visual name="led_strip_visual">
+        <pose>0.2125 0 -0.04 0 0 0</pose>
+        <geometry>
+          <box><size>0.005 0.28 0.02</size></box>
+        </geometry>
+        <material>
+          <ambient>0.2 0.2 0.2 1</ambient>
+          <diffuse>0.2 0.2 0.2 1</diffuse>
+        </material>
+      </visual>
+
       <sensor name="imu_sensor" type="imu">
         <topic>robot01/imu</topic>
         <update_rate>100</update_rate>
@@ -347,6 +359,12 @@
 
     <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
       <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <plugin filename="RobotLedPlugin" name="syncai::RobotLedPlugin">
+      <link_name>base_link</link_name>
+      <visual_name>led_strip_visual</visual_name>
+      <flash_period>0.6</flash_period>
     </plugin>
 
   </model>

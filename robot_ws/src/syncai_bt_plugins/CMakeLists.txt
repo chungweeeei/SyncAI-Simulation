@@ -21,6 +21,7 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "action/DoorControl.action"
   "action/Charging.action"
+  "action/NavigateWithAlert.action"
 )
 
 # --- Door Control BT plugin ---
@@ -38,12 +39,27 @@ ament_target_dependencies(syncai_door_control_action_bt_node
   std_msgs
 )
 
+# --- Alert BT plugin ---
+add_library(syncai_alert_action_bt_node SHARED
+  src/alert_action.cpp
+)
+target_include_directories(syncai_alert_action_bt_node PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+target_compile_features(syncai_alert_action_bt_node PUBLIC cxx_std_20)
+ament_target_dependencies(syncai_alert_action_bt_node
+  rclcpp
+  behaviortree_cpp
+  std_msgs
+)
+
 # --- Charging BT plugin (shared library with all charging BT nodes) ---
 add_library(syncai_charging_bt_nodes SHARED
   src/navigate_to_pose_action.cpp
-  src/dock_robot_action.cpp
+  src/dock_action.cpp
   src/recharge_action.cpp
-  src/undock_robot_action.cpp
+  src/undock_action.cpp
 )
 target_include_directories(syncai_charging_bt_nodes PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -100,9 +116,30 @@ ament_target_dependencies(charging_server
 target_link_libraries(charging_server "${cpp_typesupport_target}")
 target_link_libraries(charging_server syncai_charging_bt_nodes)
 
+# --- NavigateWithAlert action server executable ---
+add_executable(navigate_with_alert_server src/navigate_with_alert_server.cpp)
+target_include_directories(navigate_with_alert_server PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+target_compile_features(navigate_with_alert_server PUBLIC cxx_std_20)
+ament_target_dependencies(navigate_with_alert_server
+  rclcpp
+  rclcpp_action
+  behaviortree_cpp
+  std_msgs
+  nav2_msgs
+  geometry_msgs
+  tf2
+)
+target_link_libraries(navigate_with_alert_server "${cpp_typesupport_target}")
+target_link_libraries(navigate_with_alert_server syncai_charging_bt_nodes)
+target_link_libraries(navigate_with_alert_server syncai_alert_action_bt_node)
+
 # Install
 install(TARGETS
   syncai_door_control_action_bt_node
+  syncai_alert_action_bt_node
   syncai_charging_bt_nodes
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
@@ -112,6 +149,7 @@ install(TARGETS
 install(TARGETS
   door_control_server
   charging_server
+  navigate_with_alert_server
   DESTINATION lib/${PROJECT_NAME}
 )
 

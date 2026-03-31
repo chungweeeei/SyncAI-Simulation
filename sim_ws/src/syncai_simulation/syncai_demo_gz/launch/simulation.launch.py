@@ -128,7 +128,8 @@ def generate_launch_description():
             f"/{robot_id}/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
             f"/{robot_id}/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry",
             f"/{robot_id}/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
-            f"/{robot_id}/imu@sensor_msgs/msg/Imu[gz.msgs.IMU"
+            f"/{robot_id}/imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
+            f"/{robot_id}/alert@std_msgs/msg/Bool]gz.msgs.Boolean",
         ])
 
         actions.append(Node(
