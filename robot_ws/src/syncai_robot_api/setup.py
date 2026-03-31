@@ -21,7 +21,12 @@ setup(
         'fastapi',
         'uvicorn',
         'temporalio',
+        'httpx',
+        'pyyaml',
     ],
+    package_data={
+        'syncai_robot_api': ['agent/skills/*.md'],
+    },
     zip_safe=True,
     maintainer='syncrobotic',
     maintainer_email='chungweeeei@gmail.com',

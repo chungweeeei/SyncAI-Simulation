@@ -1,11 +1,8 @@
-import asyncio
 from typing import List
 
 from pydantic import BaseModel, Field
 
 from fastapi import APIRouter, HTTPException, Request, status
-
-from temporalio.client import WorkflowFailureError
 
 from syncai_robot_api.repositories.task.task import TaskRepo
 from syncai_robot_api.repositories.task.schema import (
@@ -22,9 +19,8 @@ from syncai_robot_api.repositories.task.schema import (
     TaskStatus
 )
 from syncai_robot_api.gateways.robot import RobotGateway
-from syncai_robot_api.temporal.workflows import TaskWorkflow
-from syncai_robot_api.temporal.converters import TaskWorkflowInput
-from syncai_robot_api.temporal.shared import get_task_queue, get_workflow_id
+from syncai_robot_api.helpers.task_helper import submit_task
+from syncai_robot_api.temporal.shared import get_workflow_id
 
 # --- Request models (from external client) ---
 
@@ -85,63 +81,26 @@ def init_task_router(task_repo: TaskRepo, robot_gateway: RobotGateway, robot_id:
             )
         )
 
-        # Step2: Add task to repository
-        success = task_repo.add_task(task)
-        if not success:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, 
-                detail=f"Task {task.id} already exists"
-            )
-
-        # Step3: Start Temporal workflow
-        workflow_id = get_workflow_id(task.id)
+        # Step2: Submit task to repository and start Temporal workflow
         temporal_client = request.app.state.temporal_client
         try:
-            handle = await temporal_client.start_workflow(
-                TaskWorkflow.run,
-                TaskWorkflowInput.from_task(task),
-                id=workflow_id,
-                task_queue=get_task_queue(robot_id),
+            await submit_task(
+                task=task,
+                task_repo=task_repo,
+                temporal_client=temporal_client,
+                robot_gateway=robot_gateway,
+                robot_id=robot_id,
+            )
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e),
             )
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-                detail=f"Failed to start workflow: {str(e)}"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to start workflow: {str(e)}",
             )
-
-        task_repo.update_workflow_id(task.id, workflow_id)
-
-        # Step4: Mark task as IN_PROGRESS and track completion in background
-        task_repo.update_task_status(task.id, TaskStatus.IN_PROGRESS)
-        task_repo.set_active_task(task.id)
-
-        async def _on_workflow_complete(wf_handle, tid: str):
-            try:
-                await wf_handle.result()
-                task_repo.update_task_status(tid, TaskStatus.COMPLETED)
-            except WorkflowFailureError as e:
-                # Skip if already cancelled by cancel_task()
-                t = task_repo.get_task(tid)
-                if t and t.status == TaskStatus.CANCELLED:
-                    return
-
-                error_msg = e.cause.message if e.cause else str(e)
-                task_repo.update_task_status(tid, TaskStatus.FAILED, error_msg=error_msg)
-                # Cancel remaining pending steps
-                t = task_repo.get_task(tid)
-                if t:
-                    for i, step in enumerate(t.payload.steps):
-                        if step.status == StepStatus.PENDING:
-                            task_repo.update_step_status(tid, i, StepStatus.CANCELLED)
-
-            except Exception as e:
-                task_repo.update_task_status(tid, TaskStatus.FAILED, error_msg=str(e))
-
-            finally:
-                task_repo.set_completed_at(tid)
-                task_repo.clear_active_task()
-
-        asyncio.create_task(_on_workflow_complete(handle, task.id))
 
         return TaskResponse(id=task.id, status=TaskStatus.IN_PROGRESS, message="Task created successfully")
 

@@ -17,6 +17,7 @@ from syncai_robot_api.gateways.robot import init_robot_gateway
 from syncai_robot_api.jobs.send_robot_state import init_send_robot_state_job
 from syncai_robot_api.temporal.worker import start_temporal_worker
 
+from syncai_robot_api.agent import init_agent
 from syncai_robot_api.server import start_api_server
 
 @dataclass
@@ -59,6 +60,16 @@ class SyncAIRobotAPI(Node):
         # Start Temporal Worker (replaces TaskExecutorJob)
         start_temporal_worker(logger=logger, robot_gateway=robot_gateway, task_repo=task_repo, robot_id=robot_config.robot_id)
 
+        # Register agent
+        agent_router = init_agent(
+            logger=logger,
+            robot_repo=robot_repo,
+            task_repo=task_repo,
+            robot_gateway=robot_gateway,
+            robot_id=robot_config.robot_id,
+            map_name=robot_config.map,
+        )
+
         # Start HTTP API server
         start_api_server(
             logger=logger,
@@ -67,6 +78,7 @@ class SyncAIRobotAPI(Node):
             robot_gateway=robot_gateway,
             robot_id=robot_config.robot_id,
             map_name=robot_config.map,
+            extra_routers=[agent_router],
         )
 
 

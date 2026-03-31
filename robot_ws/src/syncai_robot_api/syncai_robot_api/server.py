@@ -1,10 +1,11 @@
 import os
 import threading
 from contextlib import asynccontextmanager
+from typing import List, Optional
 
 import structlog
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from temporalio.client import Client
 
@@ -23,6 +24,7 @@ def create_app(
     robot_gateway: RobotGateway,
     robot_id: str,
     map_name: str,
+    extra_routers: Optional[List[APIRouter]] = None,
 ) -> FastAPI:
 
     @asynccontextmanager
@@ -42,6 +44,10 @@ def create_app(
     app.include_router(init_task_router(task_repo=task_repo, robot_gateway=robot_gateway, robot_id=robot_id))
     app.include_router(init_robot_state_router(robot_repo=robot_repo, task_repo=task_repo))
     app.include_router(init_map_router(map_name=map_name))
+
+    for router in (extra_routers or []):
+        app.include_router(router)
+
     return app
 
 
@@ -52,11 +58,12 @@ def start_api_server(
     robot_gateway: RobotGateway,
     robot_id: str,
     map_name: str,
+    extra_routers: Optional[List[APIRouter]] = None,
 ):
     host = os.getenv("SYNCAI_API_HOST", "0.0.0.0")
     port = int(os.getenv("SYNCAI_API_PORT", "3000"))
 
-    app = create_app(robot_repo=robot_repo, task_repo=task_repo, robot_gateway=robot_gateway, robot_id=robot_id, map_name=map_name)
+    app = create_app(robot_repo=robot_repo, task_repo=task_repo, robot_gateway=robot_gateway, robot_id=robot_id, map_name=map_name, extra_routers=extra_routers)
 
     def _run():
         logger.info("[APIServer] Starting", host=host, port=port)
