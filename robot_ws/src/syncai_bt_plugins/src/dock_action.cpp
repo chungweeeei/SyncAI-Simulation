@@ -1,15 +1,15 @@
-#include "syncai_bt_plugins/dock_robot_action.hpp"
+#include "syncai_bt_plugins/dock_action.hpp"
 
 namespace syncai_bt_plugins
 {
 
-DockRobotAction::DockRobotAction(
+DockAction::DockAction(
   const std::string & name, const BT::NodeConfig & config)
 : BT::StatefulActionNode(name, config)
 {
 }
 
-BT::NodeStatus DockRobotAction::onStart()
+BT::NodeStatus DockAction::onStart()
 {
   if (!config().blackboard->get<rclcpp::Node::SharedPtr>("node", node_)) {
     throw BT::RuntimeError("Missing 'node' in blackboard");
@@ -29,7 +29,7 @@ BT::NodeStatus DockRobotAction::onStart()
 
   // wait for the action server to be available, right now we use opennav_docking this docking package
   if (!action_client_->wait_for_action_server(std::chrono::seconds(10))) {
-    RCLCPP_ERROR(node_->get_logger(), "[DockRobot] Action server not available");
+    RCLCPP_ERROR(node_->get_logger(), "[Dock] Action server not available");
     return BT::NodeStatus::FAILURE;
   }
 
@@ -40,7 +40,7 @@ BT::NodeStatus DockRobotAction::onStart()
   goal.navigate_to_staging_pose = navigate_to_staging;
 
   RCLCPP_INFO(node_->get_logger(),
-    "[DockRobot] Sending goal: dock_id=%s, nav_to_staging=%s",
+    "[Dock] Sending goal: dock_id=%s, nav_to_staging=%s",
     dock_id.c_str(), navigate_to_staging ? "true" : "false");
 
   auto send_goal_options = rclcpp_action::Client<DockRobot>::SendGoalOptions();
@@ -52,40 +52,40 @@ BT::NodeStatus DockRobotAction::onStart()
 
   auto future = action_client_->async_send_goal(goal, send_goal_options);
   if (future.wait_for(std::chrono::seconds(15)) != std::future_status::ready) {
-    RCLCPP_ERROR(node_->get_logger(), "[DockRobot] Failed to send goal");
+    RCLCPP_ERROR(node_->get_logger(), "[Dock] Failed to send goal");
     return BT::NodeStatus::FAILURE;
   }
 
   goal_handle_ = future.get();
   if (!goal_handle_) {
-    RCLCPP_ERROR(node_->get_logger(), "[DockRobot] Goal was rejected");
+    RCLCPP_ERROR(node_->get_logger(), "[Dock] Goal was rejected");
     return BT::NodeStatus::FAILURE;
   }
 
-  RCLCPP_INFO(node_->get_logger(), "[DockRobot] Goal accepted");
+  RCLCPP_INFO(node_->get_logger(), "[Dock] Goal accepted");
   return BT::NodeStatus::RUNNING;
 }
 
-BT::NodeStatus DockRobotAction::onRunning()
+BT::NodeStatus DockAction::onRunning()
 {
   if(!goal_done_){
     return BT::NodeStatus::RUNNING;
   }
 
   if(!goal_success_){
-    RCLCPP_WARN(node_->get_logger(), "[DockRobot] Failed");
+    RCLCPP_WARN(node_->get_logger(), "[Dock] Failed");
     return BT::NodeStatus::FAILURE;
   }
 
-  RCLCPP_INFO(node_->get_logger(), "[DockRobot] Succeeded");
+  RCLCPP_INFO(node_->get_logger(), "[Dock] Succeeded");
   return BT::NodeStatus::SUCCESS;
 }
 
-void DockRobotAction::onHalted()
+void DockAction::onHalted()
 {
   if (goal_handle_) {
     action_client_->async_cancel_goal(goal_handle_);
-    RCLCPP_INFO(node_->get_logger(), "[DockRobot] Halted, goal cancelled");
+    RCLCPP_INFO(node_->get_logger(), "[Dock] Halted, goal cancelled");
   }
   goal_handle_ = nullptr;
   action_client_.reset();

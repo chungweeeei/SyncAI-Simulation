@@ -10,9 +10,9 @@
 
 #include "syncai_bt_plugins/action/charging.hpp"
 #include "syncai_bt_plugins/navigate_to_pose_action.hpp"
-#include "syncai_bt_plugins/dock_robot_action.hpp"
+#include "syncai_bt_plugins/dock_action.hpp"
 #include "syncai_bt_plugins/recharge_action.hpp"
-#include "syncai_bt_plugins/undock_robot_action.hpp"
+#include "syncai_bt_plugins/undock_action.hpp"
 
 using Charging = syncai_bt_plugins::action::Charging;
 using GoalHandleCharging = rclcpp_action::ServerGoalHandle<Charging>;
@@ -33,9 +33,9 @@ public:
 
     // Register BT plugins
     factory_.registerNodeType<syncai_bt_plugins::NavigateToPoseAction>("NavigateToPose");
-    factory_.registerNodeType<syncai_bt_plugins::DockRobotAction>("DockRobot");
+    factory_.registerNodeType<syncai_bt_plugins::DockAction>("Dock");
     factory_.registerNodeType<syncai_bt_plugins::RechargeAction>("Recharge");
-    factory_.registerNodeType<syncai_bt_plugins::UndockRobotAction>("UndockRobot");
+    factory_.registerNodeType<syncai_bt_plugins::UndockAction>("Undock");
 
     // Create action server
     action_server_ = rclcpp_action::create_server<Charging>(
@@ -131,11 +131,11 @@ private:
           std::string step;
           if (name == "NavigateToPose") {
             step = steps[0];
-          } else if (name == "DockRobot") {
+          } else if (name == "Dock") {
             step = steps[1];
           } else if (name == "Recharge") {
             step = steps[2];
-          } else if (name == "UndockRobot") {
+          } else if (name == "Undock") {
             step = steps[3];
           }
           if (!step.empty() && feedback->current_step != step) {

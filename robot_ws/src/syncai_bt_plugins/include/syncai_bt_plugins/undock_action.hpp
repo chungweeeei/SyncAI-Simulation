@@ -1,5 +1,5 @@
-#ifndef SYNCAI_BT_PLUGINS__UNDOCK_ROBOT_ACTION_HPP_
-#define SYNCAI_BT_PLUGINS__UNDOCK_ROBOT_ACTION_HPP_
+#ifndef SYNCAI_BT_PLUGINS__UNDOCK_ACTION_HPP_
+#define SYNCAI_BT_PLUGINS__UNDOCK_ACTION_HPP_
 
 #include <string>
 #include <memory>
@@ -12,13 +12,13 @@
 namespace syncai_bt_plugins
 {
 
-class UndockRobotAction : public BT::StatefulActionNode
+class UndockAction : public BT::StatefulActionNode
 {
 public:
   using UndockRobot = nav2_msgs::action::UndockRobot;
   using GoalHandle = rclcpp_action::ClientGoalHandle<UndockRobot>;
 
-  UndockRobotAction(const std::string & name, const BT::NodeConfig & config);
+  UndockAction(const std::string & name, const BT::NodeConfig & config);
 
   static BT::PortsList providedPorts()
   {
@@ -41,4 +41,4 @@ private:
 
 }  // namespace syncai_bt_plugins
 
-#endif  // SYNCAI_BT_PLUGINS__UNDOCK_ROBOT_ACTION_HPP_
+#endif  // SYNCAI_BT_PLUGINS__UNDOCK_ACTION_HPP_

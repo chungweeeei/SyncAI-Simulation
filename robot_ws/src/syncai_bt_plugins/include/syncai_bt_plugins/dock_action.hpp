@@ -1,5 +1,5 @@
-#ifndef SYNCAI_BT_PLUGINS__DOCK_ROBOT_ACTION_HPP_
-#define SYNCAI_BT_PLUGINS__DOCK_ROBOT_ACTION_HPP_
+#ifndef SYNCAI_BT_PLUGINS__DOCK_ACTION_HPP_
+#define SYNCAI_BT_PLUGINS__DOCK_ACTION_HPP_
 
 #include <string>
 #include <memory>
@@ -12,13 +12,13 @@
 namespace syncai_bt_plugins
 {
 
-class DockRobotAction : public BT::StatefulActionNode
+class DockAction : public BT::StatefulActionNode
 {
 public:
   using DockRobot = nav2_msgs::action::DockRobot;
   using GoalHandle = rclcpp_action::ClientGoalHandle<DockRobot>;
 
-  DockRobotAction(const std::string & name, const BT::NodeConfig & config);
+  DockAction(const std::string & name, const BT::NodeConfig & config);
 
   static BT::PortsList providedPorts()
   {

@@ -42,9 +42,9 @@ ament_target_dependencies(syncai_door_control_action_bt_node
 # --- Charging BT plugin (shared library with all charging BT nodes) ---
 add_library(syncai_charging_bt_nodes SHARED
   src/navigate_to_pose_action.cpp
-  src/dock_robot_action.cpp
+  src/dock_action.cpp
   src/recharge_action.cpp
-  src/undock_robot_action.cpp
+  src/undock_action.cpp
 )
 target_include_directories(syncai_charging_bt_nodes PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

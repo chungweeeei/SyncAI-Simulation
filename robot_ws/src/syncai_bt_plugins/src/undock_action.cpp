@@ -1,15 +1,15 @@
-#include "syncai_bt_plugins/undock_robot_action.hpp"
+#include "syncai_bt_plugins/undock_action.hpp"
 
 namespace syncai_bt_plugins
 {
 
-UndockRobotAction::UndockRobotAction(
+UndockAction::UndockAction(
   const std::string & name, const BT::NodeConfig & config)
 : BT::StatefulActionNode(name, config)
 {
 }
 
-BT::NodeStatus UndockRobotAction::onStart()
+BT::NodeStatus UndockAction::onStart()
 {
   if (!config().blackboard->get<rclcpp::Node::SharedPtr>("node", node_)) {
     throw BT::RuntimeError("Missing 'node' in blackboard");
@@ -25,7 +25,7 @@ BT::NodeStatus UndockRobotAction::onStart()
   action_client_ = rclcpp_action::create_client<UndockRobot>(node_, "undock_robot");
 
   if (!action_client_->wait_for_action_server(std::chrono::seconds(10))) {
-    RCLCPP_ERROR(node_->get_logger(), "[UndockRobot] Action server not available");
+    RCLCPP_ERROR(node_->get_logger(), "[Undock] Action server not available");
     return BT::NodeStatus::FAILURE;
   }
 
@@ -33,7 +33,7 @@ BT::NodeStatus UndockRobotAction::onStart()
   goal.dock_type = dock_type;
 
   RCLCPP_INFO(node_->get_logger(),
-    "[UndockRobot] Sending goal: dock_type=%s", dock_type.c_str());
+    "[Undock] Sending goal: dock_type=%s", dock_type.c_str());
 
   auto send_goal_options = rclcpp_action::Client<UndockRobot>::SendGoalOptions();
   send_goal_options.result_callback =
@@ -44,40 +44,40 @@ BT::NodeStatus UndockRobotAction::onStart()
 
   auto future = action_client_->async_send_goal(goal, send_goal_options);
   if (future.wait_for(std::chrono::seconds(15)) != std::future_status::ready) {
-    RCLCPP_ERROR(node_->get_logger(), "[UndockRobot] Failed to send goal");
+    RCLCPP_ERROR(node_->get_logger(), "[Undock] Failed to send goal");
     return BT::NodeStatus::FAILURE;
   }
 
   goal_handle_ = future.get();
   if (!goal_handle_) {
-    RCLCPP_ERROR(node_->get_logger(), "[UndockRobot] Goal was rejected");
+    RCLCPP_ERROR(node_->get_logger(), "[Undock] Goal was rejected");
     return BT::NodeStatus::FAILURE;
   }
 
-  RCLCPP_INFO(node_->get_logger(), "[UndockRobot] Goal accepted");
+  RCLCPP_INFO(node_->get_logger(), "[Undock] Goal accepted");
   return BT::NodeStatus::RUNNING;
 }
 
-BT::NodeStatus UndockRobotAction::onRunning()
+BT::NodeStatus UndockAction::onRunning()
 {
   if (!goal_done_) {
     return BT::NodeStatus::RUNNING;
   }
 
   if (!goal_success_) {
-    RCLCPP_WARN(node_->get_logger(), "[UndockRobot] Failed");
+    RCLCPP_WARN(node_->get_logger(), "[Undock] Failed");
     return BT::NodeStatus::FAILURE;
   }
   
-  RCLCPP_INFO(node_->get_logger(), "[UndockRobot] Succeeded");
+  RCLCPP_INFO(node_->get_logger(), "[Undock] Succeeded");
   return BT::NodeStatus::SUCCESS;
 }
 
-void UndockRobotAction::onHalted()
+void UndockAction::onHalted()
 {
   if (goal_handle_) {
     action_client_->async_cancel_goal(goal_handle_);
-    RCLCPP_INFO(node_->get_logger(), "[UndockRobot] Halted, goal cancelled");
+    RCLCPP_INFO(node_->get_logger(), "[Undock] Halted, goal cancelled");
   }
   goal_handle_ = nullptr;
   action_client_.reset();
