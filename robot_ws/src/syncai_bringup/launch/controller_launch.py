@@ -29,6 +29,17 @@ def _generate_namespaced_params(params_file, robot_id):
         costmap = params['local_costmap']['local_costmap']['ros__parameters']
         costmap['global_frame'] = robot_id + '/odom'
         costmap['robot_base_frame'] = robot_id + '/base_link'
+        # Fix keepout_filter topic: resolve to absolute namespace path
+        keepout = costmap.get('keepout_filter', {})
+        if 'filter_info_topic' in keepout:
+            keepout['filter_info_topic'] = '/' + robot_id + '/costmap_filter_info'
+
+        # Fix speed_filter topic: resolve to absolute namespace path
+        speed = costmap.get('speed_filter', {})
+        if 'filter_info_topic' in speed:
+            speed['filter_info_topic'] = '/' + robot_id + '/speed_filter_info'
+        speed['speed_limit_topic'] = '/' + robot_id + '/speed_limit'
+
         # Fix scan topic: sub-node resolves relative 'scan' to /<ns>/local_costmap/scan
         for layer_key in ['voxel_layer', 'obstacle_layer']:
             layer = costmap.get(layer_key, {})
@@ -36,6 +47,13 @@ def _generate_namespaced_params(params_file, robot_id):
                 src = layer.get(src_name, {})
                 if src.get('topic') == 'scan':
                     src['topic'] = '/' + robot_id + '/scan'
+
+    # Fix FollowPath speed_limit_topic: RPPC subscribes on controller_server namespace,
+    # must match the absolute topic that SpeedFilter publishes on.
+    controller = params.get('controller_server', {}).get('ros__parameters', {})
+    follow_path = controller.get('FollowPath', {})
+    if follow_path:
+        follow_path['speed_limit_topic'] = '/' + robot_id + '/speed_limit'
 
     # Wrap under namespace so the namespaced node can find its params
     namespaced_params = {robot_id: params}

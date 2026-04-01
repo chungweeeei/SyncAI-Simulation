@@ -1,7 +1,6 @@
 import os
 import threading
 from contextlib import asynccontextmanager
-
 import structlog
 import uvicorn
 from fastapi import FastAPI
@@ -42,6 +41,7 @@ def create_app(
     app.include_router(init_task_router(task_repo=task_repo, robot_gateway=robot_gateway, robot_id=robot_id))
     app.include_router(init_robot_state_router(robot_repo=robot_repo, task_repo=task_repo))
     app.include_router(init_map_router(map_name=map_name))
+
     return app
 
 

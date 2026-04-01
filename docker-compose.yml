@@ -61,6 +61,11 @@ services:
       - SYNCAI_DATA_DIR=/home/ubuntu/data
       - SYNCAI_API_KEY=${SYNCAI_API_KEY}
 
+      # agent settings
+      - SYNCAI_LLM_PROVIDER=${SYNCAI_LLM_PROVIDER}
+      - SYNCAI_LLM_MODEL=${SYNCAI_LLM_MODEL}
+      - SYNCAI_LLM_API_KEY=${SYNCAI_LLM_API_KEY}
+
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ubuntu/.Xauthority:ro
@@ -100,6 +105,11 @@ services:
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
       - SYNCAI_DATA_DIR=/home/ubuntu/data
       - SYNCAI_API_KEY=${SYNCAI_API_KEY}
+
+      # agent settings
+      - SYNCAI_LLM_PROVIDER=${SYNCAI_LLM_PROVIDER}
+      - SYNCAI_LLM_MODEL=${SYNCAI_LLM_MODEL}
+      - SYNCAI_LLM_API_KEY=${SYNCAI_LLM_API_KEY}
 
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw

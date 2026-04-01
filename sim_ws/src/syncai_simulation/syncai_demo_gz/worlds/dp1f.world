@@ -58,6 +58,13 @@
       </link>
     </model>
 
+    <!-- Water pool -->
+    <include>
+      <uri>package://syncai_demo_gz/models/water_pool</uri>
+      <name>water_pool_01</name>
+      <pose>7.0 22.85 0 0 0 0</pose>
+    </include>
+
     <!-- Charging station -->
     <include>
       <uri>package://syncai_demo_gz/models/charging_station</uri>
@@ -120,6 +127,13 @@
       <uri>package://syncai_demo_gz/models/vertex</uri>
       <name>point_06</name>
       <pose>10.0 12.0 0.0 0 0 0</pose>
+    </include>
+
+    <!-- Speed zone -->
+    <include>
+      <uri>package://syncai_demo_gz/models/speed_zone</uri>
+      <name>speed_zone_01</name>
+      <pose>4.5 12.75 0.0 0 0 0</pose>
     </include>
 
   </world>

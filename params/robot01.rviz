@@ -10,6 +10,9 @@ Panels:
         - /Map1/Topic1
         - /LaserScan1
         - /Path1
+        - /Map2/Topic1
+        - /Map3
+        - /Map3/Topic1
       Splitter Ratio: 0.5
     Tree Height: 196
   - Class: rviz_common/Selection
@@ -178,6 +181,20 @@ Visualization Manager:
         Value: /robot01/plan
       Value: true
     - Class: rviz_default_plugins/Image
+      Enabled: true
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Image
+      Normalize Range: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /camera
+      Value: true
+    - Class: rviz_default_plugins/Image
       Enabled: false
       Max Value: 1
       Median window: 5
@@ -191,19 +208,51 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: /camera
       Value: false
-    - Class: rviz_default_plugins/Image
+    - Alpha: 0.699999988079071
+      Binary representation: false
+      Binary threshold: 100
+      Class: rviz_default_plugins/Map
+      Color Scheme: map
+      Draw Behind: false
       Enabled: true
-      Max Value: 1
-      Median window: 5
-      Min Value: 0
-      Name: Image
-      Normalize Range: true
+      Name: Map
       Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot01/filter_mask
+      Update Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /camera
+        Value: /robot01/filter_mask_updates
+      Use Timestamp: false
+      Value: true
+    - Alpha: 0.699999988079071
+      Binary representation: false
+      Binary threshold: 100
+      Class: rviz_default_plugins/Map
+      Color Scheme: map
+      Draw Behind: false
+      Enabled: true
+      Name: Map
+      Topic:
+        Depth: 5
+        Durability Policy: Transient Local
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot01/speed_filter_mask
+      Update Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /robot01/speed_filter_mask_updates
+      Use Timestamp: false
       Value: true
   Enabled: true
   Global Options:
@@ -251,25 +300,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 15.803006172180176
+      Distance: 20.593059539794922
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -2.3037426471710205
-        Y: 2.306164026260376
-        Z: 1.3007868528366089
+        X: -2.7839949131011963
+        Y: 4.240653991699219
+        Z: 1.5691256523132324
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.4097964763641357
+      Pitch: 1.449796438217163
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 4.683568000793457
+      Yaw: 4.678567886352539
     Saved: ~
 Window Geometry:
   Displays:

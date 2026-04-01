@@ -1,0 +1,8 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Parallel success_count="1" failure_count="1">
+      <NavigateToPose x="{target_x}" y="{target_y}" yaw="{target_yaw}"/>
+      <Alert/>
+    </Parallel>
+  </BehaviorTree>
+</root>

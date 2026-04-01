@@ -6,6 +6,9 @@ namespace syncai_driver_manager
 DriverManagerNode::DriverManagerNode(const rclcpp::NodeOptions & options)
 : Node("syncai_driver_manager", options)
 {
+    timer_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+    service_cb_group_ = this->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+
     declare_parameters();
     get_parameters();
     init_pub_sub();
@@ -49,17 +52,28 @@ void DriverManagerNode::init_pub_sub()
     recharge_srv_ = this->create_service<std_srvs::srv::Trigger>(
         "recharge",
         std::bind(&DriverManagerNode::recharge_callback, this,
-                  std::placeholders::_1, std::placeholders::_2));
+                  std::placeholders::_1, std::placeholders::_2),
+        rclcpp::ServicesQoS(),
+        service_cb_group_);
+
+    set_battery_level_srv_ = this->create_service<syncai_common::srv::SetBatteryLevel>(
+        "set_battery_level",
+        std::bind(&DriverManagerNode::set_battery_level_callback, this,
+                  std::placeholders::_1, std::placeholders::_2),
+        rclcpp::ServicesQoS(),
+        service_cb_group_);
 
     auto period = std::chrono::duration<double>(1.0 / battery_publish_rate_);
     battery_timer_ = this->create_wall_timer(
         std::chrono::duration_cast<std::chrono::milliseconds>(period),
-        std::bind(&DriverManagerNode::battery_timer_callback, this)
+        std::bind(&DriverManagerNode::battery_timer_callback, this),
+        timer_cb_group_
     );
 }
 
 void DriverManagerNode::battery_timer_callback()
 {
+    std::lock_guard<std::mutex> lock(state_mutex_);
     if (is_charging_) {
         battery_level_ += battery_charge_rate_ / battery_publish_rate_;
         battery_level_ = std::min(100.0, battery_level_);
@@ -100,6 +114,7 @@ void DriverManagerNode::recharge_callback(
     const std::shared_ptr<std_srvs::srv::Trigger::Request> /*request*/,
     std::shared_ptr<std_srvs::srv::Trigger::Response> response)
 {
+    std::lock_guard<std::mutex> lock(state_mutex_);
     is_charging_ = !is_charging_;
     response->success = true;
     if (is_charging_) {
@@ -111,11 +126,35 @@ void DriverManagerNode::recharge_callback(
     }
 }
 
+void DriverManagerNode::set_battery_level_callback(
+    const std::shared_ptr<syncai_common::srv::SetBatteryLevel::Request> request,
+    std::shared_ptr<syncai_common::srv::SetBatteryLevel::Response> response)
+{
+    if (request->battery_level < 0.0 || request->battery_level > 100.0) {
+        response->success = false;
+        response->message = "Battery level must be between 0.0 and 100.0";
+        RCLCPP_WARN(this->get_logger(),
+            "[DriverManagerNode] set_battery_level rejected: %.1f out of range",
+            request->battery_level);
+        return;
+    }
+
+    std::lock_guard<std::mutex> lock(state_mutex_);
+    battery_level_ = request->battery_level;
+    response->success = true;
+    response->message = "Battery level set to " + std::to_string(request->battery_level);
+    RCLCPP_INFO(this->get_logger(),
+        "[DriverManagerNode] Battery level set to %.1f%%", request->battery_level);
+}
+
 }// namespace syncai_driver_manager
 
 int main(int argc, char ** argv){
     rclcpp::init(argc, argv);
-    rclcpp::spin(std::make_shared<syncai_driver_manager::DriverManagerNode>());
+    auto node = std::make_shared<syncai_driver_manager::DriverManagerNode>();
+    rclcpp::executors::MultiThreadedExecutor executor;
+    executor.add_node(node);
+    executor.spin();
     rclcpp::shutdown();
     return 0;
 }

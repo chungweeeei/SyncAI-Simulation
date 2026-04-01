@@ -1,9 +1,12 @@
 #ifndef SYNCAI_DRIVER_MANAGER__SYNCAI_DRIVER_MANAGER_HPP_
 #define SYNCAI_DRIVER_MANAGER__SYNCAI_DRIVER_MANAGER_HPP_
 
+#include <mutex>
+
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/battery_state.hpp>
 #include <std_srvs/srv/trigger.hpp>
+#include <syncai_common/srv/set_battery_level.hpp>
 
 namespace syncai_driver_manager
 {
@@ -21,15 +24,26 @@ private:
     void recharge_callback(
         const std::shared_ptr<std_srvs::srv::Trigger::Request> request,
         std::shared_ptr<std_srvs::srv::Trigger::Response> response);
+    void set_battery_level_callback(
+        const std::shared_ptr<syncai_common::srv::SetBatteryLevel::Request> request,
+        std::shared_ptr<syncai_common::srv::SetBatteryLevel::Response> response);
 
     // Publishers
     rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr battery_pub_;
 
     // Services
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr recharge_srv_;
+    rclcpp::Service<syncai_common::srv::SetBatteryLevel>::SharedPtr set_battery_level_srv_;
 
     // Timers
     rclcpp::TimerBase::SharedPtr battery_timer_;
+
+    // Callback groups
+    rclcpp::CallbackGroup::SharedPtr timer_cb_group_;
+    rclcpp::CallbackGroup::SharedPtr service_cb_group_;
+
+    // Thread safety
+    std::mutex state_mutex_;
 
     // Battery parameters
     double battery_level_;

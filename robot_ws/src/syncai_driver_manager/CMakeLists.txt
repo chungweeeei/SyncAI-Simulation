@@ -9,6 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
+find_package(syncai_common REQUIRED)
 
 add_executable(syncai_driver_manager src/syncai_driver_manager.cpp)
 
@@ -23,6 +24,7 @@ ament_target_dependencies(syncai_driver_manager
   rclcpp
   sensor_msgs
   std_srvs
+  syncai_common
 )
 
 install(

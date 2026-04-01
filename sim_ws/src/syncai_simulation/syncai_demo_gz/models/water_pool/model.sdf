@@ -1,0 +1,77 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <model name="water_pool">
+    <static>true</static>
+
+    <link name="base_link">
+      <!-- Water surface -->
+      <visual name="water_visual">
+        <pose>0 0 0.025 0 0 0</pose>
+        <geometry>
+          <box><size>0.6 1.5 0.05</size></box>
+        </geometry>
+        <material>
+          <ambient>0.1 0.3 0.6 0.8</ambient>
+          <diffuse>0.15 0.4 0.7 0.8</diffuse>
+          <specular>0.4 0.4 0.4 1</specular>
+        </material>
+      </visual>
+
+      <!-- Rim - long side 1 (+X) -->
+      <visual name="rim_px">
+        <pose>0.32 0 0.03 0 0 0</pose>
+        <geometry>
+          <box><size>0.04 1.54 0.06</size></box>
+        </geometry>
+        <material>
+          <ambient>0.5 0.5 0.5 1</ambient>
+          <diffuse>0.6 0.6 0.6 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Rim - long side 2 (-X) -->
+      <visual name="rim_nx">
+        <pose>-0.32 0 0.03 0 0 0</pose>
+        <geometry>
+          <box><size>0.04 1.54 0.06</size></box>
+        </geometry>
+        <material>
+          <ambient>0.5 0.5 0.5 1</ambient>
+          <diffuse>0.6 0.6 0.6 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Rim - short side 1 (+Y) -->
+      <visual name="rim_py">
+        <pose>0 0.77 0.03 0 0 0</pose>
+        <geometry>
+          <box><size>0.68 0.04 0.06</size></box>
+        </geometry>
+        <material>
+          <ambient>0.5 0.5 0.5 1</ambient>
+          <diffuse>0.6 0.6 0.6 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Rim - short side 2 (-Y) -->
+      <visual name="rim_ny">
+        <pose>0 -0.77 0.03 0 0 0</pose>
+        <geometry>
+          <box><size>0.68 0.04 0.06</size></box>
+        </geometry>
+        <material>
+          <ambient>0.5 0.5 0.5 1</ambient>
+          <diffuse>0.6 0.6 0.6 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Collision for the rim -->
+      <collision name="rim_collision">
+        <pose>0 0 0.03 0 0 0</pose>
+        <geometry>
+          <box><size>0.68 1.54 0.06</size></box>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>
