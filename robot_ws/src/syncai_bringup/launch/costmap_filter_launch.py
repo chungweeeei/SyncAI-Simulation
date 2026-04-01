@@ -30,7 +30,12 @@ def generate_launch_description():
     autostart = LaunchConfiguration('autostart')
     params_file = LaunchConfiguration('params_file')
 
-    lifecycle_nodes = ['filter_mask_server', 'costmap_filter_info_server']
+    lifecycle_nodes = [
+        'filter_mask_server',
+        'costmap_filter_info_server',
+        'speed_mask_server',
+        'speed_filter_info_server',
+    ]
 
     replaced_params_file = ReplaceString(
         source_file=params_file,
@@ -92,6 +97,23 @@ def generate_launch_description():
                 package='nav2_map_server',
                 executable='costmap_filter_info_server',
                 name='costmap_filter_info_server',
+                output='screen',
+                parameters=[configured_params],
+                arguments=['--ros-args', '--log-level', 'info'],
+            ),
+            Node(
+                package='nav2_map_server',
+                executable='map_server',
+                name='speed_mask_server',
+                output='screen',
+                parameters=[configured_params],
+                remappings=[('map', 'speed_filter_mask')],
+                arguments=['--ros-args', '--log-level', 'info'],
+            ),
+            Node(
+                package='nav2_map_server',
+                executable='costmap_filter_info_server',
+                name='speed_filter_info_server',
                 output='screen',
                 parameters=[configured_params],
                 arguments=['--ros-args', '--log-level', 'info'],

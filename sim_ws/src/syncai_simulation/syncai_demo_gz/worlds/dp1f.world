@@ -129,5 +129,12 @@
       <pose>10.0 12.0 0.0 0 0 0</pose>
     </include>
 
+    <!-- Speed zone -->
+    <include>
+      <uri>package://syncai_demo_gz/models/speed_zone</uri>
+      <name>speed_zone_01</name>
+      <pose>4.5 12.75 0.0 0 0 0</pose>
+    </include>
+
   </world>
 </sdf>

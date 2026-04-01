@@ -1,0 +1,4 @@
+float64 battery_level
+---
+bool success
+string message
