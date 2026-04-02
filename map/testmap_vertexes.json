@@ -1,34 +1,74 @@
 [
   {
     "name": "meeting_room",
-    "pose": { "x": 0.0, "y": -8.0, "theta": 0.0 }
+    "pose": {
+      "x": 0.0,
+      "y": -8.0,
+      "theta": 0.0
+    }
   },
   {
     "name": "pantry",
-    "pose": { "x": -3.0, "y": -2.0, "theta": 0.0 }
+    "pose": {
+      "x": -3.0,
+      "y": -2.0,
+      "theta": 0.0
+    }
   },
   {
     "name": "elevator_waiting_point",
-    "pose": { "x": -3.0, "y": 3.0, "theta": 0.0 }
+    "pose": {
+      "x": -3.0,
+      "y": 3.0,
+      "theta": 0.0
+    }
   },
   {
     "name": "waiting_point_01",
-    "pose": { "x": 0.0, "y": 6.0, "theta": 0.0 }
+    "pose": {
+      "x": 0.0,
+      "y": 6.0,
+      "theta": 0.0
+    }
   },
   {
     "name": "waiting_point_02",
-    "pose": { "x": 5.0, "y": 9.0, "theta": 0.0 }
+    "pose": {
+      "x": 5.0,
+      "y": 9.0,
+      "theta": 0.0
+    }
   },
-    {
+  {
     "name": "front_door",
-    "pose": { "x": 5.0, "y": 2.0, "theta": 0.0 }
+    "pose": {
+      "x": 5.0,
+      "y": 2.0,
+      "theta": 0.0
+    }
   },
   {
     "name": "waiting_point_03",
-    "pose": { "x": 5.0, "y": -3.0, "theta": 0.0 }
+    "pose": {
+      "x": 5.0,
+      "y": -3.0,
+      "theta": 0.0
+    }
   },
   {
     "name": "charging_station",
-    "pose": { "x": 0.0, "y": 10.1, "theta": 90.0 }
+    "pose": {
+      "x": 0.0,
+      "y": 10.1,
+      "theta": 90.0
+    }
+  },
+  {
+    "name": "elevator",
+    "pose": {
+      "x": -6.0,
+      "y": 2.7,
+      "theta": 0.0
+    }
   }
 ]

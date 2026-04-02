@@ -25,17 +25,17 @@ from syncai_robot_api.temporal.shared import get_workflow_id
 # --- Request models (from external client) ---
 
 class StepRequest(BaseModel):
-    id: str = Field(..., description="Unique identifier of the step", example="step1")
-    name: str = Field(..., description="Name of the step", example="Move to point")
-    type: StepType = Field(..., description="Type of the step", example="MOVE")
+    id: str = Field(..., description="Unique identifier of the step", examples=["step1"])
+    name: str = Field(..., description="Name of the step", examples=["Move to point"])
+    type: StepType = Field(..., description="Type of the step", examples=["MOVE"])
     params: MoveParams | WaitParams | DoorParams | ChargeParams = Field(..., description="Parameters for the step")
     
 class TaskPayloadRequest(BaseModel):
     steps: List[StepRequest]
 
 class TaskRequest(BaseModel):
-    action: TaskActionType = Field(..., description="Type of the task action", example="TASK")
-    id: str = Field(..., description="Unique identifier of the task", example="task123")
+    action: TaskActionType = Field(..., description="Type of the task action", examples=["TASK"])
+    id: str = Field(..., description="Unique identifier of the task", examples=["task123"])
     timestamp: float = Field(..., description="Timestamp of the task creation")
     payload: TaskPayloadRequest = Field(..., description="Payload containing the task steps")
 
@@ -44,17 +44,17 @@ class TaskResponse(BaseModel):
     id: str = Field(
         ...,
         description="Unique identifier of the task",
-        example="task123"
-    ),
+        examples=["task123"],
+    )
     status: TaskStatus = Field(
         ...,
         description="Current status of the task",
-        example="PENDING"
+        examples=["PENDING"],
     )
     message: str = Field(
         ...,
         description="Additional message or error information",
-        example="Task created successfully"
+        examples=["Task created successfully"],
     )
 
 

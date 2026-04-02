@@ -30,7 +30,8 @@ services:
       - ./sim_ws:/home/ubuntu/sim_ws
       - ./data:/home/ubuntu/data
 
-    
+    ports:
+      - 3000:3000
     networks:
       - syncai
     stdin_open: true

@@ -9,15 +9,12 @@ SESSION_NAME="syncai"
 # Kill existing session if any
 byobu kill-session -t "$SESSION_NAME" 2>/dev/null
 
-# ---------- Window 0: ekf / map_server ----------
+# ---------- Window 0: map_server / costmap_filter ----------
 byobu new-session -d -s "$SESSION_NAME" -n "localization"
 byobu send-keys -t "$SESSION_NAME:localization" \
-  "ros2 launch syncai_bringup ekf_launch.py" Enter
-byobu split-window -v -t "$SESSION_NAME:localization"
-byobu send-keys -t "$SESSION_NAME:localization.1" \
   "ros2 launch syncai_bringup map_server_launch.py" Enter
 byobu split-window -v -t "$SESSION_NAME:localization"
-byobu send-keys -t "$SESSION_NAME:localization.2" \
+byobu send-keys -t "$SESSION_NAME:localization.1" \
   "ros2 launch syncai_bringup costmap_filter_launch.py" Enter
 
 # ---------- Window 1: amcl ----------
@@ -58,11 +55,11 @@ byobu send-keys -t "$SESSION_NAME:api_driver.1" \
   "ros2 launch syncai_driver_manager syncai_driver_manager.launch.py" Enter
 
 # ---------- Window 5: robot_state / shell ----------
-byobu new-window -t "$SESSION_NAME" -n "state_shell"
-byobu send-keys -t "$SESSION_NAME:state_shell" \
+byobu new-window -t "$SESSION_NAME" -n "robot_state"
+byobu send-keys -t "$SESSION_NAME:robot_state" \
   "ros2 launch syncai_robot_state syncai_robot_state.launch.py" Enter
-byobu split-window -v -t "$SESSION_NAME:state_shell"
-byobu send-keys -t "$SESSION_NAME:state_shell.1" \
+byobu split-window -v -t "$SESSION_NAME:robot_state"
+byobu send-keys -t "$SESSION_NAME:robot_state.1" \
   "" Enter
 
 # Go back to window 0 and attach
