@@ -29,25 +29,25 @@ class StepStatus(str, Enum):
     CANCELLED = "CANCELLED"
 
 class MoveParams(BaseModel):
-    x: float = Field(..., description="X coordinate for movement", example=0.0)
-    y: float = Field(..., description="Y coordinate for movement", example=0.0)
-    r: float = Field(..., description="Rotation in degrees", example=0.0)
+    x: float = Field(..., description="X coordinate for movement", examples=[0.0])
+    y: float = Field(..., description="Y coordinate for movement", examples=[0.0])
+    r: float = Field(..., description="Rotation in degrees", examples=[0.0])
 
 class WaitParams(BaseModel):
-    durationSec: float = Field(..., description="Duration to wait in seconds", example=5.0)
+    durationSec: float = Field(..., description="Duration to wait in seconds", examples=[5.0])
 
 class DoorParams(BaseModel):
-    open: bool = Field(..., description="Whether to open (true) or close (false) the door", example=True)
+    open: bool = Field(..., description="Whether to open (true) or close (false) the door", examples=[True])
 
 class ChargeParams(BaseModel):
-    x: float = Field(..., description="X coordinate near charging station", example=-2.0)
-    y: float = Field(..., description="Y coordinate near charging station", example=5.0)
-    r: float = Field(0.0, description="Rotation in degrees", example=0.0)
+    x: float = Field(..., description="X coordinate near charging station", examples=[-2.0])
+    y: float = Field(..., description="Y coordinate near charging station", examples=[5.0])
+    r: float = Field(0.0, description="Rotation in degrees", examples=[0.0])
 
 class NavigateWithAlertParams(BaseModel):
-    x: float = Field(..., description="X coordinate for movement", example=0.0)
-    y: float = Field(..., description="Y coordinate for movement", example=0.0)
-    r: float = Field(0.0, description="Rotation in degrees", example=0.0)
+    x: float = Field(..., description="X coordinate for movement", examples=[0.0])
+    y: float = Field(..., description="Y coordinate for movement", examples=[0.0])
+    r: float = Field(0.0, description="Rotation in degrees", examples=[0.0])
 
 # --- Internal models (with status tracking) ---
 class Step(BaseModel):
