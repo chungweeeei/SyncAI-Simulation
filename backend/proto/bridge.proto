@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package bridge;
+
+service BridgeService {
+  rpc SubscribeRobotState (SubscribeRequest) returns (stream RobotState);
+}
+
+message SubscribeRequest {}
+
+message Pose {
+  float x = 1;
+  float y = 2;
+  float yaw = 3;
+}
+
+message Twist {
+  float vx = 1;
+  float vy = 2;
+  float omega = 3;
+}
+
+message Battery {
+  float percentage = 1;
+  float voltage = 2;
+}
+
+message RobotState {
+  string robot_id = 1;
+  string robot_name = 2;
+  string model = 3;
+  string map = 4;
+  Pose pose = 5;
+  Twist twist = 6;
+  Battery battery = 7;
+  int64 timestamp = 8;
+}

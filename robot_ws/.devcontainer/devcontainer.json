@@ -1,0 +1,49 @@
+{
+  "name": "SyncAI Robot WS (ROS 2 Jazzy)",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/ubuntu/robot_ws,type=bind",
+  "workspaceFolder": "/home/ubuntu/robot_ws",
+  "remoteUser": "ubuntu",
+  "containerEnv": {
+    "RMW_IMPLEMENTATION": "rmw_cyclonedds_cpp",
+    "SYNCAI_DATA_DIR": "/home/ubuntu/data"
+  },
+  "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/home/ubuntu/.claude,type=bind,consistency=cached"
+  ],
+  "runArgs": [
+    "--network=host",
+    "--ipc=host",
+    "--pid=host"
+  ],
+  "postCreateCommand": "bash -c 'source /opt/ros/jazzy/setup.bash && cd /home/ubuntu/robot_ws && rosdep install --from-paths src --ignore-src -r -y && colcon build --symlink-install'",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-iot.vscode-ros",
+        "ms-python.python",
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "redhat.vscode-yaml",
+        "streetsidesoftware.code-spell-checker",
+        "anthropics.claude-code"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/bin/python3",
+        "C_Cpp.default.includePath": [
+          "/opt/ros/jazzy/include/**",
+          "${workspaceFolder}/install/**/include/**"
+        ],
+        "files.associations": {
+          "*.launch.py": "python",
+          "*.msg": "ros.msg",
+          "*.srv": "ros.srv"
+        },
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}
