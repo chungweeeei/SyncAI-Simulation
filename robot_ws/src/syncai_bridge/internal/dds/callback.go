@@ -23,5 +23,5 @@ func goOnDataAvailable(readerHandle C.int) {
 	if !ok {
 		return
 	}
-	b.onDataAvailable()
+	b.onDataAvailable(handle)
 }

@@ -25,19 +25,16 @@ type Bridge interface {
 	Connect() error
 	Disconnect() error
 	Status() BridgeStatus
-	DeviceID() string
-	Protocol() string
 	OnData(callback DataCallback)
-	HealthCheck() bool
 }
 
 // BaseBridge provides shared fields and helpers for Bridge implementations.
 type BaseBridge struct {
-	deviceID  string
-	protocol  string
-	status    BridgeStatus
-	statusMu  sync.RWMutex
-	callbacks []DataCallback
+	deviceID   string
+	protocol   string
+	status     BridgeStatus
+	statusMu   sync.RWMutex
+	callbacks  []DataCallback
 	callbackMu sync.RWMutex
 }
 
@@ -49,9 +46,6 @@ func NewBaseBridge(deviceID, protocol string) BaseBridge {
 		status:   Disconnected,
 	}
 }
-
-func (b *BaseBridge) DeviceID() string { return b.deviceID }
-func (b *BaseBridge) Protocol() string { return b.protocol }
 
 func (b *BaseBridge) Status() BridgeStatus {
 	b.statusMu.RLock()

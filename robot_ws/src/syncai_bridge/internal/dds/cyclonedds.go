@@ -19,13 +19,24 @@ static void on_data_available_cb(dds_entity_t reader, void *arg) {
 }
 
 // Helper: create a participant on the given domain.
-static dds_entity_t create_participant(int32_t domain_id) {
+// If config_xml is non-NULL and non-empty, creates a domain with that XML
+// configuration before creating the participant.
+static dds_entity_t create_participant_with_config(int32_t domain_id, const char *config_xml) {
+    if (config_xml && config_xml[0] != '\0') {
+        dds_entity_t domain = dds_create_domain((dds_domainid_t)domain_id, config_xml);
+        if (domain < 0) return domain;
+    }
     return dds_create_participant((dds_domainid_t)domain_id, NULL, NULL);
 }
 
 // Helper: create a topic for RobotState_.
 static dds_entity_t create_robot_state_topic(dds_entity_t participant, const char *topic_name) {
     return dds_create_topic(participant, &syncai_common_msg_dds__RobotState__desc, topic_name, NULL, NULL);
+}
+
+// Helper: create a topic with an arbitrary descriptor.
+static dds_entity_t create_topic(dds_entity_t participant, const dds_topic_descriptor_t *desc, const char *topic_name) {
+    return dds_create_topic(participant, desc, topic_name, NULL, NULL);
 }
 
 // Helper: create a reader with BEST_EFFORT, VOLATILE QoS and a listener.
@@ -99,8 +110,15 @@ type DDSReader struct {
 }
 
 // CreateParticipant creates a DDS domain participant.
-func CreateParticipant(domainID int32) (*DDSParticipant, error) {
-	h := C.create_participant(C.int32_t(domainID))
+// If configXML is non-empty, the domain is created with that XML configuration.
+func CreateParticipant(domainID int32, configXML string) (*DDSParticipant, error) {
+	var cConfig *C.char
+	if configXML != "" {
+		cConfig = C.CString(configXML)
+		defer C.free(unsafe.Pointer(cConfig))
+	}
+
+	h := C.create_participant_with_config(C.int32_t(domainID), cConfig)
 	if h < 0 {
 		return nil, fmt.Errorf("dds_create_participant failed: %d", h)
 	}
