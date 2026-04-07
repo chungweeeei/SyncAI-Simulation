@@ -10,25 +10,25 @@ import { join } from 'path';
 import { RobotService } from './robot.service';
 import { RobotState } from './interfaces/robot-state.interface';
 
-interface BridgeServiceClient extends grpc.Client {
+interface RobotStateServiceClient extends grpc.Client {
   subscribeRobotState(
     request: Record<string, never>,
   ): grpc.ClientReadableStream<RobotState>;
 }
 
-interface BridgeProtoDefinition {
+interface RobotStateProtoDefinition {
   bridge: {
-    BridgeService: new (
+    RobotStateService: new (
       address: string,
       credentials: grpc.ChannelCredentials,
-    ) => BridgeServiceClient;
+    ) => RobotStateServiceClient;
   };
 }
 
 @Injectable()
 export class RobotGrpcClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(RobotGrpcClient.name);
-  private client: BridgeServiceClient | null = null;
+  private client: RobotStateServiceClient | null = null;
   private stream: grpc.ClientReadableStream<RobotState> | null = null;
   private isShuttingDown = false;
   private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -63,12 +63,12 @@ export class RobotGrpcClient implements OnModuleInit, OnModuleDestroy {
     });
     const proto = grpc.loadPackageDefinition(
       packageDefinition,
-    ) as unknown as BridgeProtoDefinition;
+    ) as unknown as RobotStateProtoDefinition;
 
     // default to localhost:50051 if not set in environment variables
-    const bridgeAddress = process.env.BRIDGE_GRPC_ADDRESS ?? 'syncai-robot01:50051';
+    const bridgeAddress = process.env.BRIDGE_GRPC_ADDRESS ?? 'localhost:50051';
 
-    this.client = new proto.bridge.BridgeService(
+    this.client = new proto.bridge.RobotStateService(
       bridgeAddress,
       grpc.credentials.createInsecure(),
     );
@@ -109,12 +109,11 @@ export class RobotGrpcClient implements OnModuleInit, OnModuleDestroy {
   private subscribe(): void {
     if (this.isShuttingDown || !this.client) return;
 
-    this.logger.log('Subscribing to BridgeService.SubscribeRobotState...');
+    this.logger.log('Subscribing to RobotStateService.SubscribeRobotState...');
 
     this.stream = this.client.subscribeRobotState({});
 
     this.stream.on('data', (data: RobotState) => {
-      console.log('Received robot state update:', data);
       this.robotService.updateState(data);
     });
 

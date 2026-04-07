@@ -2,10 +2,8 @@ package grpcserver
 
 import (
 	"log/slog"
-	"net"
 	"sync/atomic"
 
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -13,18 +11,20 @@ import (
 	pb "github.com/nicosyncai/syncai-bridge/internal/grpcserver/pb"
 )
 
-// BridgeServer implements pb.BridgeServiceServer with single-client streaming.
-type BridgeServer struct {
-	pb.UnimplementedBridgeServiceServer
+// RobotStateServer implements pb.RobotStateServiceServer with single-client streaming.
+type RobotStateServer struct {
+	pb.UnimplementedRobotStateServiceServer
 
 	logger   *slog.Logger
 	dataCh   chan *pb.RobotState
+
+	// atomic.Bool provides thread-safe boolean operations without a mutex.
 	hasClient atomic.Bool
 }
 
-// NewBridgeServer creates a new BridgeServer.
-func NewBridgeServer(logger *slog.Logger) *BridgeServer {
-	return &BridgeServer{
+// NewRobotStateServer creates a new RobotStateServer.
+func NewRobotStateServer(logger *slog.Logger) *RobotStateServer {
+	return &RobotStateServer{
 		logger: logger,
 		dataCh: make(chan *pb.RobotState, 64),
 	}
@@ -32,9 +32,9 @@ func NewBridgeServer(logger *slog.Logger) *BridgeServer {
 
 // SubscribeRobotState streams robot state to the client.
 // Only one client is allowed at a time.
-func (s *BridgeServer) SubscribeRobotState(
+func (s *RobotStateServer) SubscribeRobotState(
 	_ *pb.SubscribeRequest,
-	stream pb.BridgeService_SubscribeRobotStateServer,
+	stream pb.RobotStateService_SubscribeRobotStateServer,
 ) error {
 	if !s.hasClient.CompareAndSwap(false, true) {
 		return status.Error(codes.AlreadyExists, "a client is already subscribed")
@@ -62,24 +62,11 @@ func (s *BridgeServer) SubscribeRobotState(
 
 // Publish sends a RobotState to the connected client.
 // Non-blocking: drops the message if the channel is full.
-func (s *BridgeServer) Publish(state *pb.RobotState) {
+func (s *RobotStateServer) Publish(state *pb.RobotState) {
 	select {
 	case s.dataCh <- state:
 	default:
 	}
-}
-
-// Start creates a listener and serves gRPC. Returns the server for shutdown.
-func Start(addr string, srv *BridgeServer) (*grpc.Server, error) {
-	lis, err := net.Listen("tcp", addr)
-	if err != nil {
-		return nil, err
-	}
-	gs := grpc.NewServer()
-	pb.RegisterBridgeServiceServer(gs, srv)
-	srv.logger.Info("gRPC server listening", "address", addr)
-	go gs.Serve(lis)
-	return gs, nil
 }
 
 // DDSToProto converts a DDS RobotState to the proto RobotState.

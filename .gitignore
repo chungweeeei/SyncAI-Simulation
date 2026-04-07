@@ -64,3 +64,6 @@ htmlcov/
 Thumbs.db
 
 .env
+
+# Database
+data/db_data/

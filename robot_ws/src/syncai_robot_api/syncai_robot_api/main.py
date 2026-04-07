@@ -48,14 +48,14 @@ class SyncAIRobotAPI(Node):
         task_repo = init_task_repo(logger=logger)
 
         # Register gateways
-        agent_gateway = init_agent_gateway(logger=logger)
+        # agent_gateway = init_agent_gateway(logger=logger)
         robot_gateway = init_robot_gateway(logger=logger, node=self, robot_id=robot_config.robot_id)
         entity_gateway = init_entity_gateway(logger=logger)
 
         # Register subscribers
         init_robot_state_subscriber(logger=logger, node=self, robot_repo=robot_repo)
         # Register jobs
-        init_send_robot_state_job(logger=logger, robot_repo=robot_repo, task_repo=task_repo, agent_gateway=agent_gateway)
+        # init_send_robot_state_job(logger=logger, robot_repo=robot_repo, task_repo=task_repo, agent_gateway=agent_gateway)
 
         # Start Temporal Worker (replaces TaskExecutorJob)
         start_temporal_worker(logger=logger, robot_gateway=robot_gateway, task_repo=task_repo, robot_id=robot_config.robot_id)

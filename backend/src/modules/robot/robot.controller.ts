@@ -7,11 +7,11 @@ export class RobotController {
 
   @Get('state')
   getState() {
-    const state = this.robotService.getState();
+    const state = this.robotService.getVda5050State();
     if (!state) {
       throw new NotFoundException('Robot state not available');
     }
-    return { data: state };
+    return state;
   }
 
   @Get('config')

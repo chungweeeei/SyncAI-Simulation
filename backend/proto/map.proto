@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package bridge;
+
+option go_package = "github.com/nicosyncai/syncai-bridge/internal/grpcserver/pb";
+
+service MapService {
+  rpc GetMap (GetMapRequest) returns (MapResponse);
+}
+
+message GetMapRequest {}
+
+message MapPose {
+  float x = 1;
+  float y = 2;
+  float yaw = 3;
+}
+
+message MapMetadata {
+  string map_id = 1;
+  float resolution = 2;
+  uint32 width = 3;
+  uint32 height = 4;
+  MapPose origin = 5;
+}
+
+message Vertex {
+  string name = 1;
+  MapPose pose = 2;
+}
+
+message MapResponse {
+  MapMetadata map_metadata = 1;
+  repeated Vertex vertexes = 2;
+}

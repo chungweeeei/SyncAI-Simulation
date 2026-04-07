@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package bridge;
 
-service BridgeService {
+service RobotStateService {
   rpc SubscribeRobotState (SubscribeRequest) returns (stream RobotState);
 }
 

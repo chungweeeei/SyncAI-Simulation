@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v3.21.12
-// source: bridge.proto
+// source: proto/robot_state.proto
 
 package pb
 
@@ -29,7 +29,7 @@ type SubscribeRequest struct {
 
 func (x *SubscribeRequest) Reset() {
 	*x = SubscribeRequest{}
-	mi := &file_bridge_proto_msgTypes[0]
+	mi := &file_proto_robot_state_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -41,7 +41,7 @@ func (x *SubscribeRequest) String() string {
 func (*SubscribeRequest) ProtoMessage() {}
 
 func (x *SubscribeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_bridge_proto_msgTypes[0]
+	mi := &file_proto_robot_state_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -54,7 +54,7 @@ func (x *SubscribeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubscribeRequest.ProtoReflect.Descriptor instead.
 func (*SubscribeRequest) Descriptor() ([]byte, []int) {
-	return file_bridge_proto_rawDescGZIP(), []int{0}
+	return file_proto_robot_state_proto_rawDescGZIP(), []int{0}
 }
 
 type Pose struct {
@@ -68,7 +68,7 @@ type Pose struct {
 
 func (x *Pose) Reset() {
 	*x = Pose{}
-	mi := &file_bridge_proto_msgTypes[1]
+	mi := &file_proto_robot_state_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -80,7 +80,7 @@ func (x *Pose) String() string {
 func (*Pose) ProtoMessage() {}
 
 func (x *Pose) ProtoReflect() protoreflect.Message {
-	mi := &file_bridge_proto_msgTypes[1]
+	mi := &file_proto_robot_state_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -93,7 +93,7 @@ func (x *Pose) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Pose.ProtoReflect.Descriptor instead.
 func (*Pose) Descriptor() ([]byte, []int) {
-	return file_bridge_proto_rawDescGZIP(), []int{1}
+	return file_proto_robot_state_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Pose) GetX() float32 {
@@ -128,7 +128,7 @@ type Twist struct {
 
 func (x *Twist) Reset() {
 	*x = Twist{}
-	mi := &file_bridge_proto_msgTypes[2]
+	mi := &file_proto_robot_state_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -140,7 +140,7 @@ func (x *Twist) String() string {
 func (*Twist) ProtoMessage() {}
 
 func (x *Twist) ProtoReflect() protoreflect.Message {
-	mi := &file_bridge_proto_msgTypes[2]
+	mi := &file_proto_robot_state_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -153,7 +153,7 @@ func (x *Twist) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Twist.ProtoReflect.Descriptor instead.
 func (*Twist) Descriptor() ([]byte, []int) {
-	return file_bridge_proto_rawDescGZIP(), []int{2}
+	return file_proto_robot_state_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Twist) GetVx() float32 {
@@ -187,7 +187,7 @@ type Battery struct {
 
 func (x *Battery) Reset() {
 	*x = Battery{}
-	mi := &file_bridge_proto_msgTypes[3]
+	mi := &file_proto_robot_state_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -199,7 +199,7 @@ func (x *Battery) String() string {
 func (*Battery) ProtoMessage() {}
 
 func (x *Battery) ProtoReflect() protoreflect.Message {
-	mi := &file_bridge_proto_msgTypes[3]
+	mi := &file_proto_robot_state_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -212,7 +212,7 @@ func (x *Battery) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Battery.ProtoReflect.Descriptor instead.
 func (*Battery) Descriptor() ([]byte, []int) {
-	return file_bridge_proto_rawDescGZIP(), []int{3}
+	return file_proto_robot_state_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *Battery) GetPercentage() float32 {
@@ -245,7 +245,7 @@ type RobotState struct {
 
 func (x *RobotState) Reset() {
 	*x = RobotState{}
-	mi := &file_bridge_proto_msgTypes[4]
+	mi := &file_proto_robot_state_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -257,7 +257,7 @@ func (x *RobotState) String() string {
 func (*RobotState) ProtoMessage() {}
 
 func (x *RobotState) ProtoReflect() protoreflect.Message {
-	mi := &file_bridge_proto_msgTypes[4]
+	mi := &file_proto_robot_state_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -270,7 +270,7 @@ func (x *RobotState) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RobotState.ProtoReflect.Descriptor instead.
 func (*RobotState) Descriptor() ([]byte, []int) {
-	return file_bridge_proto_rawDescGZIP(), []int{4}
+	return file_proto_robot_state_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *RobotState) GetRobotId() string {
@@ -329,11 +329,11 @@ func (x *RobotState) GetTimestamp() int64 {
 	return 0
 }
 
-var File_bridge_proto protoreflect.FileDescriptor
+var File_proto_robot_state_proto protoreflect.FileDescriptor
 
-const file_bridge_proto_rawDesc = "" +
+const file_proto_robot_state_proto_rawDesc = "" +
 	"\n" +
-	"\fbridge.proto\x12\x06bridge\"\x12\n" +
+	"\x17proto/robot_state.proto\x12\x06bridge\"\x12\n" +
 	"\x10SubscribeRequest\"4\n" +
 	"\x04Pose\x12\f\n" +
 	"\x01x\x18\x01 \x01(\x02R\x01x\x12\f\n" +
@@ -358,36 +358,36 @@ const file_bridge_proto_rawDesc = "" +
 	"\x04pose\x18\x05 \x01(\v2\f.bridge.PoseR\x04pose\x12#\n" +
 	"\x05twist\x18\x06 \x01(\v2\r.bridge.TwistR\x05twist\x12)\n" +
 	"\abattery\x18\a \x01(\v2\x0f.bridge.BatteryR\abattery\x12\x1c\n" +
-	"\ttimestamp\x18\b \x01(\x03R\ttimestamp2V\n" +
-	"\rBridgeService\x12E\n" +
+	"\ttimestamp\x18\b \x01(\x03R\ttimestamp2Z\n" +
+	"\x11RobotStateService\x12E\n" +
 	"\x13SubscribeRobotState\x12\x18.bridge.SubscribeRequest\x1a\x12.bridge.RobotState0\x01B<Z:github.com/nicosyncai/syncai-bridge/internal/grpcserver/pbb\x06proto3"
 
 var (
-	file_bridge_proto_rawDescOnce sync.Once
-	file_bridge_proto_rawDescData []byte
+	file_proto_robot_state_proto_rawDescOnce sync.Once
+	file_proto_robot_state_proto_rawDescData []byte
 )
 
-func file_bridge_proto_rawDescGZIP() []byte {
-	file_bridge_proto_rawDescOnce.Do(func() {
-		file_bridge_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_bridge_proto_rawDesc), len(file_bridge_proto_rawDesc)))
+func file_proto_robot_state_proto_rawDescGZIP() []byte {
+	file_proto_robot_state_proto_rawDescOnce.Do(func() {
+		file_proto_robot_state_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_robot_state_proto_rawDesc), len(file_proto_robot_state_proto_rawDesc)))
 	})
-	return file_bridge_proto_rawDescData
+	return file_proto_robot_state_proto_rawDescData
 }
 
-var file_bridge_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
-var file_bridge_proto_goTypes = []any{
+var file_proto_robot_state_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_proto_robot_state_proto_goTypes = []any{
 	(*SubscribeRequest)(nil), // 0: bridge.SubscribeRequest
 	(*Pose)(nil),             // 1: bridge.Pose
 	(*Twist)(nil),            // 2: bridge.Twist
 	(*Battery)(nil),          // 3: bridge.Battery
 	(*RobotState)(nil),       // 4: bridge.RobotState
 }
-var file_bridge_proto_depIdxs = []int32{
+var file_proto_robot_state_proto_depIdxs = []int32{
 	1, // 0: bridge.RobotState.pose:type_name -> bridge.Pose
 	2, // 1: bridge.RobotState.twist:type_name -> bridge.Twist
 	3, // 2: bridge.RobotState.battery:type_name -> bridge.Battery
-	0, // 3: bridge.BridgeService.SubscribeRobotState:input_type -> bridge.SubscribeRequest
-	4, // 4: bridge.BridgeService.SubscribeRobotState:output_type -> bridge.RobotState
+	0, // 3: bridge.RobotStateService.SubscribeRobotState:input_type -> bridge.SubscribeRequest
+	4, // 4: bridge.RobotStateService.SubscribeRobotState:output_type -> bridge.RobotState
 	4, // [4:5] is the sub-list for method output_type
 	3, // [3:4] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
@@ -395,26 +395,26 @@ var file_bridge_proto_depIdxs = []int32{
 	0, // [0:3] is the sub-list for field type_name
 }
 
-func init() { file_bridge_proto_init() }
-func file_bridge_proto_init() {
-	if File_bridge_proto != nil {
+func init() { file_proto_robot_state_proto_init() }
+func file_proto_robot_state_proto_init() {
+	if File_proto_robot_state_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_bridge_proto_rawDesc), len(file_bridge_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_robot_state_proto_rawDesc), len(file_proto_robot_state_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_bridge_proto_goTypes,
-		DependencyIndexes: file_bridge_proto_depIdxs,
-		MessageInfos:      file_bridge_proto_msgTypes,
+		GoTypes:           file_proto_robot_state_proto_goTypes,
+		DependencyIndexes: file_proto_robot_state_proto_depIdxs,
+		MessageInfos:      file_proto_robot_state_proto_msgTypes,
 	}.Build()
-	File_bridge_proto = out.File
-	file_bridge_proto_goTypes = nil
-	file_bridge_proto_depIdxs = nil
+	File_proto_robot_state_proto = out.File
+	file_proto_robot_state_proto_goTypes = nil
+	file_proto_robot_state_proto_depIdxs = nil
 }

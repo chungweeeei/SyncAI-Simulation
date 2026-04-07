@@ -4,7 +4,7 @@ package bridge;
 
 option go_package = "github.com/nicosyncai/syncai-bridge/internal/grpcserver/pb";
 
-service BridgeService {
+service RobotStateService {
   rpc SubscribeRobotState (SubscribeRequest) returns (stream RobotState);
 }
 

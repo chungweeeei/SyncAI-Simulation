@@ -10,41 +10,59 @@ import (
 
 	"github.com/nicosyncai/syncai-bridge/internal/dds"
 	"github.com/nicosyncai/syncai-bridge/internal/grpcserver"
+	"github.com/nicosyncai/syncai-bridge/internal/restclient"
 )
+
+type config struct {
+	RobotID       string
+	DomainID      int32
+	DDSConfigPath string
+	GRPCAddr      string
+	RobotAPIURL   string
+}
+
+func loadConfig() config {
+	return config{
+		RobotID:       envOr("ROBOT_ID", "robot01"),
+		DomainID:      0,
+		DDSConfigPath: envOr("CYCLONEDDS_CONFIG", "config/cyclonedds.xml"),
+		GRPCAddr:      envOr("GRPC_LISTEN_ADDR", ":50051"),
+		RobotAPIURL:   envOr("ROBOT_API_URL", "http://localhost:3001"),
+	}
+}
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
-
-	robotID := envOr("ROBOT_ID", "robot01")
-	domainID := int32(0)
-	ddsConfigPath := envOr("CYCLONEDDS_CONFIG", "config/cyclonedds.xml")
-	grpcAddr := envOr("GRPC_LISTEN_ADDR", ":50051")
+	cfg := loadConfig()
 
 	logger.Info("starting syncai-bridge",
-		"robot_id", robotID,
-		"domain_id", domainID,
-		"dds_config", ddsConfigPath)
+		"robot_id", cfg.RobotID,
+		"domain_id", cfg.DomainID,
+		"dds_config", cfg.DDSConfigPath)
 
 	var configXML string
-	if data, err := os.ReadFile(ddsConfigPath); err != nil {
-		logger.Warn("could not read CycloneDDS config, using defaults", "path", ddsConfigPath, "error", err)
+	if data, err := os.ReadFile(cfg.DDSConfigPath); err != nil {
+		logger.Warn("could not read CycloneDDS config, using defaults", "path", cfg.DDSConfigPath, "error", err)
 	} else {
 		configXML = string(data)
-		logger.Info("loaded CycloneDDS config", "path", ddsConfigPath)
+		logger.Info("loaded CycloneDDS config", "path", cfg.DDSConfigPath)
 	}
 
 	// Start gRPC server.
-	bridgeServer := grpcserver.NewBridgeServer(logger)
-	gs, err := grpcserver.Start(grpcAddr, bridgeServer)
+	robotStateSrv := grpcserver.NewRobotStateServer(logger)
+	restClient := restclient.New(cfg.RobotAPIURL, logger)
+	mapServer := grpcserver.NewMapServer(logger, restClient)
+	gs, err := grpcserver.Start(cfg.GRPCAddr, logger, robotStateSrv, mapServer)
 	if err != nil {
 		logger.Error("failed to start gRPC server", "error", err)
 		os.Exit(1)
 	}
 
+	// Start DDS bridge.
 	ddsBridge := dds.NewDDSBridge(logger, dds.DDSBridgeConfig{
-		DeviceID:  robotID,
-		DomainID:  domainID,
-		Namespace: robotID,
+		DeviceID:  cfg.RobotID,
+		DomainID:  cfg.DomainID,
+		Namespace: cfg.RobotID,
 		ConfigXML: configXML,
 	})
 
@@ -58,7 +76,7 @@ func main() {
 			logger.Error("failed to unmarshal robot state", "error", err)
 			return
 		}
-		bridgeServer.Publish(grpcserver.DDSToProto(&rs))
+		robotStateSrv.Publish(grpcserver.DDSToProto(&rs))
 	})
 
 	if err := ddsBridge.Connect(); err != nil {
@@ -68,7 +86,7 @@ func main() {
 
 	// Subscribe to robot_state topic.
 	if err := ddsBridge.Subscribe(dds.SubscriptionConfig{
-		TopicName:   fmt.Sprintf("rt/%s/robot_state", robotID),
+		TopicName:   fmt.Sprintf("rt/%s/robot_state", cfg.RobotID),
 		DataType:    "robot_state",
 		CreateTopic: dds.CreateRobotStateTopic,
 		Take: func(r *dds.DDSReader) (any, error) {
@@ -79,7 +97,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger.Info("listening for DDS topics", "robot_id", robotID)
+	logger.Info("listening for DDS topics", "robot_id", cfg.RobotID)
 
 	// Wait for shutdown signal.
 	sigCh := make(chan os.Signal, 1)

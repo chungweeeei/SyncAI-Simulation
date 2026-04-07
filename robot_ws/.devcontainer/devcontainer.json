@@ -12,7 +12,10 @@
     "SYNCAI_DATA_DIR": "/home/ubuntu/data"
   },
   "mounts": [
-    "source=${localEnv:HOME}/.claude,target=/home/ubuntu/.claude,type=bind,consistency=cached"
+    "source=${localEnv:HOME}/.claude,target=/home/ubuntu/.claude,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/../data/robot01,target=/home/ubuntu/data,type=bind",
+    "source=${localWorkspaceFolder}/../map,target=/home/ubuntu/map,type=bind",
+    "source=${localWorkspaceFolder}/../params,target=/home/ubuntu/params,type=bind"
   ],
   "runArgs": [
     "--network=host",

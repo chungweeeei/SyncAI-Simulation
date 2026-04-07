@@ -128,22 +128,6 @@ services:
     tty: true
     restart: unless-stopped
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    image: syncai-backend:latest
-    container_name: syncai-backend
-    volumes:
-      - ./backend:/app
-    ports:
-      - 3005:3000
-    networks:
-      - syncai
-    stdin_open: true
-    tty: true
-    restart: unless-stopped
-
   postgresql:
     container_name: postgresql
     environment:

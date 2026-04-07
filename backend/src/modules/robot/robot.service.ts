@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RobotConfig, RobotState } from './interfaces/robot-state.interface';
+import { Vda5050StateDto } from './dto/vda5050-state.dto';
+import { buildVda5050State } from './robot.aggregate';
 
 @Injectable()
 export class RobotService {
@@ -17,6 +19,13 @@ export class RobotService {
 
   getState(): RobotState | null {
     return this.robotState;
+  }
+
+  getVda5050State(): Vda5050StateDto | null {
+    if (!this.robotState) {
+      return null;
+    }
+    return buildVda5050State(this.robotState);
   }
 
   getConfig(): RobotConfig {
