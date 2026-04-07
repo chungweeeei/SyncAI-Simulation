@@ -18,8 +18,8 @@ type TakeFn func(r *DDSReader) (any, error)
 
 // SubscriptionConfig defines what to subscribe to and how to deserialize it.
 type SubscriptionConfig struct {
-	TopicName   string       // DDS topic name, e.g. "rt/robot01/robot_state"
-	DataType    string       // logical data type, e.g. "robot_state"
+	TopicName   string // DDS topic name, e.g. "rt/robot01/robot_state"
+	DataType    string // logical data type, e.g. "robot_state"
 	CreateTopic TopicCreateFn
 	Take        TakeFn
 }
@@ -168,26 +168,24 @@ func (b *DDSBridge) onDataAvailable(readerHandle int32) {
 		return
 	}
 
-	for {
-		data, err := sub.config.Take(sub.reader)
-		if err != nil {
-			b.logger.Error("take failed",
-				"topic", sub.config.TopicName,
-				"error", err)
-			return
-		}
-		if data == nil {
-			return // no more data
-		}
-
-		payload, err := json.Marshal(data)
-		if err != nil {
-			b.logger.Error("marshal failed",
-				"topic", sub.config.TopicName,
-				"error", err)
-			continue
-		}
-
-		b.EmitData(b.config.DeviceID, sub.config.DataType, payload)
+	data, err := sub.config.Take(sub.reader)
+	if err != nil {
+		b.logger.Error("take failed",
+			"topic", sub.config.TopicName,
+			"error", err)
+		return
 	}
+	if data == nil {
+		return
+	}
+
+	payload, err := json.Marshal(data)
+	if err != nil {
+		b.logger.Error("marshal failed",
+			"topic", sub.config.TopicName,
+			"error", err)
+		return
+	}
+
+	b.EmitData(b.config.DeviceID, sub.config.DataType, payload)
 }

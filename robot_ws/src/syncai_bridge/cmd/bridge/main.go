@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/nicosyncai/syncai-bridge/internal/dds"
+	"github.com/nicosyncai/syncai-bridge/internal/grpcserver"
 )
 
 func main() {
@@ -17,6 +18,7 @@ func main() {
 	robotID := envOr("ROBOT_ID", "robot01")
 	domainID := int32(0)
 	ddsConfigPath := envOr("CYCLONEDDS_CONFIG", "config/cyclonedds.xml")
+	grpcAddr := envOr("GRPC_LISTEN_ADDR", ":50051")
 
 	logger.Info("starting syncai-bridge",
 		"robot_id", robotID,
@@ -31,6 +33,14 @@ func main() {
 		logger.Info("loaded CycloneDDS config", "path", ddsConfigPath)
 	}
 
+	// Start gRPC server.
+	bridgeServer := grpcserver.NewBridgeServer(logger)
+	gs, err := grpcserver.Start(grpcAddr, bridgeServer)
+	if err != nil {
+		logger.Error("failed to start gRPC server", "error", err)
+		os.Exit(1)
+	}
+
 	ddsBridge := dds.NewDDSBridge(logger, dds.DDSBridgeConfig{
 		DeviceID:  robotID,
 		DomainID:  domainID,
@@ -38,27 +48,17 @@ func main() {
 		ConfigXML: configXML,
 	})
 
+	// Forward DDS data to gRPC stream.
 	ddsBridge.OnData(func(deviceID, dataType string, payload []byte) {
-		switch dataType {
-		case "robot_state":
-			var rs dds.RobotState
-			if err := json.Unmarshal(payload, &rs); err != nil {
-				logger.Error("failed to unmarshal robot state", "error", err)
-				return
-			}
-			logger.Info("robot_state received",
-				"robot_id", rs.RobotID,
-				"pose_x", rs.PoseX,
-				"pose_y", rs.PoseY,
-				"battery_pct", rs.BatteryPct,
-			)
-		default:
-			logger.Info("data received",
-				"device_id", deviceID,
-				"data_type", dataType,
-				"size", len(payload),
-			)
+		if dataType != "robot_state" {
+			return
 		}
+		var rs dds.RobotState
+		if err := json.Unmarshal(payload, &rs); err != nil {
+			logger.Error("failed to unmarshal robot state", "error", err)
+			return
+		}
+		bridgeServer.Publish(grpcserver.DDSToProto(&rs))
 	})
 
 	if err := ddsBridge.Connect(); err != nil {
@@ -81,12 +81,13 @@ func main() {
 
 	logger.Info("listening for DDS topics", "robot_id", robotID)
 
-	// Wait for shutdown signal
+	// Wait for shutdown signal.
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	sig := <-sigCh
 	logger.Info("received signal, shutting down", "signal", sig)
 
+	gs.GracefulStop()
 	ddsBridge.Disconnect()
 	logger.Info("shutdown complete")
 }

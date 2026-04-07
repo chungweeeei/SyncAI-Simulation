@@ -66,7 +66,7 @@ export class RobotGrpcClient implements OnModuleInit, OnModuleDestroy {
     ) as unknown as BridgeProtoDefinition;
 
     // default to localhost:50051 if not set in environment variables
-    const bridgeAddress = process.env.BRIDGE_GRPC_ADDRESS ?? 'localhost:50051';
+    const bridgeAddress = process.env.BRIDGE_GRPC_ADDRESS ?? 'syncai-robot01:50051';
 
     this.client = new proto.bridge.BridgeService(
       bridgeAddress,
@@ -114,6 +114,7 @@ export class RobotGrpcClient implements OnModuleInit, OnModuleDestroy {
     this.stream = this.client.subscribeRobotState({});
 
     this.stream.on('data', (data: RobotState) => {
+      console.log('Received robot state update:', data);
       this.robotService.updateState(data);
     });
 
