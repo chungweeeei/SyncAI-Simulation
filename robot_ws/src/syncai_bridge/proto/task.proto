@@ -1,0 +1,109 @@
+syntax = "proto3";
+
+package bridge;
+
+option go_package = "github.com/nicosyncai/syncai-bridge/internal/grpcserver/pb";
+
+service TaskService {
+  rpc CreateTask (CreateTaskRequest) returns (CreateTaskResponse);
+  rpc ListTasks  (ListTasksRequest)  returns (ListTasksResponse);
+  rpc GetTask    (GetTaskRequest)    returns (Task);
+}
+
+// --- Enums ---
+
+enum TaskAction {
+  TASK_ACTION_UNSPECIFIED = 0;
+  TASK    = 1;
+  COMMAND = 2;
+}
+
+enum StepType {
+  STEP_TYPE_UNSPECIFIED = 0;
+  MOVE                 = 1;
+  WAIT                 = 2;
+  DOOR                 = 3;
+  CHARGE               = 4;
+  NAVIGATE_WITH_ALERT  = 5;
+}
+
+enum TaskStatus {
+  TASK_STATUS_UNSPECIFIED = 0;
+  PENDING                = 1;
+  IN_PROGRESS            = 2;
+  COMPLETED              = 3;
+  FAILED                 = 4;
+  CANCELLED              = 5;
+}
+
+// --- Step params ---
+
+message PoseParams {
+  float x = 1;
+  float y = 2;
+  float r = 3;
+}
+
+message WaitParams {
+  float duration_sec = 1;
+}
+
+message DoorParams {
+  bool open = 1;
+}
+
+// --- Core messages ---
+
+message Step {
+  string   id     = 1;
+  string   name   = 2;
+  StepType type   = 3;
+  oneof params {
+    PoseParams pose_params = 4;
+    WaitParams wait_params = 5;
+    DoorParams door_params = 6;
+  }
+  TaskStatus status    = 7;
+  string     error_msg = 8;
+}
+
+message TaskPayload {
+  repeated Step steps = 1;
+}
+
+message Task {
+  TaskAction  action             = 1;
+  string      id                 = 2;
+  double      timestamp          = 3;
+  TaskPayload payload            = 4;
+  TaskStatus  status             = 5;
+  int32       current_step_index = 6;
+  string      error_msg          = 7;
+  string      workflow_id        = 8;
+  double      completed_at       = 9;
+}
+
+// --- Requests/Responses ---
+
+message ListTasksRequest {}
+
+message ListTasksResponse {
+  repeated Task tasks = 1;
+}
+
+message CreateTaskRequest {
+  TaskAction  action    = 1;
+  string      id        = 2;
+  double      timestamp = 3;
+  TaskPayload payload   = 4;
+}
+
+message CreateTaskResponse {
+  string     id      = 1;
+  TaskStatus status  = 2;
+  string     message = 3;
+}
+
+message GetTaskRequest {
+  string task_id = 1;
+}

@@ -52,7 +52,8 @@ func main() {
 	robotStateSrv := grpcserver.NewRobotStateServer(logger)
 	restClient := restclient.New(cfg.RobotAPIURL, logger)
 	mapServer := grpcserver.NewMapServer(logger, restClient)
-	gs, err := grpcserver.Start(cfg.GRPCAddr, logger, robotStateSrv, mapServer)
+	taskServer := grpcserver.NewTaskServer(logger, restClient)
+	gs, err := grpcserver.Start(cfg.GRPCAddr, logger, robotStateSrv, mapServer, taskServer)
 	if err != nil {
 		logger.Error("failed to start gRPC server", "error", err)
 		os.Exit(1)
