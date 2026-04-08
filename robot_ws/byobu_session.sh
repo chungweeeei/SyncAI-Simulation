@@ -54,13 +54,13 @@ byobu split-window -v -t "$SESSION_NAME:api_driver"
 byobu send-keys -t "$SESSION_NAME:api_driver.1" \
   "ros2 launch syncai_driver_manager syncai_driver_manager.launch.py" Enter
 
-# ---------- Window 5: robot_state / bridge ----------
+# ---------- Window 5: robot_state / shell ----------
 byobu new-window -t "$SESSION_NAME" -n "robot_state"
 byobu send-keys -t "$SESSION_NAME:robot_state" \
   "ros2 launch syncai_robot_state syncai_robot_state.launch.py" Enter
 byobu split-window -v -t "$SESSION_NAME:robot_state"
 byobu send-keys -t "$SESSION_NAME:robot_state.1" \
-  "cd ~/robot_ws/src/syncai_bridge && source /opt/ros/jazzy/setup.bash && CGO_ENABLED=1 go run ./cmd/bridge" Enter
+  "" Enter
 
 # ---------- Window 6: docking / bt_plugins ----------
 byobu new-window -t "$SESSION_NAME" -n "dock_bt"
