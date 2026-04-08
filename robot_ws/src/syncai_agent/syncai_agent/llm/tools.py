@@ -36,16 +36,15 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "control_door",
-            "description": "Open or close a door. Requires the door's command and state topics.",
+            "description": "Open or close a door via Modbus TCP. The door is identified by cmd_topic (e.g. '/door/door_01/cmd_topic').",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "cmd_topic": {"type": "string", "description": "ROS topic to send door commands (e.g. '/door/door_01/command')"},
-                    "state_topic": {"type": "string", "description": "ROS topic to read door state (e.g. '/door/door_01/state')"},
+                    "cmd_topic": {"type": "string", "description": "Door command topic used to derive Modbus coil address (e.g. '/door/door_01/cmd_topic')"},
                     "open": {"type": "boolean", "description": "True to open the door, False to close it", "default": True},
                     "timeout_sec": {"type": "number", "description": "Timeout in seconds", "default": 10.0},
                 },
-                "required": ["cmd_topic", "state_topic"],
+                "required": ["cmd_topic"],
             },
         },
     },

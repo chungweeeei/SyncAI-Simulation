@@ -24,21 +24,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/NavigateWithAlert.action"
 )
 
-# --- Door Control BT plugin ---
-add_library(syncai_door_control_action_bt_node SHARED
-  src/door_control_action.cpp
-)
-target_include_directories(syncai_door_control_action_bt_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
-target_compile_features(syncai_door_control_action_bt_node PUBLIC cxx_std_20)
-ament_target_dependencies(syncai_door_control_action_bt_node
-  rclcpp
-  behaviortree_cpp
-  std_msgs
-)
-
 # --- Alert BT plugin ---
 add_library(syncai_alert_action_bt_node SHARED
   src/alert_action.cpp
@@ -77,24 +62,7 @@ ament_target_dependencies(syncai_charging_bt_nodes
   tf2
 )
 
-# --- Door Control action server executable ---
-add_executable(door_control_server src/door_control_server.cpp)
-target_include_directories(door_control_server PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-)
-target_compile_features(door_control_server PUBLIC cxx_std_20)
-ament_target_dependencies(door_control_server
-  rclcpp
-  rclcpp_action
-  behaviortree_cpp
-  std_msgs
-)
-
-# Link door_control_server to generated action interfaces and BT plugin
 rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} rosidl_typesupport_cpp)
-target_link_libraries(door_control_server "${cpp_typesupport_target}")
-target_link_libraries(door_control_server syncai_door_control_action_bt_node)
 
 # --- Charging action server executable ---
 add_executable(charging_server src/charging_server.cpp)
@@ -138,7 +106,6 @@ target_link_libraries(navigate_with_alert_server syncai_alert_action_bt_node)
 
 # Install
 install(TARGETS
-  syncai_door_control_action_bt_node
   syncai_alert_action_bt_node
   syncai_charging_bt_nodes
   ARCHIVE DESTINATION lib
@@ -147,7 +114,6 @@ install(TARGETS
 )
 
 install(TARGETS
-  door_control_server
   charging_server
   navigate_with_alert_server
   DESTINATION lib/${PROJECT_NAME}

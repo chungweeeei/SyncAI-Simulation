@@ -8,6 +8,8 @@ require (
 )
 
 require (
+	github.com/goburrow/serial v0.1.0 // indirect
+	github.com/simonvetter/modbus v1.6.4 // indirect
 	golang.org/x/net v0.49.0 // indirect
 	golang.org/x/sys v0.40.0 // indirect
 	golang.org/x/text v0.33.0 // indirect

@@ -6,13 +6,13 @@ from syncai_agent.skills.battery import set_battery_level
 from syncai_agent.skills import ros_cli
 
 
-def build_skills(gateway, get_state_fn) -> dict:
+def build_skills(gateway, modbus_gateway, get_state_fn) -> dict:
     return {
         # High-level programmatic skills
         "navigate_to_pose": lambda x, y, yaw: navigate_to_pose(gateway, x, y, yaw),
         "navigate_with_alert": lambda x, y, yaw: navigate_with_alert(gateway, x, y, yaw),
-        "control_door": lambda cmd_topic, state_topic, open=True, timeout_sec=10.0: control_door(
-            gateway, cmd_topic, state_topic, open, timeout_sec
+        "control_door": lambda cmd_topic, open=True, timeout_sec=10.0: control_door(
+            modbus_gateway, cmd_topic, open, timeout_sec
         ),
         "charge": lambda x, y, yaw: charge(gateway, x, y, yaw),
         "get_robot_state": lambda: get_robot_state(get_state_fn),

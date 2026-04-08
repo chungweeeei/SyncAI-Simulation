@@ -13,6 +13,7 @@ from syncai_robot_api.subscribers.robot_state_subscriber import init_robot_state
 
 from syncai_robot_api.gateways.agent import init_agent_gateway
 from syncai_robot_api.gateways.robot import init_robot_gateway
+from syncai_robot_api.gateways.modbus import ModbusGateway
 from syncai_robot_api.gateways.entity import init_entity_gateway
 
 from syncai_robot_api.jobs.send_robot_state import init_send_robot_state_job
@@ -50,6 +51,7 @@ class SyncAIRobotAPI(Node):
         # Register gateways
         # agent_gateway = init_agent_gateway(logger=logger)
         robot_gateway = init_robot_gateway(logger=logger, node=self, robot_id=robot_config.robot_id)
+        modbus_gateway = ModbusGateway(logger=logger)
         entity_gateway = init_entity_gateway(logger=logger)
 
         # Register subscribers
@@ -58,7 +60,7 @@ class SyncAIRobotAPI(Node):
         # init_send_robot_state_job(logger=logger, robot_repo=robot_repo, task_repo=task_repo, agent_gateway=agent_gateway)
 
         # Start Temporal Worker (replaces TaskExecutorJob)
-        start_temporal_worker(logger=logger, robot_gateway=robot_gateway, task_repo=task_repo, robot_id=robot_config.robot_id)
+        start_temporal_worker(logger=logger, robot_gateway=robot_gateway, modbus_gateway=modbus_gateway, task_repo=task_repo, robot_id=robot_config.robot_id)
 
         # Start HTTP API server
         start_api_server(

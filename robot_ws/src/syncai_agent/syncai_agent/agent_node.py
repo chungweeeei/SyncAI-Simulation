@@ -12,6 +12,7 @@ from rclpy.qos import (
 from syncai_common.msg import RobotState as RobotStateMsg
 
 from syncai_agent.gateway.robot_gateway import RobotGateway
+from syncai_robot_api.gateways.modbus import ModbusGateway
 from syncai_agent.skills import build_skills
 from syncai_agent.llm.client import LLMClient
 from syncai_agent.llm.agent_loop import AgentLoop
@@ -49,9 +50,13 @@ class SyncAIAgentNode(Node):
         # Robot gateway (action clients + service clients)
         self._gateway = RobotGateway(logger=logger, node=self, robot_id=robot_id)
 
+        # Modbus gateway (door control via Modbus TCP)
+        self._modbus_gateway = ModbusGateway(logger=logger)
+
         # Build skills
         skills = build_skills(
             gateway=self._gateway,
+            modbus_gateway=self._modbus_gateway,
             get_state_fn=self._get_robot_state,
         )
 

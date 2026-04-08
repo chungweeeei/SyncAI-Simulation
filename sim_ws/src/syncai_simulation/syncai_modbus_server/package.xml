@@ -3,8 +3,8 @@
 <package format="3">
   <name>syncai_modbus_server</name>
   <version>0.0.0</version>
-  <description>Modbus TCP server node for testing PLC communication</description>
-  <maintainer email="chungweeeei@gmail.com">syncrobotic</maintainer>
+  <description>Modbus TCP server for simulation IoT device control</description>
+  <maintainer email="andy_tseng@syncrobotic.com">syncrobotic</maintainer>
   <license>TODO: License declaration</license>
 
   <exec_depend>rclpy</exec_depend>

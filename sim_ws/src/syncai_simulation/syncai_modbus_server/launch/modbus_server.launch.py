@@ -10,6 +10,7 @@ def generate_launch_description():
         DeclareLaunchArgument('port', default_value='5020'),
         DeclareLaunchArgument('unit_id', default_value='1'),
         DeclareLaunchArgument('door_ids', default_value="['door_01']"),
+
         Node(
             package='syncai_modbus_server',
             executable='modbus_server',

@@ -6,10 +6,12 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 
 	"github.com/nicosyncai/syncai-bridge/internal/dds"
 	"github.com/nicosyncai/syncai-bridge/internal/grpcserver"
+	"github.com/nicosyncai/syncai-bridge/internal/modbusclient"
 	"github.com/nicosyncai/syncai-bridge/internal/restclient"
 )
 
@@ -19,6 +21,8 @@ type config struct {
 	DDSConfigPath string
 	GRPCAddr      string
 	RobotAPIURL   string
+	ModbusHost    string
+	ModbusPort    int
 }
 
 func loadConfig() config {
@@ -28,6 +32,8 @@ func loadConfig() config {
 		DDSConfigPath: envOr("CYCLONEDDS_CONFIG", "config/cyclonedds.xml"),
 		GRPCAddr:      envOr("GRPC_LISTEN_ADDR", ":50051"),
 		RobotAPIURL:   envOr("ROBOT_API_URL", "http://localhost:3001"),
+		ModbusHost:    envOr("MODBUS_HOST", "127.0.0.1"),
+		ModbusPort:    envIntOr("MODBUS_PORT", 5020),
 	}
 }
 
@@ -48,12 +54,25 @@ func main() {
 		logger.Info("loaded CycloneDDS config", "path", cfg.DDSConfigPath)
 	}
 
-	// Start gRPC server.
-	robotStateSrv := grpcserver.NewRobotStateServer(logger)
+	// Start Modbus/REST client.
+	modbusClient, err := modbusclient.New(cfg.ModbusHost, cfg.ModbusPort, 1, logger)
+	if err != nil {
+		logger.Error("failed to create modbus client", "error", err)
+		os.Exit(1)
+	}
+	if err := modbusClient.Connect(); err != nil {
+		logger.Error("failed to connect modbus client", "error", err)
+		os.Exit(1)
+	}
 	restClient := restclient.New(cfg.RobotAPIURL, logger)
-	mapServer := grpcserver.NewMapServer(logger, restClient)
-	taskServer := grpcserver.NewTaskServer(logger, restClient)
-	gs, err := grpcserver.Start(cfg.GRPCAddr, logger, robotStateSrv, mapServer, taskServer)
+
+	// Register gRPC command server with both clients.
+	commandServer := grpcserver.NewCommandServer(logger, modbusClient, restClient)
+
+	// Register gRPC robot state server.
+	robotStateSrv := grpcserver.NewRobotStateServer(logger)
+
+	gs, err := grpcserver.Start(cfg.GRPCAddr, logger, robotStateSrv, commandServer)
 	if err != nil {
 		logger.Error("failed to start gRPC server", "error", err)
 		os.Exit(1)
@@ -107,6 +126,7 @@ func main() {
 	logger.Info("received signal, shutting down", "signal", sig)
 
 	gs.GracefulStop()
+	modbusClient.Close()
 	ddsBridge.Disconnect()
 	logger.Info("shutdown complete")
 }
@@ -116,4 +136,16 @@ func envOr(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func envIntOr(key string, fallback int) int {
+	v := os.Getenv(key)
+	if v == "" {
+		return fallback
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil {
+		return fallback
+	}
+	return n
 }
