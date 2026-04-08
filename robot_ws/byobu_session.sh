@@ -62,6 +62,14 @@ byobu split-window -v -t "$SESSION_NAME:robot_state"
 byobu send-keys -t "$SESSION_NAME:robot_state.1" \
   "" Enter
 
+# ---------- Window 6: docking / bt_plugins ----------
+byobu new-window -t "$SESSION_NAME" -n "dock_bt"
+byobu send-keys -t "$SESSION_NAME:dock_bt" \
+  "ros2 launch syncai_bringup docking_launch.py" Enter
+byobu split-window -v -t "$SESSION_NAME:dock_bt"
+byobu send-keys -t "$SESSION_NAME:dock_bt.1" \
+  "ros2 launch syncai_bt_plugins syncai_bt_plugins_launch.py" Enter
+
 # Go back to window 0 and attach
 byobu select-window -t "$SESSION_NAME:localization"
 byobu attach-session -t "$SESSION_NAME"
