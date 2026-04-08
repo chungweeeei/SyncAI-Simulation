@@ -1,0 +1,26 @@
+POST http://localhost:3000/api/v1/commands
+Content-Type: application/json
+
+{
+    "deviceId": "",
+    "command": "open",
+    "timeoutSec": 30,
+    "modbus": {
+        "unitId": 1,
+        "address": 0
+    }
+}
+
+###
+POST http://localhost:3000/api/v1/commands
+Content-Type: application/json
+
+{
+    "deviceId": "",
+    "command": "close",
+    "timeoutSec": 30,
+    "modbus": {
+        "unitId": 1,
+        "address": 0
+    }
+}

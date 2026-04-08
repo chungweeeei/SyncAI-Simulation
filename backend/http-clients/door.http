@@ -1,0 +1,42 @@
+POST http://localhost:3000/api/v1/tasks
+Content-Type: application/json
+
+{
+    "action": "TASK",
+    "id": "task-door-001",
+    "timestamp": 0,
+    "payload": {
+        "steps":[
+            {
+                "id": "step-1",
+                "name": "Open the door",
+                "type": "DOOR",
+                "params": {
+                    "open": true
+                }
+            }
+        ]
+    }
+}
+
+### 
+POST http://localhost:3000/api/v1/tasks
+Content-Type: application/json
+
+{
+    "action": "TASK",
+    "id": "task-door-002",
+    "timestamp": 0,
+    "payload": {
+        "steps":[
+            {
+                "id": "step-1",
+                "name": "Close the door",
+                "type": "DOOR",
+                "params": {
+                    "open": false
+                }
+            }
+        ]
+    }
+}

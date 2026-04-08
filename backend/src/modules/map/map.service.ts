@@ -24,7 +24,7 @@ export class MapService {
       timeoutSec: 10,
       rest: {
         method: 'GET',
-        path: '/api/map',
+        path: '/api/v1/map',
         body: '',
       },
     });

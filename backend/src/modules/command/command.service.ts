@@ -16,7 +16,11 @@ export class CommandService {
       timeoutSec: dto.timeoutSec,
       modbus: dto.modbus,
       rest: dto.rest
-        ? { method: dto.rest.method, path: dto.rest.path, body: dto.rest.body ?? '' }
+        ? {
+            method: dto.rest.method,
+            path: dto.rest.path,
+            body: dto.rest.body ?? '',
+          }
         : undefined,
     });
   }
