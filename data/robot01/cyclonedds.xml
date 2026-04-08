@@ -13,7 +13,7 @@
         </General>
         <Discovery>
             <ParticipantIndex>auto</ParticipantIndex>
-            <MaxAutoParticipantIndex>35</MaxAutoParticipantIndex>
+            <MaxAutoParticipantIndex>40</MaxAutoParticipantIndex>
             <Peers>
                 <Peer address="syncai-simulation"/>
                 <Peer address="syncai-robot01"/>

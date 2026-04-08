@@ -32,7 +32,7 @@ func loadConfig() config {
 		DDSConfigPath: envOr("CYCLONEDDS_CONFIG", "config/cyclonedds.xml"),
 		GRPCAddr:      envOr("GRPC_LISTEN_ADDR", ":50051"),
 		RobotAPIURL:   envOr("ROBOT_API_URL", "http://localhost:3001"),
-		ModbusHost:    envOr("MODBUS_HOST", "127.0.0.1"),
+		ModbusHost:    envOr("MODBUS_HOST", "syncai-simulation"),
 		ModbusPort:    envIntOr("MODBUS_PORT", 5020),
 	}
 }

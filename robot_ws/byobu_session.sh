@@ -54,7 +54,15 @@ byobu split-window -v -t "$SESSION_NAME:api_driver"
 byobu send-keys -t "$SESSION_NAME:api_driver.1" \
   "ros2 launch syncai_driver_manager syncai_driver_manager.launch.py" Enter
 
-# ---------- Window 5: robot_state / shell ----------
+# ---------- Window 5: docking / bt_plugins ----------
+byobu new-window -t "$SESSION_NAME" -n "dock_bt"
+byobu send-keys -t "$SESSION_NAME:dock_bt" \
+  "ros2 launch syncai_bringup docking_launch.py" Enter
+byobu split-window -v -t "$SESSION_NAME:dock_bt"
+byobu send-keys -t "$SESSION_NAME:dock_bt.1" \
+  "ros2 launch syncai_bt_plugins syncai_bt_plugins_launch.py" Enter
+
+# ---------- Window 6: robot_state / shell ----------
 byobu new-window -t "$SESSION_NAME" -n "robot_state"
 byobu send-keys -t "$SESSION_NAME:robot_state" \
   "ros2 launch syncai_robot_state syncai_robot_state.launch.py" Enter

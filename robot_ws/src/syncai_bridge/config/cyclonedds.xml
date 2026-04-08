@@ -13,7 +13,7 @@
         </General>
         <Discovery>
             <ParticipantIndex>auto</ParticipantIndex>
-            <MaxAutoParticipantIndex>20</MaxAutoParticipantIndex>
+            <MaxAutoParticipantIndex>30</MaxAutoParticipantIndex>
             <Peers>
                 <Peer address="localhost"/>
             </Peers>

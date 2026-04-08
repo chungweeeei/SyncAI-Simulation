@@ -6,7 +6,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
     return LaunchDescription([
-        DeclareLaunchArgument('host', default_value='127.0.0.1'),
+        DeclareLaunchArgument('host', default_value='0.0.0.0'),
         DeclareLaunchArgument('port', default_value='5020'),
         DeclareLaunchArgument('unit_id', default_value='1'),
         DeclareLaunchArgument('door_ids', default_value="['door_01']"),
