@@ -6,12 +6,12 @@ export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Get()
-  listTasks() {
+  async listTasks() {
     return this.taskService.listTasks();
   }
 
   @Get(':id')
-  getTask(@Param('id') id: string) {
+  async getTask(@Param('id') id: string) {
     return this.taskService.getTask(id);
   }
 }

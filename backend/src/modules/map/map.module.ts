@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { MapController } from './map.controller';
 import { MapService } from './map.service';
-import { MapGrpcClient } from './map-grpc.client';
+import { CommandModule } from '../command/command.module';
 
 @Module({
+  imports: [CommandModule],
   controllers: [MapController],
-  providers: [MapService, MapGrpcClient],
+  providers: [MapService],
   exports: [MapService],
 })
 export class MapModule {}

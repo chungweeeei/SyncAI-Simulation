@@ -1,19 +1,46 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { CommandGrpcClient } from '../command/command-grpc.client';
 import { Task } from './interfaces/task.interface';
 
 @Injectable()
 export class TaskService {
-  private readonly tasks = new Map<string, Task>();
+  constructor(private readonly commandGrpcClient: CommandGrpcClient) {}
 
-  listTasks(): Task[] {
-    return Array.from(this.tasks.values());
+  async listTasks(): Promise<Task[]> {
+    const response = await this.commandGrpcClient.sendCommand({
+      deviceId: '',
+      command: 'list_tasks',
+      timeoutSec: 10,
+      rest: {
+        method: 'GET',
+        path: '/api/tasks',
+        body: '',
+      },
+    });
+
+    if (!response.success) {
+      throw new Error(`ListTasks failed: ${response.message}`);
+    }
+
+    return JSON.parse(response.data) as Task[];
   }
 
-  getTask(id: string): Task {
-    const task = this.tasks.get(id);
-    if (!task) {
+  async getTask(id: string): Promise<Task> {
+    const response = await this.commandGrpcClient.sendCommand({
+      deviceId: '',
+      command: 'get_task',
+      timeoutSec: 10,
+      rest: {
+        method: 'GET',
+        path: `/api/tasks/${id}`,
+        body: '',
+      },
+    });
+
+    if (!response.success) {
       throw new NotFoundException(`Task ${id} not found`);
     }
-    return task;
+
+    return JSON.parse(response.data) as Task;
   }
 }
