@@ -1,3 +1,7 @@
+include:
+  - robots/robot01.yml
+  - robots/robot02.yml
+
 services:
   sim:
     build: 
@@ -30,136 +34,9 @@ services:
       - ./data:/home/ubuntu/data
 
     ports:
-      # modbus server port for simulating robot hardware
       - 5020:5020
     networks:
       - syncai
-    stdin_open: true
-    tty: true
-    restart: unless-stopped
-
-  robot01:
-    build:
-      context: ./robot_ws
-      dockerfile: Dockerfile
-    image: syncai-robot-base-image:latest
-    container_name: syncai-robot01
-
-    runtime: nvidia
-
-    environment:
-      - DISPLAY=${DISPLAY}
-      - QT_X11_NO_MITSHM=1
-      - XAUTHORITY=/home/ubuntu/.Xauthority
-
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=all
-
-      # ROS 2 DDS
-      - ROS_DOMAIN_ID=0
-      - CYCLONEDDS_URI=file:///home/ubuntu/data/cyclonedds.xml
-      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-      - SYNCAI_DATA_DIR=/home/ubuntu/data
-      - SYNCAI_API_KEY=${SYNCAI_API_KEY}
-
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ubuntu/.Xauthority:ro
-      - ./robot_ws:/home/ubuntu/robot_ws
-      - ./data/robot01:/home/ubuntu/data
-      - ./map:/home/ubuntu/map
-      - ./params:/home/ubuntu/params
-
-    networks:
-      - syncai
-    stdin_open: true
-    tty: true
-    restart: unless-stopped
-
-  # robot02:
-  #   build:
-  #     context: ./robot_ws
-  #     dockerfile: Dockerfile
-  #   image: syncai-robot-base-image:latest
-  #   container_name: syncai-robot02
-
-  #   runtime: nvidia
-
-  #   environment:
-  #     - DISPLAY=${DISPLAY}
-  #     - QT_X11_NO_MITSHM=1
-  #     - XAUTHORITY=/home/ubuntu/.Xauthority
-
-  #     - NVIDIA_VISIBLE_DEVICES=all
-  #     - NVIDIA_DRIVER_CAPABILITIES=all
-
-  #     # ROS 2 DDS
-  #     - ROS_DOMAIN_ID=0
-  #     - CYCLONEDDS_URI=file:///home/ubuntu/data/cyclonedds.xml
-  #     - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-  #     - SYNCAI_DATA_DIR=/home/ubuntu/data
-  #     - SYNCAI_API_KEY=${SYNCAI_API_KEY}
-
-  #     # agent settings
-  #     - SYNCAI_LLM_PROVIDER=${SYNCAI_LLM_PROVIDER}
-  #     - SYNCAI_LLM_MODEL=${SYNCAI_LLM_MODEL}
-  #     - SYNCAI_LLM_API_KEY=${SYNCAI_LLM_API_KEY}
-
-  #   volumes:
-  #     - /tmp/.X11-unix:/tmp/.X11-unix:rw
-  #     - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ubuntu/.Xauthority:ro
-  #     - ./robot_ws:/home/ubuntu/robot_ws
-  #     - ./data/robot02:/home/ubuntu/data
-  #     - ./map:/home/ubuntu/map
-  #     - ./params:/home/ubuntu/params
-
-  #   networks:
-  #     - syncai
-  #   stdin_open: true
-  #   tty: true
-  #   restart: unless-stopped
-
-  bridge:
-    build:
-      context: ./robot_ws/src/syncai_bridge
-      dockerfile: Dockerfile
-    image: syncai-bridge:latest
-    container_name: syncai-bridge
-    environment:
-      - ROBOT_ID=robot01
-      - GRPC_LISTEN_ADDR=:50051
-      - ROBOT_API_URL=http://syncai-robot01:3000
-      - CYCLONEDDS_CONFIG=/app/config/cyclonedds.xml
-    volumes:
-      - ./robot_ws/src/syncai_bridge:/app
-    ports:
-      - 50051:50051
-    networks:
-      - syncai
-    depends_on:
-      - robot01
-    stdin_open: true
-    tty: true
-    restart: unless-stopped
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    image: syncai-backend:latest
-    container_name: syncai-backend
-    environment:
-      - ROBOT_API_URL=http://syncai-robot01:3000
-      - BRIDGE_GRPC_ADDRESS=${BRIDGE_GRPC_ADDRESS:-bridge:50051}
-    volumes:
-      - ./backend:/app
-    ports:
-      - 3000:3000
-    networks:
-      - syncai
-    depends_on:
-      - postgresql
-      - temporal
     stdin_open: true
     tty: true
     restart: unless-stopped

@@ -13,7 +13,7 @@ class AgentGateway:
 
     def __init__(self, logger: RcutilsLogger):
         self._logger = logger
-        self._server_ip = os.getenv("SYNCAI_SERVER_IP", "10.8.101.86")
+        self._server_ip = os.getenv("SYNCAI_SERVER_IP", "10.8.140.105")
         self._producer: Optional[Producer] = None
 
     def _ensure_connected(self) -> bool:

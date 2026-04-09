@@ -28,7 +28,7 @@ func loadConfig() config {
 		DomainID:      0,
 		DDSConfigPath: envOr("CYCLONEDDS_CONFIG", "config/cyclonedds.xml"),
 		GRPCAddr:      envOr("GRPC_LISTEN_ADDR", ":50051"),
-		RobotAPIURL:   envOr("ROBOT_API_URL", "http://localhost:3001"),
+		RobotAPIURL:   envOr("ROBOT_API_URL", "http://localhost:3000"),
 	}
 }
 
@@ -125,4 +125,3 @@ func envOr(key, fallback string) string {
 	}
 	return fallback
 }
-
