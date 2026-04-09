@@ -1,6 +1,8 @@
 import { Controller, Get, NotFoundException } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { RobotService } from './robot.service';
 
+@ApiTags('Robot')
 @Controller('robot')
 export class RobotController {
   constructor(private readonly robotService: RobotService) {}
