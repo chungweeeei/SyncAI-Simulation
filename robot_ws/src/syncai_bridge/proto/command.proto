@@ -19,8 +19,10 @@ message CommandRequest {
 }
 
 message ModbusParams {
-  uint32 unit_id = 1;
-  uint32 address = 2;
+  string server  = 1;
+  uint32 unit_id = 2;
+  uint32 address = 3;
+  bool   value   = 4;
 }
 
 message RestParams {

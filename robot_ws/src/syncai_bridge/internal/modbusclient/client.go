@@ -1,29 +1,45 @@
 package modbusclient
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/simonvetter/modbus"
 )
 
 const (
-	DefaultPollInterval = 250 * time.Millisecond
-	DefaultTimeout      = 10 * time.Second
+	DefaultTimeout = 10 * time.Second
 )
 
-// Client is a Modbus TCP client for controlling devices.
+// Client is a Modbus TCP client that manages connections dynamically by server address.
 type Client struct {
-	client *modbus.ModbusClient
-	unitID uint8
-	logger *slog.Logger
+	mu      sync.Mutex
+	clients map[string]*modbus.ModbusClient
+	logger  *slog.Logger
 }
 
-// New creates a Modbus TCP client.
-func New(host string, port int, unitID uint8, logger *slog.Logger) (*Client, error) {
-	url := fmt.Sprintf("tcp://%s:%d", host, port)
+// New creates a Modbus TCP client manager.
+func New(logger *slog.Logger) *Client {
+	return &Client{
+		clients: make(map[string]*modbus.ModbusClient),
+		logger:  logger,
+	}
+}
+
+// getOrConnect returns a cached modbus connection or creates a new one.
+func (c *Client) getOrConnect(server string, unitID uint8) (*modbus.ModbusClient, error) {
+	key := fmt.Sprintf("%s/%d", server, unitID)
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if client, ok := c.clients[key]; ok {
+		return client, nil
+	}
+
+	url := fmt.Sprintf("tcp://%s", server)
 	client, err := modbus.NewClient(&modbus.ClientConfiguration{
 		URL:     url,
 		Timeout: 5 * time.Second,
@@ -31,70 +47,81 @@ func New(host string, port int, unitID uint8, logger *slog.Logger) (*Client, err
 	if err != nil {
 		return nil, fmt.Errorf("create modbus client: %w", err)
 	}
-	return &Client{
-		client: client,
-		unitID: unitID,
-		logger: logger,
+
+	if err := client.Open(); err != nil {
+		return nil, fmt.Errorf("modbus connect to %s: %w", server, err)
+	}
+
+	client.SetUnitId(unitID)
+	c.clients[key] = client
+	c.logger.Info("modbus client connected", "server", server, "unit_id", unitID)
+
+	return client, nil
+}
+
+// ReadCoil reads a single coil from the specified modbus server.
+func (c *Client) ReadCoil(req *ModbusRequest) (*ModbusResponse, error) {
+	client, err := c.getOrConnect(req.Server, req.UnitID)
+	if err != nil {
+		return nil, &ModbusError{Op: "connect", Detail: err.Error()}
+	}
+
+	value, err := client.ReadCoil(req.Address)
+	if err != nil {
+		return nil, &ModbusError{Op: "read_coil", Detail: err.Error()}
+	}
+
+	return &ModbusResponse{
+		Success: true,
+		Message: fmt.Sprintf("read coil %d: %v", req.Address, value),
+		Value:   value,
 	}, nil
 }
 
-// Connect opens the Modbus TCP connection.
-func (c *Client) Connect() error {
-	if err := c.client.Open(); err != nil {
-		return fmt.Errorf("modbus connect: %w", err)
+// WriteCoil writes a single coil to the specified modbus server.
+func (c *Client) WriteCoil(req *ModbusRequest) (*ModbusResponse, error) {
+	client, err := c.getOrConnect(req.Server, req.UnitID)
+	if err != nil {
+		return nil, &ModbusError{Op: "connect", Detail: err.Error()}
 	}
-	c.client.SetUnitId(c.unitID)
-	c.logger.Info("modbus client connected")
-	return nil
-}
 
-// Close closes the Modbus TCP connection.
-func (c *Client) Close() {
-	c.client.Close()
-}
-
-// ControlDoor writes a coil to open/close a door, then polls discrete input until confirmed or timeout.
-func (c *Client) ControlDoor(ctx context.Context, req *DoorControlRequest) (*DoorControlResponse, error) {
-	action := "open"
-	if !req.Open {
-		action = "close"
-	}
-	c.logger.Info("controlling door", "action", action, "address", req.Address)
-
-	if err := c.client.WriteCoil(uint16(req.Address), req.Open); err != nil {
+	if err := client.WriteCoil(req.Address, req.Value); err != nil {
 		return nil, &ModbusError{Op: "write_coil", Detail: err.Error()}
 	}
 
-	timeout := req.TimeoutSec
-	if timeout <= 0 {
-		timeout = DefaultTimeout
+	return &ModbusResponse{
+		Success: true,
+		Message: fmt.Sprintf("write coil %d = %v", req.Address, req.Value),
+		Value:   req.Value,
+	}, nil
+}
+
+// ReadDiscreteInput reads a single discrete input from the specified modbus server.
+func (c *Client) ReadDiscreteInput(req *ModbusRequest) (*ModbusResponse, error) {
+	client, err := c.getOrConnect(req.Server, req.UnitID)
+	if err != nil {
+		return nil, &ModbusError{Op: "connect", Detail: err.Error()}
 	}
 
-	ticker := time.NewTicker(DefaultPollInterval)
-	defer ticker.Stop()
+	value, err := client.ReadDiscreteInput(req.Address)
+	if err != nil {
+		return nil, &ModbusError{Op: "read_discrete_input", Detail: err.Error()}
+	}
 
-	deadline := time.After(timeout)
+	return &ModbusResponse{
+		Success: true,
+		Message: fmt.Sprintf("read discrete input %d: %v", req.Address, value),
+		Value:   value,
+	}, nil
+}
 
-	for {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		case <-deadline:
-			return &DoorControlResponse{
-				Success: false,
-				Message: fmt.Sprintf("door %s timed out after %s", action, timeout),
-			}, nil
-		case <-ticker.C:
-			state, err := c.client.ReadDiscreteInput(uint16(req.Address))
-			if err != nil {
-				return nil, &ModbusError{Op: "read_discrete_input", Detail: err.Error()}
-			}
-			if state == req.Open {
-				return &DoorControlResponse{
-					Success: true,
-					Message: fmt.Sprintf("door %sed successfully", action),
-				}, nil
-			}
-		}
+// Close closes all cached modbus connections.
+func (c *Client) Close() {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	for key, client := range c.clients {
+		client.Close()
+		delete(c.clients, key)
 	}
 }

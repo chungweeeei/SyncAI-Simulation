@@ -1,16 +1,16 @@
 package modbusclient
 
-import "time"
-
-// DoorControlRequest describes a door open/close command.
-type DoorControlRequest struct {
-	Address    int
-	Open       bool
-	TimeoutSec time.Duration
+// ModbusRequest describes a generic modbus coil operation.
+type ModbusRequest struct {
+	Server  string
+	UnitID  uint8
+	Address uint16
+	Value   bool // used for write_coil
 }
 
-// DoorControlResponse is the result of a door control operation.
-type DoorControlResponse struct {
+// ModbusResponse is the result of a modbus operation.
+type ModbusResponse struct {
 	Success bool
 	Message string
+	Value   bool // used for read_coil
 }

@@ -2,9 +2,9 @@ package grpcserver
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
-	"time"
 
 	pb "github.com/nicosyncai/syncai-bridge/internal/grpcserver/pb"
 	"github.com/nicosyncai/syncai-bridge/internal/modbusclient"
@@ -44,33 +44,48 @@ func (s *CommandServer) SendCommand(ctx context.Context, req *pb.CommandRequest)
 }
 
 func (s *CommandServer) handleModbus(ctx context.Context, req *pb.CommandRequest, params *pb.ModbusParams) (*pb.CommandResponse, error) {
-	open, err := parseCommand(req.GetCommand())
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
+	modbusReq := &modbusclient.ModbusRequest{
+		Server:  params.GetServer(),
+		UnitID:  uint8(params.GetUnitId()),
+		Address: uint16(params.GetAddress()),
+		Value:   params.GetValue(),
 	}
 
-	timeout := time.Duration(req.GetTimeoutSec()) * time.Second
-	if timeout <= 0 {
-		timeout = modbusclient.DefaultTimeout
+	s.logger.Info("modbus command",
+		"device", req.GetDeviceId(),
+		"command", req.GetCommand(),
+		"server", modbusReq.Server,
+		"unit_id", modbusReq.UnitID,
+		"address", modbusReq.Address,
+	)
+
+	var resp *modbusclient.ModbusResponse
+	var err error
+
+	switch req.GetCommand() {
+	case "read_coil":
+		resp, err = s.modbus.ReadCoil(modbusReq)
+	case "write_coil":
+		resp, err = s.modbus.WriteCoil(modbusReq)
+	case "read_discrete_input":
+		resp, err = s.modbus.ReadDiscreteInput(modbusReq)
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "unsupported modbus command: %s (expected \"read_coil\", \"write_coil\", or \"read_discrete_input\")", req.GetCommand())
 	}
 
-	if params.GetUnitId() > 0 {
-		s.logger.Info("modbus command", "device", req.GetDeviceId(), "command", req.GetCommand(), "address", params.GetAddress(), "unit_id", params.GetUnitId())
-	}
-
-	resp, err := s.modbus.ControlDoor(ctx, &modbusclient.DoorControlRequest{
-		Address:    int(params.GetAddress()),
-		Open:       open,
-		TimeoutSec: timeout,
-	})
 	if err != nil {
 		s.logger.Error("modbus command failed", "error", err)
 		return nil, mapModbusError(err)
 	}
 
+	data, _ := json.Marshal(map[string]any{
+		"value": resp.Value,
+	})
+
 	return &pb.CommandResponse{
 		Success: resp.Success,
 		Message: resp.Message,
+		Data:    string(data),
 	}, nil
 }
 
@@ -88,23 +103,12 @@ func (s *CommandServer) handleRest(ctx context.Context, params *pb.RestParams) (
 	}, nil
 }
 
-func parseCommand(cmd string) (bool, error) {
-	switch cmd {
-	case "open":
-		return true, nil
-	case "close":
-		return false, nil
-	default:
-		return false, errors.New("unsupported command: " + cmd + " (expected \"open\" or \"close\")")
-	}
-}
-
 func mapModbusError(err error) error {
 	var mbErr *modbusclient.ModbusError
 	if errors.As(err, &mbErr) {
 		switch mbErr.Op {
-		case "parse_address":
-			return status.Error(codes.InvalidArgument, mbErr.Detail)
+		case "connect":
+			return status.Error(codes.Unavailable, mbErr.Detail)
 		default:
 			return status.Errorf(codes.Internal, "modbus error: %v", mbErr)
 		}

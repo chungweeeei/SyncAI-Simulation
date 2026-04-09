@@ -13,7 +13,7 @@ export interface CommandRequestParams {
   command: string;
   timeoutSec: number;
   rest?: { method: string; path: string; body: string };
-  modbus?: { unitId: number; address: number };
+  modbus?: { server: string; unitId: number; address: number; value?: boolean };
 }
 
 export interface CommandResponsePayload {

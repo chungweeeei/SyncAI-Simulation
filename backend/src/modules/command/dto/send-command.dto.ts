@@ -1,6 +1,7 @@
 import {
   IsString,
   IsNumber,
+  IsBoolean,
   IsOptional,
   ValidateNested,
   Min,
@@ -8,6 +9,9 @@ import {
 import { Type } from 'class-transformer';
 
 export class ModbusParamsDto {
+  @IsString()
+  server: string;
+
   @IsNumber()
   @Min(0)
   unitId: number;
@@ -15,6 +19,10 @@ export class ModbusParamsDto {
   @IsNumber()
   @Min(0)
   address: number;
+
+  @IsBoolean()
+  @IsOptional()
+  value?: boolean;
 }
 
 export class RestParamsDto {

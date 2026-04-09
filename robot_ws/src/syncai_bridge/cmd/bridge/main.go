@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
-	"strconv"
 	"syscall"
 
 	"github.com/nicosyncai/syncai-bridge/internal/dds"
@@ -21,8 +20,6 @@ type config struct {
 	DDSConfigPath string
 	GRPCAddr      string
 	RobotAPIURL   string
-	ModbusHost    string
-	ModbusPort    int
 }
 
 func loadConfig() config {
@@ -32,8 +29,6 @@ func loadConfig() config {
 		DDSConfigPath: envOr("CYCLONEDDS_CONFIG", "config/cyclonedds.xml"),
 		GRPCAddr:      envOr("GRPC_LISTEN_ADDR", ":50051"),
 		RobotAPIURL:   envOr("ROBOT_API_URL", "http://localhost:3001"),
-		ModbusHost:    envOr("MODBUS_HOST", "syncai-simulation"),
-		ModbusPort:    envIntOr("MODBUS_PORT", 5020),
 	}
 }
 
@@ -55,15 +50,7 @@ func main() {
 	}
 
 	// Start Modbus/REST client.
-	modbusClient, err := modbusclient.New(cfg.ModbusHost, cfg.ModbusPort, 1, logger)
-	if err != nil {
-		logger.Error("failed to create modbus client", "error", err)
-		os.Exit(1)
-	}
-	if err := modbusClient.Connect(); err != nil {
-		logger.Error("failed to connect modbus client", "error", err)
-		os.Exit(1)
-	}
+	modbusClient := modbusclient.New(logger)
 	restClient := restclient.New(cfg.RobotAPIURL, logger)
 
 	// Register gRPC command server with both clients.
@@ -138,14 +125,3 @@ func envOr(key, fallback string) string {
 	return fallback
 }
 
-func envIntOr(key string, fallback int) int {
-	v := os.Getenv(key)
-	if v == "" {
-		return fallback
-	}
-	n, err := strconv.Atoi(v)
-	if err != nil {
-		return fallback
-	}
-	return n
-}
