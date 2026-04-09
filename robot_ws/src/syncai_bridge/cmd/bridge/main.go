@@ -51,7 +51,7 @@ func main() {
 
 	// Start Modbus/REST client.
 	modbusClient := modbusclient.New(logger)
-	restClient := restclient.New(cfg.RobotAPIURL, logger)
+	restClient := restclient.New(logger)
 
 	// Register gRPC command server with both clients.
 	commandServer := grpcserver.NewCommandServer(logger, modbusClient, restClient)

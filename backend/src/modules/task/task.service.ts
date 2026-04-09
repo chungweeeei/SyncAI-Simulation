@@ -6,6 +6,9 @@ import { TaskResponse } from './dto/task-response.dto';
 
 @Injectable()
 export class TaskService {
+  private readonly robotApiUrl =
+    process.env.ROBOT_API_URL ?? 'http://localhost:3001';
+
   constructor(private readonly commandGrpcClient: CommandGrpcClient) {}
 
   async listTasks(): Promise<Task[]> {
@@ -15,7 +18,7 @@ export class TaskService {
       timeoutSec: 10,
       rest: {
         method: 'GET',
-        path: '/api/v1/tasks',
+        url: `${this.robotApiUrl}/api/v1/tasks`,
         body: '',
       },
     });
@@ -34,7 +37,7 @@ export class TaskService {
       timeoutSec: 10,
       rest: {
         method: 'GET',
-        path: `/api/v1/tasks/${id}`,
+        url: `${this.robotApiUrl}/api/v1/tasks/${id}`,
         body: '',
       },
     });
@@ -53,7 +56,7 @@ export class TaskService {
       timeoutSec: 10,
       rest: {
         method: 'POST',
-        path: '/api/v1/tasks/',
+        url: `${this.robotApiUrl}/api/v1/tasks/`,
         body: JSON.stringify(dto),
       },
     });
@@ -72,7 +75,7 @@ export class TaskService {
       timeoutSec: 10,
       rest: {
         method: 'DELETE',
-        path: `/api/v1/tasks/${id}`,
+        url: `${this.robotApiUrl}/api/v1/tasks/${id}`,
         body: '',
       },
     });

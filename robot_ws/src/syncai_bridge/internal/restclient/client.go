@@ -10,17 +10,15 @@ import (
 	"time"
 )
 
-// Client calls the robot's local REST API (syncai_robot_api).
+// Client makes HTTP requests to external REST APIs.
 type Client struct {
-	baseURL string
-	http    *http.Client
-	logger  *slog.Logger
+	http   *http.Client
+	logger *slog.Logger
 }
 
-// New creates a REST client targeting the given base URL (e.g. "http://localhost:3000").
-func New(baseURL string, logger *slog.Logger) *Client {
+// New creates a REST client.
+func New(logger *slog.Logger) *Client {
 	return &Client{
-		baseURL: baseURL,
 		http: &http.Client{
 			Timeout: 10 * time.Second,
 		},
@@ -28,10 +26,8 @@ func New(baseURL string, logger *slog.Logger) *Client {
 	}
 }
 
-// SendRequest makes a generic HTTP request and returns the raw response body.
-func (c *Client) SendRequest(ctx context.Context, method, path, body string) ([]byte, error) {
-	url := c.baseURL + path
-
+// SendRequest makes a generic HTTP request to the given full URL and returns the raw response body.
+func (c *Client) SendRequest(ctx context.Context, method, url, body string, headers map[string]string) ([]byte, error) {
 	var reqBody io.Reader
 	if body != "" {
 		reqBody = bytes.NewReader([]byte(body))
@@ -41,7 +37,14 @@ func (c *Client) SendRequest(ctx context.Context, method, path, body string) ([]
 	if err != nil {
 		return nil, fmt.Errorf("build request: %w", err)
 	}
-	if body != "" {
+
+	// Apply custom headers.
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+
+	// Default Content-Type to application/json if body is present and not already set.
+	if body != "" && req.Header.Get("Content-Type") == "" {
 		req.Header.Set("Content-Type", "application/json")
 	}
 
@@ -62,4 +65,3 @@ func (c *Client) SendRequest(ctx context.Context, method, path, body string) ([]
 
 	return respBody, nil
 }
-

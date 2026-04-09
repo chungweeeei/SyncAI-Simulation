@@ -15,6 +15,9 @@ interface MapPayloadRaw {
 
 @Injectable()
 export class MapService {
+  private readonly robotApiUrl =
+    process.env.ROBOT_API_URL ?? 'http://localhost:3001';
+
   constructor(private readonly commandGrpcClient: CommandGrpcClient) {}
 
   async getMap(): Promise<MapPayload> {
@@ -24,7 +27,7 @@ export class MapService {
       timeoutSec: 10,
       rest: {
         method: 'GET',
-        path: '/api/v1/map',
+        url: `${this.robotApiUrl}/api/v1/map`,
         body: '',
       },
     });

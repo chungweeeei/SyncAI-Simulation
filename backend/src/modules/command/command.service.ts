@@ -18,8 +18,9 @@ export class CommandService {
       rest: dto.rest
         ? {
             method: dto.rest.method,
-            path: dto.rest.path,
-            body: dto.rest.body ?? '',
+            url: dto.rest.url,
+            body: dto.rest.body ? JSON.stringify(dto.rest.body) : '',
+            headers: dto.rest.headers,
           }
         : undefined,
     });

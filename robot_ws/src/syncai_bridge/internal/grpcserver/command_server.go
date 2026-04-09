@@ -90,7 +90,7 @@ func (s *CommandServer) handleModbus(ctx context.Context, req *pb.CommandRequest
 }
 
 func (s *CommandServer) handleRest(ctx context.Context, params *pb.RestParams) (*pb.CommandResponse, error) {
-	data, err := s.rest.SendRequest(ctx, params.GetMethod(), params.GetPath(), params.GetBody())
+	data, err := s.rest.SendRequest(ctx, params.GetMethod(), params.GetUrl(), params.GetBody(), params.GetHeaders())
 	if err != nil {
 		s.logger.Error("rest command failed", "error", err)
 		return nil, mapHTTPError(err)

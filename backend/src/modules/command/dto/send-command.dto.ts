@@ -3,6 +3,7 @@ import {
   IsNumber,
   IsBoolean,
   IsOptional,
+  IsObject,
   ValidateNested,
   Min,
 } from 'class-validator';
@@ -31,18 +32,26 @@ export class ModbusParamsDto {
 }
 
 export class RestParamsDto {
-  @ApiProperty({ description: 'HTTP method' })
+  @ApiProperty({ description: 'HTTP method (GET, POST, PUT, DELETE, etc.)' })
   @IsString()
   method: string;
 
-  @ApiProperty({ description: 'Request path' })
+  @ApiProperty({ description: 'Full target URL' })
   @IsString()
-  path: string;
+  url: string;
 
-  @ApiPropertyOptional({ description: 'Request body' })
-  @IsString()
+  @ApiPropertyOptional({ description: 'Request body (JSON object)' })
+  @IsObject()
   @IsOptional()
-  body?: string;
+  body?: Record<string, any>;
+
+  @ApiPropertyOptional({
+    description: 'Custom HTTP headers',
+    example: { Authorization: 'Bearer xxx' },
+  })
+  @IsObject()
+  @IsOptional()
+  headers?: Record<string, string>;
 }
 
 export class SendCommandDto {
