@@ -51,7 +51,7 @@ class SyncAIRobotAPI(Node):
         # Register gateways
         # agent_gateway = init_agent_gateway(logger=logger)
         robot_gateway = init_robot_gateway(logger=logger, node=self, robot_id=robot_config.robot_id)
-        modbus_gateway = ModbusGateway(logger=logger)
+        modbus_gateway = ModbusGateway(logger=logger, host="syncai-simulation", port=5020)
         entity_gateway = init_entity_gateway(logger=logger)
 
         # Register subscribers

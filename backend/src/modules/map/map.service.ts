@@ -16,7 +16,7 @@ interface MapPayloadRaw {
 @Injectable()
 export class MapService {
   private readonly robotApiUrl =
-    process.env.ROBOT_API_URL ?? 'http://localhost:3001';
+    process.env.ROBOT_API_URL ?? 'http://localhost:3000';
 
   constructor(private readonly commandGrpcClient: CommandGrpcClient) {}
 

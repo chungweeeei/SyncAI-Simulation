@@ -95,6 +95,7 @@ func main() {
 	if err := ddsBridge.Subscribe(dds.SubscriptionConfig{
 		TopicName:   fmt.Sprintf("rt/%s/robot_state", cfg.RobotID),
 		DataType:    "robot_state",
+		TypeHash:    "RIHS01_0f4932fdb74d62ef06ab1daff3e8f15bca021dad5dc708c6f1a9f14dec444f73",
 		CreateTopic: dds.CreateRobotStateTopic,
 		Take: func(r *dds.DDSReader) (any, error) {
 			return dds.TakeRobotState(r)

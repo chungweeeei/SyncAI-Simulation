@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        v3.21.12
-// source: proto/command.proto
+// source: command.proto
 
 package pb
 
@@ -37,7 +37,7 @@ type CommandRequest struct {
 
 func (x *CommandRequest) Reset() {
 	*x = CommandRequest{}
-	mi := &file_proto_command_proto_msgTypes[0]
+	mi := &file_command_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -49,7 +49,7 @@ func (x *CommandRequest) String() string {
 func (*CommandRequest) ProtoMessage() {}
 
 func (x *CommandRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_command_proto_msgTypes[0]
+	mi := &file_command_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -62,7 +62,7 @@ func (x *CommandRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommandRequest.ProtoReflect.Descriptor instead.
 func (*CommandRequest) Descriptor() ([]byte, []int) {
-	return file_proto_command_proto_rawDescGZIP(), []int{0}
+	return file_command_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *CommandRequest) GetDeviceId() string {
@@ -139,7 +139,7 @@ type ModbusParams struct {
 
 func (x *ModbusParams) Reset() {
 	*x = ModbusParams{}
-	mi := &file_proto_command_proto_msgTypes[1]
+	mi := &file_command_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -151,7 +151,7 @@ func (x *ModbusParams) String() string {
 func (*ModbusParams) ProtoMessage() {}
 
 func (x *ModbusParams) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_command_proto_msgTypes[1]
+	mi := &file_command_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -164,7 +164,7 @@ func (x *ModbusParams) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ModbusParams.ProtoReflect.Descriptor instead.
 func (*ModbusParams) Descriptor() ([]byte, []int) {
-	return file_proto_command_proto_rawDescGZIP(), []int{1}
+	return file_command_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *ModbusParams) GetServer() string {
@@ -198,15 +198,16 @@ func (x *ModbusParams) GetValue() bool {
 type RestParams struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Method        string                 `protobuf:"bytes,1,opt,name=method,proto3" json:"method,omitempty"`
-	Path          string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	Url           string                 `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
 	Body          string                 `protobuf:"bytes,3,opt,name=body,proto3" json:"body,omitempty"`
+	Headers       map[string]string      `protobuf:"bytes,4,rep,name=headers,proto3" json:"headers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RestParams) Reset() {
 	*x = RestParams{}
-	mi := &file_proto_command_proto_msgTypes[2]
+	mi := &file_command_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -218,7 +219,7 @@ func (x *RestParams) String() string {
 func (*RestParams) ProtoMessage() {}
 
 func (x *RestParams) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_command_proto_msgTypes[2]
+	mi := &file_command_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -231,7 +232,7 @@ func (x *RestParams) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RestParams.ProtoReflect.Descriptor instead.
 func (*RestParams) Descriptor() ([]byte, []int) {
-	return file_proto_command_proto_rawDescGZIP(), []int{2}
+	return file_command_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *RestParams) GetMethod() string {
@@ -241,9 +242,9 @@ func (x *RestParams) GetMethod() string {
 	return ""
 }
 
-func (x *RestParams) GetPath() string {
+func (x *RestParams) GetUrl() string {
 	if x != nil {
-		return x.Path
+		return x.Url
 	}
 	return ""
 }
@@ -253,6 +254,13 @@ func (x *RestParams) GetBody() string {
 		return x.Body
 	}
 	return ""
+}
+
+func (x *RestParams) GetHeaders() map[string]string {
+	if x != nil {
+		return x.Headers
+	}
+	return nil
 }
 
 type CommandResponse struct {
@@ -266,7 +274,7 @@ type CommandResponse struct {
 
 func (x *CommandResponse) Reset() {
 	*x = CommandResponse{}
-	mi := &file_proto_command_proto_msgTypes[3]
+	mi := &file_command_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -278,7 +286,7 @@ func (x *CommandResponse) String() string {
 func (*CommandResponse) ProtoMessage() {}
 
 func (x *CommandResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_command_proto_msgTypes[3]
+	mi := &file_command_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -291,7 +299,7 @@ func (x *CommandResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommandResponse.ProtoReflect.Descriptor instead.
 func (*CommandResponse) Descriptor() ([]byte, []int) {
-	return file_proto_command_proto_rawDescGZIP(), []int{3}
+	return file_command_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *CommandResponse) GetSuccess() bool {
@@ -315,11 +323,11 @@ func (x *CommandResponse) GetData() string {
 	return ""
 }
 
-var File_proto_command_proto protoreflect.FileDescriptor
+var File_command_proto protoreflect.FileDescriptor
 
-const file_proto_command_proto_rawDesc = "" +
+const file_command_proto_rawDesc = "" +
 	"\n" +
-	"\x13proto/command.proto\x12\x06bridge\"\xce\x01\n" +
+	"\rcommand.proto\x12\x06bridge\"\xce\x01\n" +
 	"\x0eCommandRequest\x12\x1b\n" +
 	"\tdevice_id\x18\x01 \x01(\tR\bdeviceId\x12\x18\n" +
 	"\acommand\x18\x02 \x01(\tR\acommand\x12\x1f\n" +
@@ -334,12 +342,16 @@ const file_proto_command_proto_rawDesc = "" +
 	"\x06server\x18\x01 \x01(\tR\x06server\x12\x17\n" +
 	"\aunit_id\x18\x02 \x01(\rR\x06unitId\x12\x18\n" +
 	"\aaddress\x18\x03 \x01(\rR\aaddress\x12\x14\n" +
-	"\x05value\x18\x04 \x01(\bR\x05value\"L\n" +
+	"\x05value\x18\x04 \x01(\bR\x05value\"\xc1\x01\n" +
 	"\n" +
 	"RestParams\x12\x16\n" +
-	"\x06method\x18\x01 \x01(\tR\x06method\x12\x12\n" +
-	"\x04path\x18\x02 \x01(\tR\x04path\x12\x12\n" +
-	"\x04body\x18\x03 \x01(\tR\x04body\"Y\n" +
+	"\x06method\x18\x01 \x01(\tR\x06method\x12\x10\n" +
+	"\x03url\x18\x02 \x01(\tR\x03url\x12\x12\n" +
+	"\x04body\x18\x03 \x01(\tR\x04body\x129\n" +
+	"\aheaders\x18\x04 \x03(\v2\x1f.bridge.RestParams.HeadersEntryR\aheaders\x1a:\n" +
+	"\fHeadersEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"Y\n" +
 	"\x0fCommandResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x12\x12\n" +
@@ -348,42 +360,44 @@ const file_proto_command_proto_rawDesc = "" +
 	"\vSendCommand\x12\x16.bridge.CommandRequest\x1a\x17.bridge.CommandResponseB<Z:github.com/nicosyncai/syncai-bridge/internal/grpcserver/pbb\x06proto3"
 
 var (
-	file_proto_command_proto_rawDescOnce sync.Once
-	file_proto_command_proto_rawDescData []byte
+	file_command_proto_rawDescOnce sync.Once
+	file_command_proto_rawDescData []byte
 )
 
-func file_proto_command_proto_rawDescGZIP() []byte {
-	file_proto_command_proto_rawDescOnce.Do(func() {
-		file_proto_command_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_command_proto_rawDesc), len(file_proto_command_proto_rawDesc)))
+func file_command_proto_rawDescGZIP() []byte {
+	file_command_proto_rawDescOnce.Do(func() {
+		file_command_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_command_proto_rawDesc), len(file_command_proto_rawDesc)))
 	})
-	return file_proto_command_proto_rawDescData
+	return file_command_proto_rawDescData
 }
 
-var file_proto_command_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
-var file_proto_command_proto_goTypes = []any{
+var file_command_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_command_proto_goTypes = []any{
 	(*CommandRequest)(nil),  // 0: bridge.CommandRequest
 	(*ModbusParams)(nil),    // 1: bridge.ModbusParams
 	(*RestParams)(nil),      // 2: bridge.RestParams
 	(*CommandResponse)(nil), // 3: bridge.CommandResponse
+	nil,                     // 4: bridge.RestParams.HeadersEntry
 }
-var file_proto_command_proto_depIdxs = []int32{
+var file_command_proto_depIdxs = []int32{
 	1, // 0: bridge.CommandRequest.modbus:type_name -> bridge.ModbusParams
 	2, // 1: bridge.CommandRequest.rest:type_name -> bridge.RestParams
-	0, // 2: bridge.CommandService.SendCommand:input_type -> bridge.CommandRequest
-	3, // 3: bridge.CommandService.SendCommand:output_type -> bridge.CommandResponse
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	4, // 2: bridge.RestParams.headers:type_name -> bridge.RestParams.HeadersEntry
+	0, // 3: bridge.CommandService.SendCommand:input_type -> bridge.CommandRequest
+	3, // 4: bridge.CommandService.SendCommand:output_type -> bridge.CommandResponse
+	4, // [4:5] is the sub-list for method output_type
+	3, // [3:4] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
-func init() { file_proto_command_proto_init() }
-func file_proto_command_proto_init() {
-	if File_proto_command_proto != nil {
+func init() { file_command_proto_init() }
+func file_command_proto_init() {
+	if File_command_proto != nil {
 		return
 	}
-	file_proto_command_proto_msgTypes[0].OneofWrappers = []any{
+	file_command_proto_msgTypes[0].OneofWrappers = []any{
 		(*CommandRequest_Modbus)(nil),
 		(*CommandRequest_Rest)(nil),
 	}
@@ -391,17 +405,17 @@ func file_proto_command_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_command_proto_rawDesc), len(file_proto_command_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_command_proto_rawDesc), len(file_command_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_proto_command_proto_goTypes,
-		DependencyIndexes: file_proto_command_proto_depIdxs,
-		MessageInfos:      file_proto_command_proto_msgTypes,
+		GoTypes:           file_command_proto_goTypes,
+		DependencyIndexes: file_command_proto_depIdxs,
+		MessageInfos:      file_command_proto_msgTypes,
 	}.Build()
-	File_proto_command_proto = out.File
-	file_proto_command_proto_goTypes = nil
-	file_proto_command_proto_depIdxs = nil
+	File_command_proto = out.File
+	file_command_proto_goTypes = nil
+	file_command_proto_depIdxs = nil
 }

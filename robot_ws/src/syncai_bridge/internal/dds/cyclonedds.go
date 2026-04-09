@@ -40,11 +40,15 @@ static dds_entity_t create_topic(dds_entity_t participant, const dds_topic_descr
 }
 
 // Helper: create a reader with BEST_EFFORT, VOLATILE QoS and a listener.
-static dds_entity_t create_reader_with_listener(dds_entity_t participant, dds_entity_t topic) {
+// If user_data is non-NULL, sets USER_DATA QoS (used for ROS 2 type hash).
+static dds_entity_t create_reader_with_listener(dds_entity_t participant, dds_entity_t topic, const void *user_data, size_t user_data_len) {
     dds_qos_t *qos = dds_create_qos();
     dds_qset_reliability(qos, DDS_RELIABILITY_BEST_EFFORT, 0);
     dds_qset_durability(qos, DDS_DURABILITY_VOLATILE);
     dds_qset_history(qos, DDS_HISTORY_KEEP_LAST, 5);
+    if (user_data && user_data_len > 0) {
+        dds_qset_userdata(qos, user_data, user_data_len);
+    }
 
     dds_listener_t *listener = dds_create_listener(NULL);
     dds_lset_data_available(listener, on_data_available_cb);
@@ -80,6 +84,11 @@ static void free_robot_state_sample(syncai_common_msg_dds__RobotState_ *sample) 
     if (sample) {
         syncai_common_msg_dds__RobotState__free(sample, DDS_FREE_ALL);
     }
+}
+
+// Helper: reset (remove) the listener on a DDS entity so no more callbacks fire.
+static int32_t reset_listener(dds_entity_t entity) {
+    return (int32_t)dds_set_listener(entity, NULL);
 }
 
 // Helper: delete a DDS entity.
@@ -139,8 +148,14 @@ func CreateRobotStateTopic(p *DDSParticipant, topicName string) (*DDSTopic, erro
 
 // CreateReaderWithListener creates a reader with BEST_EFFORT QoS and
 // a listener callback that will invoke goOnDataAvailable.
-func CreateReaderWithListener(p *DDSParticipant, t *DDSTopic) (*DDSReader, error) {
-	h := C.create_reader_with_listener(p.handle, t.handle)
+// If typeHash is non-empty, it is set as USER_DATA QoS for ROS 2 type hash compatibility.
+func CreateReaderWithListener(p *DDSParticipant, t *DDSTopic, typeHash string) (*DDSReader, error) {
+	var cHash *C.char
+	if typeHash != "" {
+		cHash = C.CString(typeHash)
+		defer C.free(unsafe.Pointer(cHash))
+	}
+	h := C.create_reader_with_listener(p.handle, t.handle, unsafe.Pointer(cHash), C.size_t(len(typeHash)))
 	if h < 0 {
 		return nil, fmt.Errorf("dds_create_reader failed: %d", h)
 	}
@@ -185,6 +200,15 @@ func TakeRobotState(r *DDSReader) (*RobotState, error) {
 		BatteryV:      float32(cSample.battery_voltage),
 	}
 	return state, nil
+}
+
+// ResetListener removes the listener from a DDS entity so no more callbacks fire.
+func ResetListener(handle int32) error {
+	rc := C.reset_listener(C.dds_entity_t(handle))
+	if rc < 0 {
+		return fmt.Errorf("dds_set_listener(NULL) failed: %d", rc)
+	}
+	return nil
 }
 
 // DeleteEntity deletes a DDS entity (participant, topic, or reader).

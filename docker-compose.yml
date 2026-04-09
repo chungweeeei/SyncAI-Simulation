@@ -23,7 +23,6 @@ services:
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
       - GZ_SIM_RESOURCE_PATH=/home/ubuntu/sim_ws/install/syncai_demo_gz/share/syncai_demo_gz
 
-
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ubuntu/.Xauthority:ro
@@ -31,7 +30,7 @@ services:
       - ./data:/home/ubuntu/data
 
     ports:
-      - 3000:3000
+      # modbus server port for simulating robot hardware
       - 5020:5020
     networks:
       - syncai
@@ -63,11 +62,6 @@ services:
       - SYNCAI_DATA_DIR=/home/ubuntu/data
       - SYNCAI_API_KEY=${SYNCAI_API_KEY}
 
-      # agent settings
-      - SYNCAI_LLM_PROVIDER=${SYNCAI_LLM_PROVIDER}
-      - SYNCAI_LLM_MODEL=${SYNCAI_LLM_MODEL}
-      - SYNCAI_LLM_API_KEY=${SYNCAI_LLM_API_KEY}
-
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ubuntu/.Xauthority:ro
@@ -76,8 +70,6 @@ services:
       - ./map:/home/ubuntu/map
       - ./params:/home/ubuntu/params
 
-    ports:
-      - 3001:3000
     networks:
       - syncai
     stdin_open: true
@@ -121,13 +113,34 @@ services:
   #     - ./map:/home/ubuntu/map
   #     - ./params:/home/ubuntu/params
 
-  #   ports:
-  #     - 3002:3000
   #   networks:
   #     - syncai
   #   stdin_open: true
   #   tty: true
   #   restart: unless-stopped
+
+  bridge:
+    build:
+      context: ./robot_ws/src/syncai_bridge
+      dockerfile: Dockerfile
+    image: syncai-bridge:latest
+    container_name: syncai-bridge
+    environment:
+      - ROBOT_ID=robot01
+      - GRPC_LISTEN_ADDR=:50051
+      - ROBOT_API_URL=http://syncai-robot01:3000
+      - CYCLONEDDS_CONFIG=/app/config/cyclonedds.xml
+    volumes:
+      - ./robot_ws/src/syncai_bridge:/app
+    ports:
+      - 50051:50051
+    networks:
+      - syncai
+    depends_on:
+      - robot01
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
 
   backend:
     build:
@@ -136,12 +149,12 @@ services:
     image: syncai-backend:latest
     container_name: syncai-backend
     environment:
-      - PORT=3000
-      - BRIDGE_GRPC_ADDRESS=${BRIDGE_GRPC_ADDRESS:-robot01:50051}
+      - ROBOT_API_URL=http://syncai-robot01:3000
+      - BRIDGE_GRPC_ADDRESS=${BRIDGE_GRPC_ADDRESS:-bridge:50051}
     volumes:
       - ./backend:/app
     ports:
-      - 3005:3000
+      - 3000:3000
     networks:
       - syncai
     depends_on:

@@ -13,9 +13,9 @@
         </General>
         <Discovery>
             <ParticipantIndex>auto</ParticipantIndex>
-            <MaxAutoParticipantIndex>30</MaxAutoParticipantIndex>
+            <MaxAutoParticipantIndex>40</MaxAutoParticipantIndex>
             <Peers>
-                <Peer address="localhost"/>
+                <Peer address="robot01"/>
             </Peers>
         </Discovery>
         <Tracing>

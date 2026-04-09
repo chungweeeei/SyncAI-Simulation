@@ -13,7 +13,7 @@ class AgentGateway:
 
     def __init__(self, logger: RcutilsLogger):
         self._logger = logger
-        self._broker = os.getenv("KAFKA_BROKER", "10.8.101.86")
+        self._server_ip = os.getenv("SYNCAI_SERVER_IP", "10.8.101.86")
         self._producer: Optional[Producer] = None
 
     def _ensure_connected(self) -> bool:
@@ -22,10 +22,10 @@ class AgentGateway:
 
         try:
             self._producer = Producer({
-                "bootstrap.servers": self._broker,
+                "bootstrap.servers": self._server_ip,
                 "client.id": "syncai-iot-collector",
             })
-            self._logger.info(f"[AgentGateway] Kafka producer created, broker={self._broker}")
+            self._logger.info(f"[AgentGateway] Kafka producer created, broker={self._server_ip}")
             return True
         except Exception as err:
             self._producer = None

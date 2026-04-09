@@ -1,16 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import {
-  CommandGrpcClient,
-  CommandResponsePayload,
-} from './command-grpc.client';
+import { CommandGrpcClient } from './command-grpc.client';
 import { SendCommandDto } from './dto/send-command.dto';
+import { CommandResponseDto } from './dto/command-response.dto';
 
 @Injectable()
 export class CommandService {
   constructor(private readonly commandGrpcClient: CommandGrpcClient) {}
 
-  async sendCommand(dto: SendCommandDto): Promise<CommandResponsePayload> {
-    return this.commandGrpcClient.sendCommand({
+  async sendCommand(dto: SendCommandDto): Promise<CommandResponseDto> {
+    const response = await this.commandGrpcClient.sendCommand({
       deviceId: dto.deviceId,
       command: dto.command,
       timeoutSec: dto.timeoutSec,
@@ -24,5 +22,20 @@ export class CommandService {
           }
         : undefined,
     });
+
+    let parsedData: Record<string, any> | null = null;
+    if (response.data) {
+      try {
+        parsedData = JSON.parse(response.data);
+      } catch {
+        parsedData = { raw: response.data };
+      }
+    }
+
+    return {
+      success: response.success,
+      message: response.message,
+      data: parsedData,
+    };
   }
 }

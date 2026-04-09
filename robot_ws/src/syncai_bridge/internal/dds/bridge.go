@@ -20,6 +20,7 @@ type TakeFn func(r *DDSReader) (any, error)
 type SubscriptionConfig struct {
 	TopicName   string // DDS topic name, e.g. "rt/robot01/robot_state"
 	DataType    string // logical data type, e.g. "robot_state"
+	TypeHash    string // ROS 2 type hash, e.g. "RIHS01_..." (set as USER_DATA QoS)
 	CreateTopic TopicCreateFn
 	Take        TakeFn
 }
@@ -105,7 +106,7 @@ func (b *DDSBridge) Subscribe(cfg SubscriptionConfig) error {
 		return fmt.Errorf("create topic %q: %w", cfg.TopicName, err)
 	}
 
-	reader, err := CreateReaderWithListener(b.participant, topic)
+	reader, err := CreateReaderWithListener(b.participant, topic, cfg.TypeHash)
 	if err != nil {
 		return fmt.Errorf("create reader for %q: %w", cfg.TopicName, err)
 	}
@@ -134,25 +135,41 @@ func (b *DDSBridge) Subscribe(cfg SubscriptionConfig) error {
 // Disconnect tears down all subscriptions and the DDS participant.
 func (b *DDSBridge) Disconnect() error {
 	b.mu.Lock()
-	defer b.mu.Unlock()
 
-	// Unregister all readers from global registry.
+	// Step 1: Unregister all readers from global registry so the C callback
+	// becomes a no-op immediately.
 	readerRegistryMu.Lock()
 	for handle := range b.subscriptions {
 		delete(readerRegistry, handle)
 	}
 	readerRegistryMu.Unlock()
 
-	// Deleting the participant cascades to all topics and readers.
-	if b.participant != nil {
-		if err := DeleteEntity(b.participant.ParticipantHandle()); err != nil {
+	// Step 2: Remove listeners from all readers while still holding b.mu.
+	// This tells CycloneDDS to stop invoking callbacks. Any in-flight callback
+	// that already passed the registry lookup will finish harmlessly because
+	// it will fail the b.subscriptions lookup after we release b.mu.
+	for handle := range b.subscriptions {
+		if err := ResetListener(handle); err != nil {
+			b.logger.Warn("failed to reset listener", "reader_handle", handle, "error", err)
+		}
+	}
+
+	// Step 3: Snapshot and clear state, then release the mutex BEFORE calling
+	// dds_delete. This avoids a deadlock where dds_delete waits for an
+	// in-flight callback that is blocked trying to acquire b.mu.
+	participant := b.participant
+	b.participant = nil
+	b.subscriptions = make(map[int32]*subscription)
+	b.mu.Unlock()
+
+	// Step 4: Delete the participant (cascades to all topics and readers).
+	if participant != nil {
+		if err := DeleteEntity(participant.ParticipantHandle()); err != nil {
 			b.SetStatus(bridge.Error)
 			return fmt.Errorf("delete participant: %w", err)
 		}
 	}
 
-	b.participant = nil
-	b.subscriptions = make(map[int32]*subscription)
 	b.SetStatus(bridge.Disconnected)
 	b.logger.Info("DDS bridge disconnected", "device_id", b.config.DeviceID)
 	return nil

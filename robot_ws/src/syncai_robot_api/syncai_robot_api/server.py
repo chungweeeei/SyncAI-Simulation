@@ -57,7 +57,7 @@ def start_api_server(
     map_name: str,
 ):
     host = os.getenv("SYNCAI_API_HOST", "0.0.0.0")
-    port = int(os.getenv("SYNCAI_API_PORT", "3001"))
+    port = int(os.getenv("SYNCAI_API_PORT", "3000"))
 
     app = create_app(robot_repo=robot_repo, task_repo=task_repo, robot_gateway=robot_gateway, entity_gateway=entity_gateway, robot_id=robot_id, map_name=map_name)
 
