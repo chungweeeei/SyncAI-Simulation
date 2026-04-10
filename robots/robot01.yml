@@ -1,0 +1,34 @@
+services:
+  robot01:
+    extends:
+      file: base.yml
+      service: robot
+    container_name: syncai-robot01
+    volumes:
+      - ../data/robot01:/home/ubuntu/data
+
+  robot01-bridge:
+    extends:
+      file: base.yml
+      service: bridge
+    container_name: syncai-robot01-bridge
+    environment:
+      - ROBOT_ID=robot01
+      - ROBOT_API_URL=http://robot01:3000
+      - CYCLONEDDS_CONFIG=/app/config/cyclonedds.xml
+    depends_on:
+      - robot01
+ 
+  robot01-backend:
+    extends:
+      file: base.yml
+      service: backend
+    container_name: syncai-robot01-backend
+    environment:
+      - ROBOT_API_URL=http://robot01:3000
+      - BRIDGE_GRPC_ADDRESS=robot01-bridge:50051
+    ports:
+      - "3001:3000"
+    depends_on:
+      - postgresql
+      - temporal

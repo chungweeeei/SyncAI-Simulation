@@ -25,7 +25,6 @@ def generate_launch_description():
     namespace = LaunchConfiguration('namespace')
     use_sim_time = LaunchConfiguration('use_sim_time')
 
-    door_control_bt_xml = os.path.join(pkg_dir, 'config', 'door_control.xml')
     charging_bt_xml = os.path.join(pkg_dir, 'config', 'charging.xml')
     navigate_through_door_bt_xml = os.path.join(pkg_dir, 'config', 'navigate_through_door.xml')
     navigate_with_alert_bt_xml = os.path.join(pkg_dir, 'config', 'navigate_with_alert.xml')
@@ -50,14 +49,6 @@ def generate_launch_description():
         actions=[
             PushROSNamespace(namespace),
             SetParameter('use_sim_time', use_sim_time),
-            Node(
-                package='syncai_bt_plugins',
-                executable='door_control_server',
-                name='door_control_server',
-                output='screen',
-                parameters=[{'bt_xml_file': door_control_bt_xml}],
-                arguments=['--ros-args', '--log-level', 'info'],
-            ),
             Node(
                 package='syncai_bt_plugins',
                 executable='charging_server',

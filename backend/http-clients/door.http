@@ -1,0 +1,60 @@
+POST http://localhost:3000/api/v1/commands
+Content-Type: application/json
+
+{
+    "deviceId": "",
+    "command": "write_coil",
+    "timeoutSec": 10,
+    "modbus": {
+        "server": "localhost:5020",
+        "unitId": 1,
+        "address": 0,
+        "value": true
+    }
+}
+
+###
+POST http://localhost:3000/api/v1/commands
+Content-Type: application/json
+
+{
+    "deviceId": "",
+    "command": "write_coil",
+    "timeoutSec": 10,
+    "modbus": {
+        "server": "localhost:5020",
+        "unitId": 1,
+        "address": 0,
+        "value": false
+    }
+}
+
+###
+POST http://localhost:3000/api/v1/commands
+Content-Type: application/json
+
+{
+    "deviceId": "",
+    "command": "read_coil",
+    "timeoutSec": 10,
+    "modbus": {
+        "server": "localhost:5020",
+        "unitId": 1,
+        "address": 0
+    }
+}
+
+###
+POST http://localhost:3000/api/v1/commands
+Content-Type: application/json
+
+{
+    "deviceId": "",
+    "command": "read_discrete_input",
+    "timeoutSec": 10,
+    "modbus": {
+        "server": "localhost:5020",
+        "unitId": 1,
+        "address": 0
+    }
+}

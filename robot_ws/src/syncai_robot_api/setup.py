@@ -35,6 +35,7 @@ setup(
     entry_points={
         'console_scripts': [
             'syncai_robot_api = syncai_robot_api.main:main',
+            'test_bridge_cmd = syncai_robot_api.subscribers.test_bridge_cmd:main',
         ],
     },
 )

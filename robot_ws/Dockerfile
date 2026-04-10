@@ -49,7 +49,8 @@ RUN pip3 install --break-system-packages \
     uvicorn \
     confluent-kafka \
     requests \
-    temporalio
+    temporalio \
+    pymodbus
 
 COPY scripts/entrypoint.sh /home/ubuntu/entrypoint.sh
 RUN chmod +x /home/ubuntu/entrypoint.sh

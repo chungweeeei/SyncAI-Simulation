@@ -13,6 +13,8 @@ find_package(geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/RobotState.msg"
+  "msg/BridgeCommand.msg"
+  "msg/BridgeCommandResponse.msg"
   "srv/SetBatteryLevel.srv"
   DEPENDENCIES
     std_msgs

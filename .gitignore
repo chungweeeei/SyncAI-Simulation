@@ -23,6 +23,11 @@ cmake_install.cmake
 Makefile
 compile_commands.json
 
+# Node.js / NestJS
+node_modules/
+dist/
+*.tsbuildinfo
+
 # IDE and editor files
 .vscode/
 .idea/
@@ -59,3 +64,6 @@ htmlcov/
 Thumbs.db
 
 .env
+
+# Database
+data/db_data/

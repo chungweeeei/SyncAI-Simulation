@@ -1,0 +1,51 @@
+module std_msgs { module msg { module dds_ {
+  struct Time_ {
+    long sec;
+    unsigned long nanosec;
+  };
+  struct Header_ {
+    std_msgs::msg::dds_::Time_ stamp;
+    string frame_id;
+  };
+}; }; };
+
+module geometry_msgs { module msg { module dds_ {
+  struct Point_ {
+    double x;
+    double y;
+    double z;
+  };
+  struct Quaternion_ {
+    double x;
+    double y;
+    double z;
+    double w;
+  };
+  struct Pose_ {
+    geometry_msgs::msg::dds_::Point_ position;
+    geometry_msgs::msg::dds_::Quaternion_ orientation;
+  };
+  struct Vector3_ {
+    double x;
+    double y;
+    double z;
+  };
+  struct Twist_ {
+    geometry_msgs::msg::dds_::Vector3_ linear;
+    geometry_msgs::msg::dds_::Vector3_ angular;
+  };
+}; }; };
+
+module syncai_common { module msg { module dds_ {
+  struct RobotState_ {
+    std_msgs::msg::dds_::Header_ header;
+    string robot_id;
+    string robot_name;
+    string model;
+    string map_;
+    geometry_msgs::msg::dds_::Pose_ pose;
+    geometry_msgs::msg::dds_::Twist_ velocity;
+    float battery_percentage;
+    float battery_voltage;
+  };
+}; }; };

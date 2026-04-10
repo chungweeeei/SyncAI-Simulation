@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package bridge;
+
+option go_package = "github.com/nicosyncai/syncai-bridge/internal/grpcserver/pb";
+
+service CommandService {
+  rpc SendCommand (CommandRequest) returns (CommandResponse);
+}
+
+message CommandRequest {
+  string device_id   = 1;
+  string command     = 2;
+  float  timeout_sec = 3;
+  oneof protocol {
+    ModbusParams modbus = 10;
+    RestParams   rest   = 11;
+  }
+}
+
+message ModbusParams {
+  string server  = 1;
+  uint32 unit_id = 2;
+  uint32 address = 3;
+  bool   value   = 4;
+}
+
+message RestParams {
+  string method              = 1;
+  string url                 = 2;
+  string body                = 3;
+  map<string, string> headers = 4;
+}
+
+message CommandResponse {
+  bool   success = 1;
+  string message = 2;
+  string data    = 3;
+}

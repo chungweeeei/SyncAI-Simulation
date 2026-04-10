@@ -10,7 +10,7 @@ from rclpy.action.client import ClientGoalHandle
 from nav2_msgs.action import NavigateToPose
 from geometry_msgs.msg import PoseStamped
 from action_msgs.msg import GoalStatus
-from syncai_bt_plugins.action import DoorControl, Charging, NavigateWithAlert
+from syncai_bt_plugins.action import Charging, NavigateWithAlert
 
 
 def _wait_for_future(future, timeout: Optional[float] = None) -> bool:
@@ -31,10 +31,6 @@ class RobotGateway:
         self._nav_client = ActionClient(node, NavigateToPose, nav_action_name)
         self._current_goal_handle: Optional[ClientGoalHandle] = None
 
-        # Door control action client
-        door_action_name = f'/{robot_id}/door_control'
-        self._door_client = ActionClient(node, DoorControl, door_action_name)
-
         # Charging action client
         charging_action_name = f'/{robot_id}/charging'
         self._charging_client = ActionClient(node, Charging, charging_action_name)
@@ -46,7 +42,6 @@ class RobotGateway:
         self._logger.info(
             "[RobotGateway] Action clients created",
             nav_action=nav_action_name,
-            door_action=door_action_name,
             charging_action=charging_action_name,
             navigate_with_alert_action=navigate_with_alert_action_name,
         )
@@ -94,54 +89,6 @@ class RobotGateway:
         else:
             error_msg = getattr(result.result, 'error_msg', 'Unknown error')
             return False, f"Navigation failed: {error_msg}"
-
-    def control_door(
-        self,
-        cmd_topic: str,
-        state_topic: str,
-        open: bool = True,
-        timeout_sec: float = 10.0,
-    ) -> Tuple[bool, str]:
-        if not self._door_client.wait_for_server(timeout_sec=10.0):
-            return False, "Door control action server not available"
-
-        goal_msg = DoorControl.Goal()
-        goal_msg.cmd_topic = cmd_topic
-        goal_msg.state_topic = state_topic
-        goal_msg.open = open
-        goal_msg.timeout_sec = timeout_sec
-
-        action_str = "open" if open else "close"
-        self._logger.info(
-            f"[RobotGateway] Sending door {action_str} goal",
-            cmd_topic=cmd_topic,
-            state_topic=state_topic,
-        )
-
-        send_goal_future = self._door_client.send_goal_async(goal_msg)
-        if not _wait_for_future(send_goal_future, timeout=15.0):
-            return False, "Timeout waiting for door control goal acceptance"
-
-        self._current_goal_handle = send_goal_future.result()
-
-        if not self._current_goal_handle.accepted:
-            self._current_goal_handle = None
-            return False, "Door control goal rejected"
-
-        self._logger.info(f"[RobotGateway] Door {action_str} goal accepted")
-
-        result_future = self._current_goal_handle.get_result_async()
-        _wait_for_future(result_future, timeout=timeout_sec + 5.0)
-
-        result = result_future.result()
-        self._current_goal_handle = None
-
-        if result.status == GoalStatus.STATUS_SUCCEEDED:
-            return True, result.result.message
-        elif result.status == GoalStatus.STATUS_CANCELED:
-            return False, "Door control was cancelled"
-        else:
-            return False, result.result.message
 
     def charge(
         self,

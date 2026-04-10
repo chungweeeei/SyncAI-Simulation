@@ -1,0 +1,64 @@
+services:
+  robot:
+    build:
+      context: ../robot_ws
+      dockerfile: Dockerfile
+    image: syncai-robot-base-image:latest
+
+    runtime: nvidia
+
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - XAUTHORITY=/home/ubuntu/.Xauthority
+
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+
+      # ROS 2 DDS
+      - ROS_DOMAIN_ID=0
+      - CYCLONEDDS_URI=file:///home/ubuntu/data/cyclonedds.xml
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+      - SYNCAI_DATA_DIR=/home/ubuntu/data
+      - SYNCAI_API_KEY=${SYNCAI_API_KEY}
+
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ubuntu/.Xauthority:ro
+      - ../robot_ws:/home/ubuntu/robot_ws
+      - ../map:/home/ubuntu/map
+      - ../params:/home/ubuntu/params
+
+    networks:
+      - syncai
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+  bridge:
+    build:
+      context: ../robot_ws/src/syncai_bridge
+      dockerfile: Dockerfile
+    image: syncai-bridge:latest
+    environment:
+      - GRPC_LISTEN_ADDR=:50051
+    volumes:
+      - ../robot_ws/src/syncai_bridge:/app
+    networks:
+      - syncai
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    image: syncai-backend:latest
+    volumes:
+      - ../backend:/app
+    networks:
+      - syncai
+    stdin_open: true
+    tty: true
+    restart: unless-stopped

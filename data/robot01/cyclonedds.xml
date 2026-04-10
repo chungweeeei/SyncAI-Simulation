@@ -4,7 +4,7 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd"
 >
-    <Domain Id="0">
+    <Domain Id="any">
         <General>
             <Interfaces>
                 <NetworkInterface autodetermine="true" multicast="false" />
@@ -13,7 +13,7 @@
         </General>
         <Discovery>
             <ParticipantIndex>auto</ParticipantIndex>
-            <MaxAutoParticipantIndex>35</MaxAutoParticipantIndex>
+            <MaxAutoParticipantIndex>40</MaxAutoParticipantIndex>
             <Peers>
                 <Peer address="syncai-simulation"/>
                 <Peer address="syncai-robot01"/>

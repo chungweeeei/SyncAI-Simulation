@@ -1,0 +1,56 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+  <model name="fire">
+    <static>true</static>
+
+    <link name="base_link">
+      <!-- Dark burn source base -->
+      <visual name="base_visual">
+        <geometry>
+          <cylinder>
+            <radius>0.15</radius>
+            <length>0.05</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.1 0.1 0.1 1</ambient>
+          <diffuse>0.15 0.1 0.05 1</diffuse>
+        </material>
+      </visual>
+      <collision name="base_collision">
+        <geometry>
+          <cylinder>
+            <radius>0.15</radius>
+            <length>0.05</length>
+          </cylinder>
+        </geometry>
+      </collision>
+
+      <!-- Fire particle emitter -->
+      <particle_emitter name="fire_emitter" type="point">
+        <pose>0 0 0.05 0 0 0</pose>
+        <emitting>true</emitting>
+        <size>0.08 0.08 0</size>
+        <particle_size>0.12 0.12 0.12</particle_size>
+        <lifetime>2</lifetime>
+        <min_velocity>0.5</min_velocity>
+        <max_velocity>1.5</max_velocity>
+        <rate>30</rate>
+        <scale_rate>0.5</scale_rate>
+        <color_start>1.0 0.7 0.0 1.0</color_start>
+        <color_end>0.8 0.1 0.0 0.2</color_end>
+        <material>
+          <diffuse>1.0 0.5 0.0 0.8</diffuse>
+          <emissive>1.0 0.3 0.0 1.0</emissive>
+        </material>
+      </particle_emitter>
+    </link>
+
+    <!-- Fix to world -->
+    <joint name="frame_fix" type="fixed">
+      <parent>world</parent>
+      <child>base_link</child>
+    </joint>
+
+  </model>
+</sdf>

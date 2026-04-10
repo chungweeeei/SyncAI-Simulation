@@ -1,0 +1,57 @@
+{
+  "name": "SyncAI Sim WS (ROS 2 Jazzy + Gazebo Harmonic)",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/ubuntu/sim_ws,type=bind",
+  "workspaceFolder": "/home/ubuntu/sim_ws",
+  "remoteUser": "ubuntu",
+  "containerEnv": {
+    "RMW_IMPLEMENTATION": "rmw_cyclonedds_cpp",
+    "SYNCAI_DATA_DIR": "/home/ubuntu/data",
+    "GZ_SIM_SYSTEM_PLUGIN_PATH": "/home/ubuntu/sim_ws/install/syncai_demo_gz/lib/syncai_demo_gz/",
+    "GZ_SIM_RESOURCE_PATH": "/home/ubuntu/sim_ws/install/syncai_demo_gz/share/"
+  },
+  "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/home/ubuntu/.claude,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/../data,target=/home/ubuntu/data,type=bind",
+    "source=${localWorkspaceFolder}/../map,target=/home/ubuntu/map,type=bind",
+    "source=${localWorkspaceFolder}/../params,target=/home/ubuntu/params,type=bind"
+  ],
+  "runArgs": [
+    "--network=host",
+    "--ipc=host",
+    "--pid=host"
+  ],
+  "postCreateCommand": "bash -c 'source /opt/ros/jazzy/setup.bash && cd /home/ubuntu/sim_ws && rosdep install --from-paths src --ignore-src -r -y && colcon build --symlink-install'",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-iot.vscode-ros",
+        "ms-python.python",
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "redhat.vscode-yaml",
+        "streetsidesoftware.code-spell-checker",
+        "anthropics.claude-code"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/bin/python3",
+        "C_Cpp.default.includePath": [
+          "/opt/ros/jazzy/include/**",
+          "${workspaceFolder}/install/**/include/**",
+          "/usr/include/gz/**"
+        ],
+        "files.associations": {
+          "*.launch.py": "python",
+          "*.msg": "ros.msg",
+          "*.srv": "ros.srv",
+          "*.sdf": "xml",
+          "*.world": "xml"
+        },
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  }
+}
