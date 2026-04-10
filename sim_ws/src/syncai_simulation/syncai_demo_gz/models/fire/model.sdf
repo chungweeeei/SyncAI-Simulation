@@ -4,46 +4,67 @@
     <static>true</static>
 
     <link name="base_link">
-      <!-- Dark burn source base -->
+      <!-- Dark burn mark on ground -->
       <visual name="base_visual">
         <geometry>
           <cylinder>
             <radius>0.15</radius>
-            <length>0.05</length>
+            <length>0.02</length>
           </cylinder>
         </geometry>
         <material>
-          <ambient>0.1 0.1 0.1 1</ambient>
-          <diffuse>0.15 0.1 0.05 1</diffuse>
+          <ambient>0.05 0.05 0.05 1</ambient>
+          <diffuse>0.1 0.08 0.05 1</diffuse>
         </material>
       </visual>
-      <collision name="base_collision">
-        <geometry>
-          <cylinder>
-            <radius>0.15</radius>
-            <length>0.05</length>
-          </cylinder>
-        </geometry>
-      </collision>
 
-      <!-- Fire particle emitter -->
-      <particle_emitter name="fire_emitter" type="point">
-        <pose>0 0 0.05 0 0 0</pose>
-        <emitting>true</emitting>
-        <size>0.08 0.08 0</size>
-        <particle_size>0.12 0.12 0.12</particle_size>
-        <lifetime>2</lifetime>
-        <min_velocity>0.5</min_velocity>
-        <max_velocity>1.5</max_velocity>
-        <rate>30</rate>
-        <scale_rate>0.5</scale_rate>
-        <color_start>1.0 0.7 0.0 1.0</color_start>
-        <color_end>0.8 0.1 0.0 0.2</color_end>
+      <!-- Outer flame (red-orange, larger) -->
+      <visual name="flame_outer">
+        <pose>0 0 0.22 0 0 0</pose>
+        <geometry>
+          <ellipsoid>
+            <radii>0.12 0.12 0.22</radii>
+          </ellipsoid>
+        </geometry>
         <material>
-          <diffuse>1.0 0.5 0.0 0.8</diffuse>
+          <ambient>0.8 0.2 0.0 0.5</ambient>
+          <diffuse>0.9 0.2 0.0 0.5</diffuse>
           <emissive>1.0 0.3 0.0 1.0</emissive>
         </material>
-      </particle_emitter>
+        <transparency>0.4</transparency>
+      </visual>
+
+      <!-- Middle flame (orange-yellow) -->
+      <visual name="flame_mid">
+        <pose>0 0 0.20 0 0 0</pose>
+        <geometry>
+          <ellipsoid>
+            <radii>0.08 0.08 0.18</radii>
+          </ellipsoid>
+        </geometry>
+        <material>
+          <ambient>1.0 0.5 0.0 0.6</ambient>
+          <diffuse>1.0 0.6 0.0 0.6</diffuse>
+          <emissive>1.0 0.6 0.0 1.0</emissive>
+        </material>
+        <transparency>0.3</transparency>
+      </visual>
+
+      <!-- Inner flame core (bright yellow-white) -->
+      <visual name="flame_core">
+        <pose>0 0 0.15 0 0 0</pose>
+        <geometry>
+          <ellipsoid>
+            <radii>0.04 0.04 0.12</radii>
+          </ellipsoid>
+        </geometry>
+        <material>
+          <ambient>1.0 0.9 0.3 0.8</ambient>
+          <diffuse>1.0 1.0 0.5 0.8</diffuse>
+          <emissive>1.0 1.0 0.7 1.0</emissive>
+        </material>
+        <transparency>0.2</transparency>
+      </visual>
     </link>
 
     <!-- Fix to world -->

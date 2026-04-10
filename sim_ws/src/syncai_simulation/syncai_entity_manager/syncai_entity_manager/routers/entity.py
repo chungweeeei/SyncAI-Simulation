@@ -14,6 +14,7 @@ from syncai_entity_manager.repositories.entity import EntityRepo
 class ModelType(str, Enum):
     BOX = 'box'
     VERTEX = 'vertex'
+    FIRE = 'fire'
 
 
 class Pose(BaseModel):
