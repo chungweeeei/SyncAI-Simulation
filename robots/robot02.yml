@@ -14,8 +14,9 @@ services:
     container_name: syncai-robot02-bridge
     environment:
       - ROBOT_ID=robot02
-      - ROBOT_API_URL=http://robot02:3000
-      - CYCLONEDDS_CONFIG=/app/config/cyclonedds.xml
+      - ROBOT_API_URL=http://syncai-robot02:3000
+    volumes:
+      - ../data/robot02:/home/ubuntu/data
     depends_on:
       - robot02
 
@@ -25,8 +26,8 @@ services:
       service: backend
     container_name: syncai-robot02-backend
     environment:
-      - ROBOT_API_URL=http://robot02:3000
-      - BRIDGE_GRPC_ADDRESS=robot02-bridge:50051
+      - ROBOT_API_URL=http://syncai-robot02:3000
+      - BRIDGE_GRPC_ADDRESS=syncai-robot02-bridge:50051
     ports:
       - "3002:3000"
     depends_on:

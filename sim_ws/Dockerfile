@@ -55,7 +55,8 @@ RUN pip3 install --break-system-packages \
     fastapi \
     uvicorn \
     websockets \ 
-    confluent-kafka
+    confluent-kafka \
+    pymodbus==3.12.1
 
 COPY scripts/entrypoint.sh /home/ubuntu/entrypoint.sh
 RUN chmod +x /home/ubuntu/entrypoint.sh
