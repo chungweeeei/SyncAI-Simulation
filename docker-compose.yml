@@ -1,46 +1,7 @@
 include:
   - robots/robot01.yml
-  - robots/robot02.yml
 
 services:
-  sim:
-    build: 
-      context: ./sim_ws
-      dockerfile: Dockerfile
-    image: syncai-simulation-base-image:latest
-    container_name: syncai-simulation
-
-    runtime: nvidia
-    environment:
-      # X11 forwarding
-      - DISPLAY=${DISPLAY}
-      - QT_X11_NO_MITSHM=1
-      - XAUTHORITY=/home/ubuntu/.Xauthority
-
-      # NVIDIA settings      
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=all
-
-      # ROS 2 and Gazebo settings
-      - ROS_DOMAIN_ID=0
-      - CYCLONEDDS_URI=file:///home/ubuntu/sim_ws/config/cyclonedds.xml
-      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-      - GZ_SIM_RESOURCE_PATH=/home/ubuntu/sim_ws/install/syncai_demo_gz/share/syncai_demo_gz
-
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ubuntu/.Xauthority:ro
-      - ./sim_ws:/home/ubuntu/sim_ws
-      - ./data:/home/ubuntu/data
-
-    ports:
-      - 5020:5020
-    networks:
-      - syncai
-    stdin_open: true
-    tty: true
-    restart: unless-stopped
-
   postgresql:
     container_name: postgresql
     environment:
@@ -55,7 +16,7 @@ services:
       - /tmp
       - /run
     networks:
-      - syncai
+      - syncai-network
     restart: unless-stopped
 
   temporal:
@@ -70,6 +31,7 @@ services:
       - POSTGRES_SEEDS=postgresql
       - TEMPORAL_ADDRESS=${TEMPORAL_ADDRESS}
       - TEMPORAL_CLI_ADDRESS=${TEMPORAL_CLI_ADDRESS}
+      - BIND_ON_IP=0.0.0.0
     image: temporalio/auto-setup:${TEMPORAL_VERSION}
     ports:
       - 7233:7233
@@ -77,7 +39,7 @@ services:
       - /tmp
       - /run
     networks:
-      - syncai
+      - syncai-network
     restart: unless-stopped
 
   temporal-ui:
@@ -96,9 +58,10 @@ services:
       - /tmp
       - /run
     networks:
-      - syncai
+      - syncai-network
     restart: unless-stopped
 
 networks:
-  syncai:
-    driver: bridge
+  syncai-network:
+    external: true
+    name: syncai-network

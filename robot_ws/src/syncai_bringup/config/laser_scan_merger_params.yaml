@@ -1,0 +1,69 @@
+/**:
+  ros__parameters:
+    use_sim_time: true
+
+ros2_laser_scan_merger:
+  ros__parameters:
+    use_sim_time: true
+    # Topics (relative; PushROSNamespace prepends /<ns>/)
+    scanTopic1: scan_front
+    scanTopic2: scan_rear
+    pointCloudTopic: cloud_in
+    # Output PointCloud2 frame id. Launch rewrites to <ns>/scan.
+    # Was previously base_link; switched because sim odom reports base_link
+    # at z=0 and nav2 voxel layer rejects sensor origins at the boundary.
+    pointCloutFrameId: scan
+
+    # laser1 = front-left mount (lidar_link_front in SyncAI-Omniverse mir_amr.py:179)
+    show1: true
+    flip1: false
+    inverse1: false
+    laser1XOff: 0.38
+    laser1YOff: 0.26
+    laser1ZOff: 0.0
+    laser1Alpha: 0.0
+    laser1AngleMin: -180.0
+    laser1AngleMax: 180.0
+    laser1R: 255
+    laser1G: 0
+    laser1B: 0
+
+    # laser2 = rear-right mount (lidar_link_rear in SyncAI-Omniverse mir_amr.py:184)
+    show2: true
+    flip2: false
+    inverse2: false
+    laser2XOff: -0.38
+    laser2YOff: -0.26
+    laser2ZOff: 0.0
+    laser2Alpha: 0.0
+    laser2AngleMin: -180.0
+    laser2AngleMax: 180.0
+    laser2R: 0
+    laser2G: 0
+    laser2B: 255
+
+    # Robot footprint in base_link frame (axis-aligned box).
+    # Points falling inside this box are dropped as self-hits.
+    # Front lidar sits at (0.38, 0.26), rear at (-0.38, -0.26); pad ~5 cm past them.
+    footprintXMin: -0.45
+    footprintXMax: 0.45
+    footprintYMin: -0.32
+    footprintYMax: 0.32
+
+pointcloud_to_laserscan:
+  ros__parameters:
+    use_sim_time: true
+    # Launch rewrites to <ns>/scan so it matches the merged cloud frame.
+    target_frame: scan
+    transform_tolerance: 0.05
+    min_height: -0.5
+    max_height: 1.0
+    angle_min: -3.141592653589793
+    angle_max: 3.141592653589793
+    angle_increment: 0.0087
+    scan_time: 0.1
+    range_min: 0.05
+    range_max: 25.0
+    use_inf: true
+    inf_epsilon: 1.0
+    queue_size: 16

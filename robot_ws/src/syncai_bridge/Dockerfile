@@ -24,8 +24,6 @@ RUN apt-get update && apt-get install -y \
     ros-jazzy-iceoryx-binding-c \
     && rm -rf /var/lib/apt/lists/*
 
-ENV LD_LIBRARY_PATH=/opt/ros/jazzy/lib/aarch64-linux-gnu:$LD_LIBRARY_PATH
-
 RUN echo "ubuntu ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 USER ubuntu

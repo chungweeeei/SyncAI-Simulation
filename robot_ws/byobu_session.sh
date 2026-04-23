@@ -17,6 +17,11 @@ byobu split-window -v -t "$SESSION_NAME:localization"
 byobu send-keys -t "$SESSION_NAME:localization.1" \
   "ros2 launch syncai_bringup costmap_filter_launch.py" Enter
 
+# ---------- Window: scan_merger ----------
+byobu new-window -t "$SESSION_NAME" -n "scan_merger"
+byobu send-keys -t "$SESSION_NAME:scan_merger" \
+  "ros2 launch syncai_bringup laser_scan_merger_launch.py" Enter
+
 # ---------- Window 1: amcl ----------
 byobu new-window -t "$SESSION_NAME" -n "amcl"
 byobu send-keys -t "$SESSION_NAME:amcl" \

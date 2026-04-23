@@ -3,6 +3,9 @@ services:
     build:
       context: ../robot_ws
       dockerfile: Dockerfile
+      args:
+        HOST_UID: ${HOST_UID:-1000}
+        HOST_GID: ${HOST_GID:-1000}
     image: syncai-robot-base-image:latest
 
     runtime: nvidia
@@ -30,7 +33,7 @@ services:
       - ../params:/home/ubuntu/params
 
     networks:
-      - syncai
+      - syncai-network
     stdin_open: true
     tty: true
     restart: unless-stopped
@@ -47,7 +50,7 @@ services:
     volumes:
       - ../robot_ws/src/syncai_bridge:/app
     networks:
-      - syncai
+      - syncai-network
     stdin_open: true
     tty: true
     restart: unless-stopped
@@ -56,11 +59,16 @@ services:
     build:
       context: ../backend
       dockerfile: Dockerfile
+      args:
+        HOST_UID: ${HOST_UID:-1000}
+        HOST_GID: ${HOST_GID:-1000}
     image: syncai-backend:latest
+    working_dir: /app
     volumes:
       - ../backend:/app
+      - /app/node_modules
     networks:
-      - syncai
+      - syncai-network
     stdin_open: true
     tty: true
     restart: unless-stopped

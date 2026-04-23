@@ -4,10 +4,18 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: false
     feedback: "OPEN_LOOP"
+    # Aligned with Isaac Sim MiR250 model (run_sim.py:36-45 in SyncAI-Omniverse).
+    # Sim verified chassis can do 0.28 m/s linear, 0.38 rad/s angular.
+    # Sim DiffCtrl caps: max_linear_accel=1.0, max_linear_decel=1.5,
+    # max_angular_accel=1.5. Smoother accel kept slightly below sim caps so
+    # smoother is the authoritative rate limiter (DiffCtrl ramping becomes
+    # passthrough). max_velocity[2] raised 0.3 -> 0.5 to match controller's
+    # rotate_to_heading_angular_vel; otherwise smoother silently clipped 0.5
+    # rotate cmds down to 0.3.
     max_velocity: [0.5, 0.0, 0.5]
     min_velocity: [-0.5, 0.0, -0.5]
-    max_accel: [2.5, 0.0, 1.5]
-    max_decel: [-2.5, 0.0, -1.5]
+    max_accel: [0.8, 0.0, 1.2]
+    max_decel: [-1.0, 0.0, -1.5]
     odom_topic: odom
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]

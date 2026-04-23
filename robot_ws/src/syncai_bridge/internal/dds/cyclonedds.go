@@ -2,7 +2,7 @@ package dds
 
 /*
 #cgo CFLAGS: -I/opt/ros/jazzy/include/CycloneDDS
-#cgo LDFLAGS: -L/opt/ros/jazzy/lib/aarch64-linux-gnu -lddsc -Wl,-rpath,/opt/ros/jazzy/lib/aarch64-linux-gnu
+#cgo LDFLAGS: -lddsc
 
 #include <stdlib.h>
 #include <string.h>

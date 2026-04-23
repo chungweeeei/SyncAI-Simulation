@@ -19,7 +19,7 @@ CGO_ENABLED=1 go build -o syncai-bridge ./cmd/bridge
 ROBOT_ID=robot01 ./syncai-bridge
 ```
 
-CGo links against CycloneDDS at `/opt/ros/jazzy/lib/aarch64-linux-gnu` (aarch64). The `CFLAGS`/`LDFLAGS` are hardcoded in `internal/dds/cyclonedds.go`. For x86_64, these paths must be adjusted.
+CGo links against CycloneDDS under `/opt/ros/jazzy/lib/<multiarch>`. Arch-specific `LDFLAGS` live in `internal/dds/cyclonedds_linux_amd64.go` (x86_64) and `cyclonedds_linux_arm64.go` (aarch64); the shared `CFLAGS` stay in `cyclonedds.go`.
 
 ## Architecture
 

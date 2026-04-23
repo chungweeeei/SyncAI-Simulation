@@ -10,10 +10,9 @@ controller_server:
     goal_checker_plugins: ["general_goal_checker"]
     controller_plugins: ["FollowPath"]
     progress_checker:
-      plugin: "nav2_controller::PoseProgressChecker"
-      required_movement_radius: 0.1
-      required_movement_angle: 0.1
-      movement_time_allowance: 30.0
+      plugin: "nav2_controller::SimpleProgressChecker"
+      required_movement_radius: 0.5
+      movement_time_allowance: 10.0
     general_goal_checker:
       stateful: true
       plugin: "nav2_controller::SimpleGoalChecker"
@@ -40,15 +39,7 @@ controller_server:
       use_rotate_to_heading: true
       allow_reversing: false
       rotate_to_heading_min_angle: 0.523
-      # 0.8 was too low: per controller tick (50 ms) the closed-loop ramp
-      # added only 0.04 rad/s to the published cmd. Sim's MiR250 chassis
-      # (100 kg, ~8 kg*m^2 yaw inertia) can't respond to a 0.04 rad/s pulse
-      # within 50 ms, so odom feedback stayed at 0, controller re-ramped from
-      # 0 every tick, cmd locked at 0.04 forever. Bumping to 5.0 effectively
-      # disables controller-side ramping; velocity_smoother (OPEN_LOOP) is
-      # now the only rate limiter in the chain and ramps off its own previous
-      # output, breaking the deadlock.
-      max_angular_accel: 5.0
+      max_angular_accel: 0.8
       max_robot_pose_search_dist: 10.0
 
 local_costmap:
@@ -63,11 +54,7 @@ local_costmap:
       width: 3
       height: 3
       resolution: 0.05
-      # MiR250 chassis is 0.80 x 0.58 m (per SyncAI-Omniverse mir_amr.py:88-90),
-      # bounding circle radius = sqrt(0.40^2 + 0.29^2) ~= 0.49 m. The previous
-      # 0.22 was the TurtleBot3 default and let nav2 plan paths the real chassis
-      # would clip walls on. 0.50 leaves a few mm of margin.
-      robot_radius: 0.50
+      robot_radius: 0.22
       transform_tolerance: 2.0
       plugins: ["voxel_layer", "inflation_layer"]
       voxel_layer:

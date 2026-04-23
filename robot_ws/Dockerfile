@@ -32,6 +32,9 @@ RUN apt-get update && apt-get install -y \
     ros-jazzy-geometry-msgs \
     ros-jazzy-sensor-msgs \
     ros-jazzy-rviz2 \
+    ros-jazzy-pointcloud-to-laserscan \
+    ros-jazzy-pcl-conversions \
+    ros-jazzy-tf2-geometry-msgs \
     python3-colcon-common-extensions \
     python3-rosdep \
     byobu \
@@ -56,6 +59,12 @@ COPY scripts/entrypoint.sh /home/ubuntu/entrypoint.sh
 RUN chmod +x /home/ubuntu/entrypoint.sh
 
 RUN echo "ubuntu ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+ARG HOST_UID=1000
+ARG HOST_GID=1000
+RUN groupmod -g ${HOST_GID} ubuntu && \
+    usermod -u ${HOST_UID} -g ${HOST_GID} ubuntu && \
+    chown -R ubuntu:ubuntu /home/ubuntu
 
 USER ubuntu
 WORKDIR /home/ubuntu
