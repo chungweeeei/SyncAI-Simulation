@@ -67,6 +67,10 @@ def generate_launch_description():
         default_params_file, robot_id
     )
 
+    filter_params_file = os.path.join(
+        bringup_dir, 'config', 'scan_filter_chain.yaml'
+    )
+
     namespace = LaunchConfiguration('namespace')
     use_sim_time = LaunchConfiguration('use_sim_time')
 
@@ -104,6 +108,27 @@ def generate_launch_description():
                 name='pointcloud_to_laserscan',
                 output='screen',
                 parameters=[namespaced_params_file],
+                # Publish the unfiltered scan on `scan_raw`; the filter chain
+                # below reads it and republishes cleaned output on `scan` for
+                # Nav2 to consume transparently.
+                remappings=[('scan', 'scan_raw')],
+                arguments=['--ros-args', '--log-level', 'info'],
+            ),
+            # Speckle + shadow filter: kills RTX flicker beams that otherwise
+            # produce ghost points in the local costmap (see
+            # scan_filter_chain.yaml for tuning rationale). Input: scan_raw,
+            # output remapped from the filter's default `scan_filtered` onto
+            # `scan` so Nav2 subscribers are unaffected.
+            Node(
+                package='laser_filters',
+                executable='scan_to_scan_filter_chain',
+                name='scan_to_scan_filter_chain',
+                output='screen',
+                parameters=[filter_params_file],
+                remappings=[
+                    ('scan', 'scan_raw'),
+                    ('scan_filtered', 'scan'),
+                ],
                 arguments=['--ros-args', '--log-level', 'info'],
             ),
         ],

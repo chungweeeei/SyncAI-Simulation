@@ -28,14 +28,18 @@ ros2_laser_scan_merger:
     laser1G: 0
     laser1B: 0
 
-    # laser2 = rear-right mount (lidar_link_rear in SyncAI-Omniverse mir_amr.py:184)
+    # laser2 = rear-right mount (lidar_link_rear in SyncAI-Omniverse mir_amr.py:189)
+    # Alpha=180 compensates the 180° Z-rotation applied to the rear RTX sensor
+    # prim in run_sim.py (dual_diagonal anti-ghost geometry: rear's open sector
+    # faces -X). The LaserScan arrives in the rotated sensor frame; without
+    # this rotation the merger projects rear hits to the front of the robot.
     show2: true
     flip2: false
     inverse2: false
     laser2XOff: -0.38
     laser2YOff: -0.26
     laser2ZOff: 0.0
-    laser2Alpha: 0.0
+    laser2Alpha: 180.0
     laser2AngleMin: -180.0
     laser2AngleMax: 180.0
     laser2R: 0
@@ -44,11 +48,14 @@ ros2_laser_scan_merger:
 
     # Robot footprint in base_link frame (axis-aligned box).
     # Points falling inside this box are dropped as self-hits.
-    # Front lidar sits at (0.38, 0.26), rear at (-0.38, -0.26); pad ~5 cm past them.
-    footprintXMin: -0.45
-    footprintXMax: 0.45
-    footprintYMin: -0.32
-    footprintYMax: 0.32
+    # Front lidar sits at (0.38, 0.26), rear at (-0.38, -0.26); pad ~15 cm past
+    # them to also catch self-hits on bumpers / external structures that extend
+    # beyond the lidar mount. Tighten if real obstacles near the chassis edges
+    # start getting filtered during docking.
+    footprintXMin: -0.53
+    footprintXMax: 0.53
+    footprintYMin: -0.41
+    footprintYMax: 0.41
 
 pointcloud_to_laserscan:
   ros__parameters:
@@ -60,10 +67,17 @@ pointcloud_to_laserscan:
     max_height: 1.0
     angle_min: -3.141592653589793
     angle_max: 3.141592653589793
-    angle_increment: 0.0087
+    # Match the RTX source beam spacing (~1.30° = 0.0227 rad). The older
+    # 0.5° output was oversampled 2.6x, producing sparse "+inf gaps between
+    # every real beam" and making real obstacles look like flickering speckle
+    # in rviz. Run analyze_scan.py after any sim-side lidar change and retune.
+    angle_increment: 0.0227
     scan_time: 0.1
     range_min: 0.05
-    range_max: 25.0
+    # Cap at 10 m: at 1.30° beam spacing, arcs >22 cm between neighbors make
+    # returns beyond 10 m unreliable (isolated-point rate spikes), and the
+    # global costmap rolling window is smaller than this anyway.
+    range_max: 10.0
     use_inf: true
     inf_epsilon: 1.0
     queue_size: 16

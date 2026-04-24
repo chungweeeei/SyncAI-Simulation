@@ -1,0 +1,23 @@
+/**:
+  ros__parameters:
+    filter1:
+      name: speckle
+      type: laser_filters/LaserScanSpeckleFilter
+      params:
+        # 0 = distance between consecutive beams.
+        # Any beam whose range differs from its neighbors by > max_range_difference
+        # (across `filter_window` neighbors) becomes inf. Kills RTX flicker / edge speckle.
+        filter_type: 0
+        max_range: 10.0
+        max_range_difference: 0.30
+        filter_window: 2
+    filter2:
+      name: shadows
+      type: laser_filters/ScanShadowsFilter
+      params:
+        # Angle-of-incidence gate: rays grazing a surface with opening_angle
+        # between (min,max) are dropped. Lower `neighbors` for coarse beams.
+        min_angle: 10.0
+        max_angle: 170.0
+        neighbors: 1
+        window: 1

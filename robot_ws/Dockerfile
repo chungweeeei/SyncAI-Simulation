@@ -33,6 +33,7 @@ RUN apt-get update && apt-get install -y \
     ros-jazzy-sensor-msgs \
     ros-jazzy-rviz2 \
     ros-jazzy-pointcloud-to-laserscan \
+    ros-jazzy-laser-filters \
     ros-jazzy-pcl-conversions \
     ros-jazzy-tf2-geometry-msgs \
     python3-colcon-common-extensions \
