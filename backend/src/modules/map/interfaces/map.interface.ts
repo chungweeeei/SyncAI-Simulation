@@ -1,9 +1,3 @@
-export interface MapPoseRaw {
-  x: number;
-  y: number;
-  yaw: number;
-}
-
 export interface MapPose {
   x: number;
   y: number;
