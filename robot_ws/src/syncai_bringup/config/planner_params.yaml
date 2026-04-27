@@ -19,7 +19,7 @@ global_costmap:
       global_frame: map
       robot_base_frame: <robot_namespace>/base_link
       use_sim_time: true
-      footprint: "[[0.21, 0.155], [0.21, -0.155], [-0.21, -0.155], [-0.21, 0.155]]"
+      footprint: "[[0.40, 0.29], [0.40, -0.29], [-0.40, -0.29], [-0.40, 0.29]]"
       resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
