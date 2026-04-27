@@ -11,14 +11,14 @@ docking_server:
     base_frame: "base_link"
     fixed_frame: "odom"
     dock_backwards: false
-    dock_prestaging_tolerance: 0.05
+    dock_prestaging_tolerance: 0.02
 
     # Dock type plugins
     dock_plugins: ['simple_charging_dock']
     simple_charging_dock:
       plugin: 'opennav_docking::SimpleNonChargingDock'
       docking_threshold: 0.02
-      staging_x_offset: -0.7
+      staging_x_offset: -0.5
       staging_yaw_offset: 0.0
       use_external_detection_pose: false
       use_battery_status: false
@@ -28,7 +28,7 @@ docking_server:
     # Internal controller for dock approach
     controller:
       k_phi: 3.5
-      k_delta: 3.5
+      k_delta: 2.5
       v_linear_min: 0.04
       v_linear_max: 0.08
       use_collision_detection: false
