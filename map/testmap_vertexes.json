@@ -43,7 +43,7 @@
     "name": "front_door",
     "pose": {
       "x": 5.0,
-      "y": 2.0,
+      "y": 2.5,
       "theta": 0.0
     }
   },

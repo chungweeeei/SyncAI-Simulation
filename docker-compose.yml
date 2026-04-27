@@ -1,5 +1,6 @@
 include:
   - robots/robot01.yml
+  - robots/robot02.yml
 
 services:
   sim:
