@@ -63,11 +63,15 @@ local_costmap:
       width: 3
       height: 3
       resolution: 0.05
-      # MiR250 chassis is 0.80 x 0.58 m (per SyncAI-Omniverse mir_amr.py:88-90).
-      # Use rectangular footprint instead of robot_radius (circle) so narrow
-      # corridors (~0.85 m wide) don't false-positive collision when the chassis
-      # could actually fit lengthwise.
-      footprint: "[[0.40, 0.29], [0.40, -0.29], [-0.40, -0.29], [-0.40, 0.29]]"
+      # MiR250 chassis at scale=0.7 (per SyncAI-Omniverse/config/sim_config.yaml
+      # robots[*].scale): real MiR250 is 0.80 x 0.58 m, so sim body is
+      # 0.56 x 0.40 m -> half-extents (0.28, 0.20). Rectangular footprint
+      # (not robot_radius) so a 0.60 m corridor still lets the chassis pass
+      # lengthwise. If sim_config.yaml's scale changes, rescale these and the
+      # planner_params.yaml global_costmap footprint to match, otherwise
+      # RegulatedPurePursuitController spam-rejects valid paths as
+      # "collision ahead!" (oversized footprint sweeps through wall cells).
+      footprint: "[[0.28, 0.20], [0.28, -0.20], [-0.28, -0.20], [-0.28, 0.20]]"
       transform_tolerance: 2.0
       plugins: ["voxel_layer", "inflation_layer"]
       voxel_layer:

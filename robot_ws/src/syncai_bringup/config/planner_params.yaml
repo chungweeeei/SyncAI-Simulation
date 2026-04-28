@@ -19,7 +19,10 @@ global_costmap:
       global_frame: map
       robot_base_frame: <robot_namespace>/base_link
       use_sim_time: true
-      footprint: "[[0.40, 0.29], [0.40, -0.29], [-0.40, -0.29], [-0.40, 0.29]]"
+      # Match controller_params.yaml local_costmap footprint -- scale=0.7 of
+      # the real MiR250 0.80 x 0.58 m, per SyncAI-Omniverse/config/sim_config.yaml
+      # robots[*].scale. Rescale both files together when the sim scale changes.
+      footprint: "[[0.28, 0.20], [0.28, -0.20], [-0.28, -0.20], [-0.28, 0.20]]"
       resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]

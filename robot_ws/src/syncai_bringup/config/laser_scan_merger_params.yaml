@@ -14,12 +14,17 @@ ros2_laser_scan_merger:
     # at z=0 and nav2 voxel layer rejects sensor origins at the boundary.
     pointCloutFrameId: scan
 
-    # laser1 = front-left mount (lidar_link_front in SyncAI-Omniverse mir_amr.py:179)
+    # laser1 = front-left mount (lidar_link_front in SyncAI-Omniverse mir_amr.py:208).
+    # Offsets are the *runtime* sensor pose: mir_amr.py multiplies the unscaled
+    # MiR250 mount coordinates (0.38, 0.26) by the per-robot `scale` from
+    # SyncAI-Omniverse/config/sim_config.yaml. With scale=0.7 -> 0.266, 0.182.
+    # If sim_config.yaml scale changes, retune these or the front/rear scans
+    # will draw the same wall as two parallel lines.
     show1: true
     flip1: false
     inverse1: false
-    laser1XOff: 0.38
-    laser1YOff: 0.26
+    laser1XOff: 0.266
+    laser1YOff: 0.182
     laser1ZOff: 0.0
     laser1Alpha: 0.0
     laser1AngleMin: -180.0
@@ -28,7 +33,8 @@ ros2_laser_scan_merger:
     laser1G: 0
     laser1B: 0
 
-    # laser2 = rear-right mount (lidar_link_rear in SyncAI-Omniverse mir_amr.py:189)
+    # laser2 = rear-right mount (lidar_link_rear in SyncAI-Omniverse mir_amr.py:213).
+    # Same scale=0.7 applies: (-0.38, -0.26) * 0.7 = (-0.266, -0.182).
     # Alpha=180 compensates the 180° Z-rotation applied to the rear RTX sensor
     # prim in run_sim.py (dual_diagonal anti-ghost geometry: rear's open sector
     # faces -X). The LaserScan arrives in the rotated sensor frame; without
@@ -36,8 +42,8 @@ ros2_laser_scan_merger:
     show2: true
     flip2: false
     inverse2: false
-    laser2XOff: -0.38
-    laser2YOff: -0.26
+    laser2XOff: -0.266
+    laser2YOff: -0.182
     laser2ZOff: 0.0
     laser2Alpha: 180.0
     laser2AngleMin: -180.0
@@ -48,14 +54,14 @@ ros2_laser_scan_merger:
 
     # Robot footprint in base_link frame (axis-aligned box).
     # Points falling inside this box are dropped as self-hits.
-    # Front lidar sits at (0.38, 0.26), rear at (-0.38, -0.26); pad ~15 cm past
-    # them to also catch self-hits on bumpers / external structures that extend
-    # beyond the lidar mount. Tighten if real obstacles near the chassis edges
-    # start getting filtered during docking.
-    footprintXMin: -0.53
-    footprintXMax: 0.53
-    footprintYMin: -0.41
-    footprintYMax: 0.41
+    # At sim scale=0.7 the lidars sit at (±0.266, ±0.182); chassis + bumpers
+    # extend ~10 cm past them, giving (±0.37, ±0.29). Tighten if real obstacles
+    # near the chassis edges start getting filtered during docking; rescale
+    # alongside laser{1,2}XOff/YOff if sim_config.yaml scale changes.
+    footprintXMin: -0.37
+    footprintXMax: 0.37
+    footprintYMin: -0.29
+    footprintYMax: 0.29
 
 pointcloud_to_laserscan:
   ros__parameters:
