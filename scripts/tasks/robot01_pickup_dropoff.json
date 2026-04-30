@@ -1,0 +1,33 @@
+{
+  "action": "TASK",
+  "id": "robot01-pickup-dropoff-001",
+  "timestamp": 0,
+  "payload": {
+    "steps": [
+      {
+        "id": "step1",
+        "name": "Move to conveyor_01",
+        "type": "MOVE",
+        "params": { "x": -3.5, "y": 4.5, "r": 90.0 }
+      },
+      {
+        "id": "step2",
+        "name": "Pickup box from conveyor_01",
+        "type": "PICKUP",
+        "params": { "conveyor_id": "conveyor_01", "box_id": "box01" }
+      },
+      {
+        "id": "step3",
+        "name": "Move to dropoff_a",
+        "type": "MOVE",
+        "params": { "x": 4.5, "y": -1.0, "r": -90.0 }
+      },
+      {
+        "id": "step4",
+        "name": "Dropoff at dropoff_a",
+        "type": "DROPOFF",
+        "params": { "zone_id": "dropoff_a" }
+      }
+    ]
+  }
+}

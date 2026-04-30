@@ -26,8 +26,10 @@ class RobotActivities:
         self.task_repo.update_step_status(input.task_id, input.step_index, StepStatus.IN_PROGRESS)
         self.task_repo.update_current_step_index(input.task_id, input.step_index)
 
+        yaw_rad = math.radians(input.params.get("r", 0.0))
+
         success, msg = self.robot_gateway.navigate_to_pose(
-            x=input.params["x"], y=input.params["y"], yaw=input.params["r"]
+            x=input.params["x"], y=input.params["y"], yaw=yaw_rad
         )
 
         status = StepStatus.COMPLETED if success else StepStatus.FAILED
