@@ -1,0 +1,5 @@
+devices:
+  - id: door_01
+    type: door
+  - id: conveyor_01
+    type: conveyor

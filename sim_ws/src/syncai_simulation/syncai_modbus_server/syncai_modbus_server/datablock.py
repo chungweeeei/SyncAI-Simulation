@@ -3,8 +3,8 @@ from typing import Callable
 from pymodbus.datastore import ModbusSequentialDataBlock
 
 
-class CoilWriteDataBlock(ModbusSequentialDataBlock):
-    """Custom datablock that fires a callback when coils are written."""
+class WriteCallbackDataBlock(ModbusSequentialDataBlock):
+    """Sequential datablock that fires a callback whenever values are written."""
 
     def __init__(self, address: int, values: list, write_callback: Callable | None = None):
         super().__init__(address, values)

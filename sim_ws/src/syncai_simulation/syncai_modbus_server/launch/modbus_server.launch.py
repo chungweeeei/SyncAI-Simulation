@@ -9,7 +9,7 @@ def generate_launch_description():
         DeclareLaunchArgument('host', default_value='0.0.0.0'),
         DeclareLaunchArgument('port', default_value='5020'),
         DeclareLaunchArgument('unit_id', default_value='1'),
-        DeclareLaunchArgument('door_ids', default_value="['door_01']"),
+        DeclareLaunchArgument('config_file', default_value=''),
 
         Node(
             package='syncai_modbus_server',
@@ -19,7 +19,7 @@ def generate_launch_description():
                 'host': LaunchConfiguration('host'),
                 'port': LaunchConfiguration('port'),
                 'unit_id': LaunchConfiguration('unit_id'),
-                'door_ids': LaunchConfiguration('door_ids'),
+                'config_file': LaunchConfiguration('config_file'),
             }],
             output='screen',
         ),
