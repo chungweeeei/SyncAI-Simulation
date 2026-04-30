@@ -13,6 +13,7 @@ class CargoGateway:
         self._robot_name = robot_name
         self._drop_pub = node.create_publisher(String, "/cargo/drop_cmd", 10)
         self._pickup_pubs: dict[str, object] = {}
+        self._carried_box: str | None = None
 
     def pickup(self, conveyor_id: str, box_id: str) -> Tuple[bool, str]:
         pub = self._pickup_pubs.get(conveyor_id)
@@ -26,17 +27,25 @@ class CargoGateway:
         msg = String()
         msg.data = payload
         pub.publish(msg)
+        self._carried_box = box_id
         self._logger.info(
             "[CargoGateway] pickup", conveyor=conveyor_id, box=box_id, robot=self._robot_name
         )
         return True, f"pickup published to /cargo/{conveyor_id}/pickup_cmd ({payload})"
 
     def dropoff(self, zone_id: str) -> Tuple[bool, str]:
+        if self._carried_box is None:
+            self._logger.warning("[CargoGateway] dropoff with no carried box", zone=zone_id)
+            return False, "dropoff failed: no box currently carried"
+
+        box_id = self._carried_box
+        payload = f"{box_id}:{zone_id}"
         msg = String()
-        msg.data = zone_id
+        msg.data = payload
         self._drop_pub.publish(msg)
-        self._logger.info("[CargoGateway] dropoff", zone=zone_id)
-        return True, f"drop published to /cargo/drop_cmd ({zone_id})"
+        self._carried_box = None
+        self._logger.info("[CargoGateway] dropoff", box=box_id, zone=zone_id)
+        return True, f"drop published to /cargo/drop_cmd ({payload})"
 
 
 def init_cargo_gateway(
