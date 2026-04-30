@@ -52,19 +52,20 @@ export class ChargeParamsDto {
   r?: number;
 }
 
-export class NavigateWithAlertParamsDto {
-  @ApiProperty({ description: 'X coordinate' })
-  @IsNumber()
-  x: number;
+export class PickupParamsDto {
+  @ApiProperty({ description: 'Conveyor device id', example: 'conveyor_01' })
+  @IsString()
+  conveyor_id: string;
 
-  @ApiProperty({ description: 'Y coordinate' })
-  @IsNumber()
-  y: number;
+  @ApiProperty({ description: 'Box id to pick up', example: 'box01' })
+  @IsString()
+  box_id: string;
+}
 
-  @ApiPropertyOptional({ description: 'Rotation angle' })
-  @IsNumber()
-  @IsOptional()
-  r?: number;
+export class DropoffParamsDto {
+  @ApiProperty({ description: 'Dropoff zone id', example: 'dropoff_a' })
+  @IsString()
+  zone_id: string;
 }
 
 export class StepDto {
@@ -87,7 +88,8 @@ export class StepDto {
       { type: 'object', title: 'WaitParamsDto' },
       { type: 'object', title: 'DoorParamsDto' },
       { type: 'object', title: 'ChargeParamsDto' },
-      { type: 'object', title: 'NavigateWithAlertParamsDto' },
+      { type: 'object', title: 'PickupParamsDto' },
+      { type: 'object', title: 'DropoffParamsDto' },
     ],
   })
   @ValidateNested()
@@ -97,7 +99,8 @@ export class StepDto {
       [StepType.WAIT]: WaitParamsDto,
       [StepType.DOOR]: DoorParamsDto,
       [StepType.CHARGE]: ChargeParamsDto,
-      [StepType.NAVIGATE_WITH_ALERT]: NavigateWithAlertParamsDto,
+      [StepType.PICKUP]: PickupParamsDto,
+      [StepType.DROPOFF]: DropoffParamsDto,
     };
     const cls = typeMap[obj.type];
     return cls ? plainToInstance(cls, value) : value;
@@ -107,7 +110,8 @@ export class StepDto {
     | WaitParamsDto
     | DoorParamsDto
     | ChargeParamsDto
-    | NavigateWithAlertParamsDto;
+    | PickupParamsDto
+    | DropoffParamsDto;
 }
 
 export class TaskPayloadDto {

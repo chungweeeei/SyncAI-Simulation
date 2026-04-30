@@ -8,7 +8,8 @@ export enum StepType {
   WAIT = 'WAIT',
   DOOR = 'DOOR',
   CHARGE = 'CHARGE',
-  NAVIGATE_WITH_ALERT = 'NAVIGATE_WITH_ALERT',
+  PICKUP = 'PICKUP',
+  DROPOFF = 'DROPOFF',
 }
 
 export enum TaskStatus {

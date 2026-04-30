@@ -10,7 +10,7 @@ from rclpy.action.client import ClientGoalHandle
 from nav2_msgs.action import NavigateToPose
 from geometry_msgs.msg import PoseStamped
 from action_msgs.msg import GoalStatus
-from syncai_bt_plugins.action import Charging, NavigateWithAlert
+from syncai_bt_plugins.action import Charging
 
 
 def _wait_for_future(future, timeout: Optional[float] = None) -> bool:
@@ -35,15 +35,10 @@ class RobotGateway:
         charging_action_name = f'/{robot_id}/charging'
         self._charging_client = ActionClient(node, Charging, charging_action_name)
 
-        # Navigate with alert action client
-        navigate_with_alert_action_name = f'/{robot_id}/navigate_with_alert'
-        self._navigate_with_alert_client = ActionClient(node, NavigateWithAlert, navigate_with_alert_action_name)
-
         self._logger.info(
             "[RobotGateway] Action clients created",
             nav_action=nav_action_name,
             charging_action=charging_action_name,
-            navigate_with_alert_action=navigate_with_alert_action_name,
         )
 
     def navigate_to_pose(self, x: float, y: float, yaw: float) -> Tuple[bool, str]:
@@ -133,50 +128,6 @@ class RobotGateway:
             return True, result.result.message
         elif result.status == GoalStatus.STATUS_CANCELED:
             return False, "Charging was cancelled"
-        else:
-            return False, result.result.message
-
-    def navigate_with_alert(
-        self,
-        x: float,
-        y: float,
-        yaw: float,
-    ) -> Tuple[bool, str]:
-        if not self._navigate_with_alert_client.wait_for_server(timeout_sec=10.0):
-            return False, "Navigate with alert action server not available"
-
-        goal_msg = NavigateWithAlert.Goal()
-        goal_msg.target_x = x
-        goal_msg.target_y = y
-        goal_msg.target_yaw = yaw
-
-        self._logger.info(
-            "[RobotGateway] Sending navigate with alert goal",
-            x=x, y=y, yaw=yaw,
-        )
-
-        send_goal_future = self._navigate_with_alert_client.send_goal_async(goal_msg)
-        if not _wait_for_future(send_goal_future, timeout=15.0):
-            return False, "Timeout waiting for navigate with alert goal acceptance"
-
-        self._current_goal_handle = send_goal_future.result()
-
-        if not self._current_goal_handle.accepted:
-            self._current_goal_handle = None
-            return False, "Navigate with alert goal rejected"
-
-        self._logger.info("[RobotGateway] Navigate with alert goal accepted")
-
-        result_future = self._current_goal_handle.get_result_async()
-        _wait_for_future(result_future)
-
-        result = result_future.result()
-        self._current_goal_handle = None
-
-        if result.status == GoalStatus.STATUS_SUCCEEDED:
-            return True, result.result.message
-        elif result.status == GoalStatus.STATUS_CANCELED:
-            return False, "Navigate with alert was cancelled"
         else:
             return False, result.result.message
 

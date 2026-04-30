@@ -12,7 +12,8 @@ class StepType(str, Enum):
     WAIT = "WAIT"
     DOOR = "DOOR"
     CHARGE = "CHARGE"
-    NAVIGATE_WITH_ALERT = "NAVIGATE_WITH_ALERT"
+    PICKUP = "PICKUP"
+    DROPOFF = "DROPOFF"
 
 class TaskStatus(str, Enum):
     PENDING = "PENDING"
@@ -44,17 +45,19 @@ class ChargeParams(BaseModel):
     y: float = Field(..., description="Y coordinate near charging station", examples=[5.0])
     r: float = Field(0.0, description="Rotation in degrees", examples=[0.0])
 
-class NavigateWithAlertParams(BaseModel):
-    x: float = Field(..., description="X coordinate for movement", examples=[0.0])
-    y: float = Field(..., description="Y coordinate for movement", examples=[0.0])
-    r: float = Field(0.0, description="Rotation in degrees", examples=[0.0])
+class PickupParams(BaseModel):
+    conveyor_id: str = Field(..., description="Conveyor device id", examples=["conveyor_01"])
+    box_id: str = Field(..., description="Box id to pick up", examples=["box01"])
+
+class DropoffParams(BaseModel):
+    zone_id: str = Field(..., description="Dropoff zone id", examples=["dropoff_a"])
 
 # --- Internal models (with status tracking) ---
 class Step(BaseModel):
     id: str
     name: str
     type: StepType
-    params: MoveParams | WaitParams | DoorParams | ChargeParams | NavigateWithAlertParams
+    params: MoveParams | WaitParams | DoorParams | ChargeParams | PickupParams | DropoffParams
     status: StepStatus = StepStatus.PENDING
     error_msg: Optional[str] = None
 

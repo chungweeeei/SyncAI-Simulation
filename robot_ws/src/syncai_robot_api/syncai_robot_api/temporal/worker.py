@@ -8,6 +8,7 @@ from temporalio.worker import Worker
 
 from syncai_robot_api.gateways.robot import RobotGateway
 from syncai_robot_api.gateways.modbus import ModbusGateway
+from syncai_robot_api.gateways.cargo import CargoGateway
 from syncai_robot_api.repositories.task.task import TaskRepo
 from syncai_robot_api.temporal.shared import TEMPORAL_SERVER_URL, get_task_queue
 from syncai_robot_api.temporal.activities import RobotActivities
@@ -18,6 +19,7 @@ def start_temporal_worker(
     logger: structlog.stdlib.BoundLogger,
     robot_gateway: RobotGateway,
     modbus_gateway: ModbusGateway,
+    cargo_gateway: CargoGateway,
     task_repo: TaskRepo,
     robot_id: str,
 ):
@@ -32,6 +34,7 @@ def start_temporal_worker(
         activities = RobotActivities(
             robot_gateway=robot_gateway,
             modbus_gateway=modbus_gateway,
+            cargo_gateway=cargo_gateway,
             task_repo=task_repo,
             logger=logger,
         )
@@ -45,7 +48,8 @@ def start_temporal_worker(
                 activities.execute_wait,
                 activities.execute_door,
                 activities.execute_charge,
-                activities.execute_navigate_with_alert,
+                activities.execute_pickup,
+                activities.execute_dropoff,
             ],
             activity_executor=ThreadPoolExecutor(max_workers=1),
         )

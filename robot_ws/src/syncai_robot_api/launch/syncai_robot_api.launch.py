@@ -11,12 +11,14 @@ def _read_system_ini(data_dir):
     ini_path = os.path.join(data_dir, 'system.ini')
     config = configparser.ConfigParser()
     config.read(ini_path)
-    return config.get('identity', 'robot_id', fallback='robot01')
+    robot_id = config.get('identity', 'robot_id', fallback='robot01')
+    robot_name = config.get('identity', 'robot_name', fallback=robot_id)
+    return robot_id, robot_name
 
 
 def generate_launch_description():
     data_dir_default = os.path.expanduser("~/data")
-    robot_id = _read_system_ini(data_dir_default)
+    robot_id, _ = _read_system_ini(data_dir_default)
 
     namespace = LaunchConfiguration('namespace')
 
@@ -34,6 +36,7 @@ def generate_launch_description():
                 executable='syncai_robot_api',
                 name='syncai_robot_api',
                 output='screen',
+                parameters=[],
             ),
         ],
     )

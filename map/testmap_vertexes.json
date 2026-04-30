@@ -48,14 +48,6 @@
     }
   },
   {
-    "name": "waiting_point_03",
-    "pose": {
-      "x": 5.0,
-      "y": -3.0,
-      "theta": 0.0
-    }
-  },
-  {
     "name": "charging_station",
     "pose": {
       "x": 0.0,
@@ -69,6 +61,22 @@
       "x": -6.0,
       "y": 2.7,
       "theta": 0.0
+    }
+  },
+  {
+    "name": "pickup_conveyor_01",
+    "pose": {
+      "x": -3.5,
+      "y": 4.5,
+      "theta": 90.0
+    }  
+  },
+  {
+    "name": "dropoff_a",
+    "pose": {
+      "x": 4.5,
+      "y": -1.0,
+      "theta": -90.0
     }
   }
 ]

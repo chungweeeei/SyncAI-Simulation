@@ -7,6 +7,7 @@ from temporalio import activity
 
 from syncai_robot_api.gateways.robot import RobotGateway
 from syncai_robot_api.gateways.modbus import ModbusGateway
+from syncai_robot_api.gateways.cargo import CargoGateway
 from syncai_robot_api.repositories.task.task import TaskRepo
 from syncai_robot_api.repositories.task.schema import StepStatus
 from syncai_robot_api.temporal.converters import StepInput, StepResult
@@ -16,6 +17,7 @@ from syncai_robot_api.temporal.converters import StepInput, StepResult
 class RobotActivities:
     robot_gateway: RobotGateway
     modbus_gateway: ModbusGateway
+    cargo_gateway: CargoGateway
     task_repo: TaskRepo
     logger: structlog.stdlib.BoundLogger
 
@@ -68,16 +70,15 @@ class RobotActivities:
         return StepResult(success=success, message=msg)
 
     @activity.defn
-    def execute_navigate_with_alert(self, input: StepInput) -> StepResult:
+    def execute_door(self, input: StepInput) -> StepResult:
         self.task_repo.update_step_status(input.task_id, input.step_index, StepStatus.IN_PROGRESS)
         self.task_repo.update_current_step_index(input.task_id, input.step_index)
 
-        yaw_rad = math.radians(input.params.get("r", 0.0))
-
-        success, msg = self.robot_gateway.navigate_with_alert(
-            x=input.params["x"],
-            y=input.params["y"],
-            yaw=yaw_rad
+        success, msg = self.modbus_gateway.control_door(
+            cmd_topic=input.params.get("cmd_topic", "/door/door_01/cmd_topic"),
+            open=input.params["open"],
+            timeout_sec=input.params.get("timeout_sec", 10.0),
+            coil_address=input.params.get("coil_address"),
         )
 
         status = StepStatus.COMPLETED if success else StepStatus.FAILED
@@ -89,15 +90,30 @@ class RobotActivities:
         return StepResult(success=success, message=msg)
 
     @activity.defn
-    def execute_door(self, input: StepInput) -> StepResult:
+    def execute_pickup(self, input: StepInput) -> StepResult:
         self.task_repo.update_step_status(input.task_id, input.step_index, StepStatus.IN_PROGRESS)
         self.task_repo.update_current_step_index(input.task_id, input.step_index)
 
-        success, msg = self.modbus_gateway.control_door(
-            cmd_topic=input.params.get("cmd_topic", "/door/door_01/cmd_topic"),
-            open=input.params["open"],
-            timeout_sec=input.params.get("timeout_sec", 10.0),
-            coil_address=input.params.get("coil_address"),
+        success, msg = self.cargo_gateway.pickup(
+            conveyor_id=input.params["conveyor_id"],
+            box_id=input.params["box_id"],
+        )
+
+        status = StepStatus.COMPLETED if success else StepStatus.FAILED
+        self.task_repo.update_step_status(
+            input.task_id, input.step_index, status,
+            error_msg=msg if not success else None
+        )
+
+        return StepResult(success=success, message=msg)
+
+    @activity.defn
+    def execute_dropoff(self, input: StepInput) -> StepResult:
+        self.task_repo.update_step_status(input.task_id, input.step_index, StepStatus.IN_PROGRESS)
+        self.task_repo.update_current_step_index(input.task_id, input.step_index)
+
+        success, msg = self.cargo_gateway.dropoff(
+            zone_id=input.params["zone_id"],
         )
 
         status = StepStatus.COMPLETED if success else StepStatus.FAILED
