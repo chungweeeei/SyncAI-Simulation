@@ -42,9 +42,11 @@ RUN pip3 install --break-system-packages \
     structlog \
     fastapi \
     uvicorn \
-    websockets \ 
+    websockets \
     confluent-kafka \
-    pymodbus==3.12.1
+    pymodbus==3.12.1 \
+    'sqlalchemy>=2.0' \
+    asyncpg
 
 COPY scripts/entrypoint.sh /home/ubuntu/entrypoint.sh
 RUN chmod +x /home/ubuntu/entrypoint.sh

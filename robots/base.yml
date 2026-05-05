@@ -3,14 +3,14 @@ services:
     build:
       context: ../robot_ws
       dockerfile: Dockerfile
-      args:
-        HOST_UID: ${HOST_UID:-1000}
-        HOST_GID: ${HOST_GID:-1000}
     image: syncai-robot-base-image:latest
+
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
 
     runtime: nvidia
 
     environment:
+      - HOME=/home/ubuntu
       - DISPLAY=${DISPLAY}
       - QT_X11_NO_MITSHM=1
       - XAUTHORITY=/home/ubuntu/.Xauthority

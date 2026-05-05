@@ -5,6 +5,7 @@ from rclpy.node import Node
 
 from syncai_wms import logger as _logger_config  # noqa: F401  (configures structlog)
 from syncai_wms.gateways.spawn import init_spawn_gateway
+from syncai_wms.repositories.cell.cell import init_cell_repo
 from syncai_wms.repositories.pending_cargo import init_pending_cargo_repo
 from syncai_wms.server import start_api_server
 from syncai_wms.subscribers.cargo_pending_subscriber import (
@@ -20,6 +21,7 @@ class SyncAIWMS(Node):
 
         pending_repo = init_pending_cargo_repo(logger=logger)
         spawn_gateway = init_spawn_gateway(logger=logger, node=self)
+        cell_repo = init_cell_repo(logger=logger)
 
         init_cargo_pending_subscriber(logger=logger, node=self, repo=pending_repo)
 
@@ -27,6 +29,7 @@ class SyncAIWMS(Node):
             logger=logger,
             spawn_gateway=spawn_gateway,
             pending_repo=pending_repo,
+            cell_repo=cell_repo,
         )
 
 

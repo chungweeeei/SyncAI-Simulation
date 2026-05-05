@@ -20,6 +20,8 @@ setup(
         'setuptools',
         'fastapi',
         'uvicorn',
+        'sqlalchemy>=2.0',
+        'asyncpg',
     ],
     zip_safe=True,
     maintainer='syncrobotic',

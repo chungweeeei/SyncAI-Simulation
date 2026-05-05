@@ -53,13 +53,12 @@ RUN pip3 install --break-system-packages \
 COPY scripts/entrypoint.sh /home/ubuntu/entrypoint.sh
 RUN chmod +x /home/ubuntu/entrypoint.sh
 
-RUN echo "ubuntu ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+# Allow any uid (overridden via compose `user:`) to sudo without password.
+RUN echo "ALL ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-ARG HOST_UID=1000
-ARG HOST_GID=1000
-RUN groupmod -g ${HOST_GID} ubuntu && \
-    usermod -u ${HOST_UID} -g ${HOST_GID} ubuntu && \
-    chown -R ubuntu:ubuntu /home/ubuntu
+# Make HOME world-writable so a runtime-overridden uid can still write
+# things like ~/.ros, ~/.cache, ~/.bash_history.
+RUN chmod -R 777 /home/ubuntu
 
 USER ubuntu
 WORKDIR /home/ubuntu

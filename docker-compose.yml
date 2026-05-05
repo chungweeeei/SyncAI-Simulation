@@ -20,7 +20,7 @@ services:
       - QT_X11_NO_MITSHM=1
       - XAUTHORITY=/home/ubuntu/.Xauthority
 
-      # NVIDIA settings      
+      # NVIDIA settings
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
 
@@ -29,14 +29,24 @@ services:
       - CYCLONEDDS_URI=file:///home/ubuntu/sim_ws/config/cyclonedds.xml
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
+      # syncai_wms PostgreSQL settings
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - SYNCAI_WMS_DB_HOST=postgresql
+      - SYNCAI_WMS_DB_PORT=5432
+
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ubuntu/.Xauthority:ro
       - ./sim_ws:/home/ubuntu/sim_ws
       - ./data:/home/ubuntu/data
+      - ./map:/home/ubuntu/map:ro
 
     ports:
       - 5020:5020
+      - 8100:8100
+    depends_on:
+      - postgresql
     networks:
       - syncai-network
     stdin_open: true
@@ -53,6 +63,23 @@ services:
       - 5432:5432
     volumes:
       - ./data/db_data:/var/lib/postgresql
+    tmpfs:
+      - /tmp
+      - /run
+    networks:
+      - syncai-network
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: pgadmin
+    depends_on:
+      - postgresql
+    image: elestio/pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    ports:
+      - "5050:80"
     tmpfs:
       - /tmp
       - /run
