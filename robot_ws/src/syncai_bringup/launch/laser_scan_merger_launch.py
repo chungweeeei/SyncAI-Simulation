@@ -100,6 +100,12 @@ def generate_launch_description():
                 name='ros2_laser_scan_merger',
                 output='screen',
                 parameters=[namespaced_params_file],
+                # Merger's built-in LaserScan output topic is hardcoded to "scan"
+                # in main.cpp:39 (no param to disable). Without this remap it
+                # collides with the filter_chain's /scan publisher, producing
+                # interleaved-timestamp messages that crash Cartographer with
+                # `map_by_time Check failed: data.time >> std::prev`.
+                remappings=[('scan', 'scan_merged_raw')],
                 arguments=['--ros-args', '--log-level', 'info'],
             ),
             Node(

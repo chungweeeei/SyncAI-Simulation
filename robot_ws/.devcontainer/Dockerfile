@@ -26,14 +26,10 @@ RUN apt-get update && apt-get install -y \
     ros-jazzy-navigation2 \
     ros-jazzy-nav2-bringup \
     ros-jazzy-slam-toolbox \
-    ros-jazzy-tf2-ros \
+    ros-jazzy-cartographer \
+    ros-jazzy-cartographer-ros \
     ros-jazzy-tf2-tools \
     ros-jazzy-rmw-cyclonedds-cpp \
-    ros-jazzy-rosidl-default-generators \
-    ros-jazzy-rosidl-default-runtime \
-    ros-jazzy-std-msgs \
-    ros-jazzy-geometry-msgs \
-    ros-jazzy-sensor-msgs \
     ros-jazzy-rviz2 \
     python3-colcon-common-extensions \
     python3-rosdep \

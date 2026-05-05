@@ -22,20 +22,14 @@ RUN apt-get update && apt-get install -y \
     ros-jazzy-ros-base \
     ros-jazzy-navigation2 \
     ros-jazzy-nav2-bringup \
-    ros-jazzy-slam-toolbox \
-    ros-jazzy-tf2-ros \
+    ros-jazzy-cartographer \
+    ros-jazzy-cartographer-ros \
     ros-jazzy-tf2-tools \
     ros-jazzy-rmw-cyclonedds-cpp \
-    ros-jazzy-rosidl-default-generators \
-    ros-jazzy-rosidl-default-runtime \
-    ros-jazzy-std-msgs \
-    ros-jazzy-geometry-msgs \
-    ros-jazzy-sensor-msgs \
     ros-jazzy-rviz2 \
     ros-jazzy-pointcloud-to-laserscan \
     ros-jazzy-laser-filters \
     ros-jazzy-pcl-conversions \
-    ros-jazzy-tf2-geometry-msgs \
     python3-colcon-common-extensions \
     python3-rosdep \
     byobu \
@@ -54,7 +48,7 @@ RUN pip3 install --break-system-packages \
     confluent-kafka \
     requests \
     temporalio \
-    pymodbus
+    pymodbus 
 
 COPY scripts/entrypoint.sh /home/ubuntu/entrypoint.sh
 RUN chmod +x /home/ubuntu/entrypoint.sh
