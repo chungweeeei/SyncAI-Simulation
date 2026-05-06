@@ -35,6 +35,9 @@ class CellORM(Base):
     area_id: Mapped[str] = mapped_column(String(64), nullable=False)
     cell_position_x: Mapped[float] = mapped_column(Float, nullable=False)
     cell_position_y: Mapped[float] = mapped_column(Float, nullable=False)
+    cell_orientation_r: Mapped[float] = mapped_column(
+        Float, nullable=False, server_default=text("0")
+    )
     display_name: Mapped[str] = mapped_column(String(128), nullable=False)
     function_type_category: Mapped[FunctionTypeCategory] = mapped_column(
         String(32), nullable=False

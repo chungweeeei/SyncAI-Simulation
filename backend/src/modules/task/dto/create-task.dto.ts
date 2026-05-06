@@ -23,6 +23,13 @@ export class MoveParamsDto {
   @ApiProperty({ description: 'Rotation angle' })
   @IsNumber()
   r: number;
+
+  @ApiPropertyOptional({
+    description: 'WMS Cell uuid; if provided, robot reports occupancy on arrival',
+  })
+  @IsString()
+  @IsOptional()
+  cell_id?: string;
 }
 
 export class WaitParamsDto {

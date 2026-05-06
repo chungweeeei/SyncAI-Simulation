@@ -8,6 +8,7 @@ from temporalio import activity
 from syncai_robot_api.gateways.robot import RobotGateway
 from syncai_robot_api.gateways.modbus import ModbusGateway
 from syncai_robot_api.gateways.cargo import CargoGateway
+from syncai_robot_api.gateways.wms import WmsGateway
 from syncai_robot_api.repositories.task.task import TaskRepo
 from syncai_robot_api.repositories.task.schema import StepStatus
 from syncai_robot_api.temporal.converters import StepInput, StepResult
@@ -18,7 +19,9 @@ class RobotActivities:
     robot_gateway: RobotGateway
     modbus_gateway: ModbusGateway
     cargo_gateway: CargoGateway
+    wms_gateway: WmsGateway
     task_repo: TaskRepo
+    robot_id: str
     logger: structlog.stdlib.BoundLogger
 
     @activity.defn
@@ -27,10 +30,20 @@ class RobotActivities:
         self.task_repo.update_current_step_index(input.task_id, input.step_index)
 
         yaw_rad = math.radians(input.params.get("r", 0.0))
+        cell_id = input.params.get("cell_id")
+
+        # Robot is about to leave its current cell — release it immediately so
+        # the cell is free during transit, not only after arrival.
+        self.wms_gateway.release_robot(robot_id=self.robot_id)
 
         success, msg = self.robot_gateway.navigate_to_pose(
             x=input.params["x"], y=input.params["y"], yaw=yaw_rad
         )
+
+        if success and cell_id:
+            # Arrived at a known cell — claim it
+            self.wms_gateway.occupy_cell(cell_id=cell_id, robot_id=self.robot_id)
+        # On failure or no destination cell, robot stays free (already released).
 
         status = StepStatus.COMPLETED if success else StepStatus.FAILED
         self.task_repo.update_step_status(

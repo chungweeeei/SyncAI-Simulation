@@ -4,21 +4,16 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd"
 >
-    <Domain Id="0">
+    <Domain Id="any">
         <General>
             <Interfaces>
-                <NetworkInterface autodetermine="true" multicast="false" />
+                <NetworkInterface name="enP2p1s0" multicast="true" />
             </Interfaces>
-            <AllowMulticast>false</AllowMulticast>
+            <AllowMulticast>spdp</AllowMulticast>
         </General>
         <Discovery>
             <ParticipantIndex>auto</ParticipantIndex>
-            <MaxAutoParticipantIndex>20</MaxAutoParticipantIndex>
-            <Peers>
-                <Peer address="syncai-simulation"/>
-                <Peer address="syncai-robot01"/>
-                <Peer address="syncai-robot02"/>
-            </Peers>
+            <MaxAutoParticipantIndex>40</MaxAutoParticipantIndex>
         </Discovery>
         <SharedMemory>
             <Enable>false</Enable>

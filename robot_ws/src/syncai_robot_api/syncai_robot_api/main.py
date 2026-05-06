@@ -16,6 +16,7 @@ from syncai_robot_api.gateways.robot import init_robot_gateway
 from syncai_robot_api.gateways.modbus import ModbusGateway
 from syncai_robot_api.gateways.cargo import init_cargo_gateway
 from syncai_robot_api.gateways.entity import init_entity_gateway
+from syncai_robot_api.gateways.wms import init_wms_gateway
 
 from syncai_robot_api.jobs.send_robot_state import init_send_robot_state_job
 from syncai_robot_api.temporal.worker import start_temporal_worker
@@ -57,6 +58,7 @@ class SyncAIRobotAPI(Node):
         modbus_gateway = ModbusGateway(logger=logger, host="syncai-iot-server", port=5020)
         cargo_gateway = init_cargo_gateway(logger=logger, node=self, robot_name=robot_config.robot_name)
         entity_gateway = init_entity_gateway(logger=logger)
+        wms_gateway = init_wms_gateway(logger=logger)
 
         # Register subscribers
         init_robot_state_subscriber(logger=logger, node=self, robot_repo=robot_repo)
@@ -64,7 +66,7 @@ class SyncAIRobotAPI(Node):
         # init_send_robot_state_job(logger=logger, robot_repo=robot_repo, task_repo=task_repo, agent_gateway=agent_gateway)
 
         # Start Temporal Worker (replaces TaskExecutorJob)
-        start_temporal_worker(logger=logger, robot_gateway=robot_gateway, modbus_gateway=modbus_gateway, cargo_gateway=cargo_gateway, task_repo=task_repo, robot_id=robot_config.robot_id)
+        start_temporal_worker(logger=logger, robot_gateway=robot_gateway, modbus_gateway=modbus_gateway, cargo_gateway=cargo_gateway, wms_gateway=wms_gateway, task_repo=task_repo, robot_id=robot_config.robot_id)
 
         # Start HTTP API server
         start_api_server(

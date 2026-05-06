@@ -33,6 +33,11 @@ class MoveParams(BaseModel):
     x: float = Field(..., description="X coordinate for movement", examples=[0.0])
     y: float = Field(..., description="Y coordinate for movement", examples=[0.0])
     r: float = Field(..., description="Rotation in degrees", examples=[0.0])
+    cell_id: Optional[str] = Field(
+        default=None,
+        description="WMS Cell uuid; if provided, robot will report occupancy to WMS on arrival",
+        examples=["4386af1d-ffb9-42bc-89f5-9ccd41f887ed"],
+    )
 
 class WaitParams(BaseModel):
     durationSec: float = Field(..., description="Duration to wait in seconds", examples=[5.0])

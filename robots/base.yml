@@ -25,6 +25,7 @@ services:
       - SYNCAI_DATA_DIR=/home/ubuntu/data
       - SYNCAI_API_KEY=${SYNCAI_API_KEY}
       - TEMPORAL_ADDRESS=localhost:7233
+      - SYNCAI_WMS_URL=http://localhost:8100
 
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw

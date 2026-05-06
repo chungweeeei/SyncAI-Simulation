@@ -14,6 +14,9 @@ from syncai_wms.repositories.cell.schema import (
     CellResponse,
     CellUpdate,
     FunctionTypeCategory,
+    OccupyRequest,
+    ReleaseRequest,
+    ReleaseResponse,
 )
 
 
@@ -89,5 +92,20 @@ def init_cell_router(cell_repo: CellRepo) -> APIRouter:
                 detail=f"cell not found: {cell_uuid}",
             )
         return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+    @router.post("/{cell_uuid}/occupy", response_model=CellResponse)
+    async def occupy_cell(cell_uuid: UUID, payload: OccupyRequest) -> CellResponse:
+        try:
+            return await cell_repo.transfer_occupancy(cell_uuid, payload.robot_id)
+        except CellNotFoundError:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"cell not found: {cell_uuid}",
+            )
+
+    @router.post("/release", response_model=ReleaseResponse)
+    async def release_robot_cells(payload: ReleaseRequest) -> ReleaseResponse:
+        cleared = await cell_repo.release_robot(payload.robot_id)
+        return ReleaseResponse(robot_id=payload.robot_id, cleared=cleared)
 
     return router

@@ -13,7 +13,7 @@
         </General>
         <Discovery>
             <ParticipantIndex>auto</ParticipantIndex>
-            <MaxAutoParticipantIndex>40</MaxAutoParticipantIndex>
+            <MaxAutoParticipantIndex>80</MaxAutoParticipantIndex>
         </Discovery>
         <SharedMemory>
             <Enable>false</Enable>

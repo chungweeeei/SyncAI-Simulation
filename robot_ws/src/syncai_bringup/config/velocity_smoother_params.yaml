@@ -9,11 +9,14 @@ velocity_smoother:
     # Sim DiffCtrl caps: max_linear_accel=1.0, max_linear_decel=1.5,
     # max_angular_accel=1.5. Smoother accel kept slightly below sim caps so
     # smoother is the authoritative rate limiter (DiffCtrl ramping becomes
-    # passthrough). max_velocity[2] raised 0.3 -> 0.5 to match controller's
-    # rotate_to_heading_angular_vel; otherwise smoother silently clipped 0.5
-    # rotate cmds down to 0.3.
-    max_velocity: [0.8, 0.0, 0.5]
-    min_velocity: [-0.8, 0.0, -0.5]
+    # passthrough). max_velocity kept slightly below physical cap so smoother
+    # — not the chassis — is the truth: controller cmds higher than this
+    # (e.g. rotate_to_heading_angular_vel=0.5) get clipped here, preventing
+    # the prior overshoot/oscillation where cmd 0.5 was passed to a chassis
+    # that physically delivered only ~0.38, leaving the loop perpetually
+    # saturated and overshooting goal yaw.
+    max_velocity: [0.8, 0.0, 0.4]
+    min_velocity: [-0.8, 0.0, -0.4]
     max_accel: [0.8, 0.0, 1.2]
     max_decel: [-1.0, 0.0, -1.5]
     odom_topic: odom

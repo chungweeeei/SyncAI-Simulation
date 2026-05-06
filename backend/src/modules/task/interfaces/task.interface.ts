@@ -2,6 +2,7 @@ export interface TaskStepParams {
   x?: number;
   y?: number;
   r?: number;
+  cell_id?: string;
   durationSec?: number;
   open?: boolean;
   conveyor_id?: string;

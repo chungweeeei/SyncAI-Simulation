@@ -3,6 +3,54 @@ include:
   - robots/robot02.yml
 
 services:
+  sim:
+    build:
+      context: ./sim_ws
+      dockerfile: Dockerfile
+      args:
+        HOST_UID: ${HOST_UID:-1000}
+        HOST_GID: ${HOST_GID:-1000}
+    image: syncai-simulation-base-image:latest
+    container_name: syncai-iot-server
+
+    depends_on:
+      postgresql:
+        condition: service_healthy
+
+    runtime: nvidia
+    environment:
+      # X11 forwarding
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - XAUTHORITY=/home/ubuntu/.Xauthority
+
+      # NVIDIA settings
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+
+      # ROS 2 DDS settings
+      - ROS_DOMAIN_ID=0
+      - CYCLONEDDS_URI=file:///home/ubuntu/sim_ws/config/cyclonedds.xml
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+
+      # syncai_wms PostgreSQL settings
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - SYNCAI_WMS_DB_HOST=localhost
+      - SYNCAI_WMS_DB_PORT=5432
+
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ubuntu/.Xauthority:ro
+      - ./sim_ws:/home/ubuntu/sim_ws
+      - ./data:/home/ubuntu/data
+      - ./map:/home/ubuntu/map:ro
+
+    network_mode: host
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+  
   postgresql:
     container_name: postgresql
     environment:
@@ -15,6 +63,23 @@ services:
     tmpfs:
       - /tmp
       - /run
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: pgadmin
+    depends_on:
+      - postgresql
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+      - PGADMIN_LISTEN_PORT=${PGADMIN_LISTEN_PORT}
+    image: dpage/pgadmin4:latest
+    network_mode: host
     restart: unless-stopped
 
   temporal:

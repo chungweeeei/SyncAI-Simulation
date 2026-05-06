@@ -124,6 +124,38 @@ class CellRepo:
             row.deleted_at = datetime.now(timezone.utc)
             await session.commit()
 
+    async def transfer_occupancy(
+        self, cell_uuid: UUID, robot_id: str
+    ) -> CellResponse:
+        async with self._factory()() as session:
+            target = await self._fetch(session, cell_uuid, include_deleted=False)
+
+            stmt = select(CellORM).where(
+                CellORM.occupied_by == robot_id,
+                CellORM.uuid != cell_uuid,
+                CellORM.deleted_at.is_(None),
+            )
+            stale = (await session.execute(stmt)).scalars().all()
+            for row in stale:
+                row.occupied_by = None
+
+            target.occupied_by = robot_id
+            await session.commit()
+            await session.refresh(target)
+            return CellResponse.model_validate(target, from_attributes=True)
+
+    async def release_robot(self, robot_id: str) -> int:
+        async with self._factory()() as session:
+            stmt = select(CellORM).where(
+                CellORM.occupied_by == robot_id,
+                CellORM.deleted_at.is_(None),
+            )
+            rows = (await session.execute(stmt)).scalars().all()
+            for row in rows:
+                row.occupied_by = None
+            await session.commit()
+            return len(rows)
+
     async def _fetch(
         self, session: AsyncSession, cell_uuid: UUID, include_deleted: bool
     ) -> CellORM:
