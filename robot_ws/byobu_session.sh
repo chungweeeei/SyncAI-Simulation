@@ -13,9 +13,6 @@ byobu kill-session -t "$SESSION_NAME" 2>/dev/null
 byobu new-session -d -s "$SESSION_NAME" -n "localization"
 byobu send-keys -t "$SESSION_NAME:localization" \
   "ros2 launch syncai_bringup map_server_launch.py" Enter
-byobu split-window -v -t "$SESSION_NAME:localization"
-byobu send-keys -t "$SESSION_NAME:localization.1" \
-  "ros2 launch syncai_bringup costmap_filter_launch.py" Enter
 
 # ---------- Window: scan_merger ----------
 byobu new-window -t "$SESSION_NAME" -n "scan_merger"
@@ -75,7 +72,7 @@ byobu split-window -v -t "$SESSION_NAME:robot_state"
 byobu send-keys -t "$SESSION_NAME:robot_state.1" \
   "" Enter
 
-# ---------- Window 6: docking / bt_plugins ----------
+# ---------- Window 7: docking / bt_plugins ----------
 byobu new-window -t "$SESSION_NAME" -n "dock_bt"
 byobu send-keys -t "$SESSION_NAME:dock_bt" \
   "ros2 launch syncai_bringup docking_launch.py" Enter

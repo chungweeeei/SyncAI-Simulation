@@ -5,6 +5,7 @@ from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import PushROSNamespace, SetParameter, Node
 from launch_ros.descriptions import ParameterFile
@@ -80,6 +81,12 @@ def generate_launch_description():
         description='Automatically startup the costmap filter nodes',
     )
 
+    declare_use_local_lifecycle_manager_cmd = DeclareLaunchArgument(
+        'use_local_lifecycle_manager',
+        default_value='true',
+        description='Spawn a local lifecycle_manager (false when nav2_bringup_launch manages it globally)',
+    )
+
     load_nodes = GroupAction(
         actions=[
             PushROSNamespace(namespace),
@@ -119,6 +126,7 @@ def generate_launch_description():
                 arguments=['--ros-args', '--log-level', 'info'],
             ),
             Node(
+                condition=IfCondition(LaunchConfiguration('use_local_lifecycle_manager')),
                 package='nav2_lifecycle_manager',
                 executable='lifecycle_manager',
                 name='lifecycle_manager_costmap_filter',
@@ -137,6 +145,8 @@ def generate_launch_description():
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_autostart_cmd)
+
+    ld.add_action(declare_use_local_lifecycle_manager_cmd)
 
     ld.add_action(load_nodes)
 

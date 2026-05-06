@@ -24,6 +24,7 @@ services:
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
       - SYNCAI_DATA_DIR=/home/ubuntu/data
       - SYNCAI_API_KEY=${SYNCAI_API_KEY}
+      - TEMPORAL_ADDRESS=localhost:7233
 
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
@@ -32,8 +33,7 @@ services:
       - ../map:/home/ubuntu/map
       - ../params:/home/ubuntu/params
 
-    networks:
-      - syncai-network
+    network_mode: host
     stdin_open: true
     tty: true
     restart: unless-stopped
@@ -44,13 +44,11 @@ services:
       dockerfile: Dockerfile
     image: syncai-bridge:latest
     environment:
-      - GRPC_LISTEN_ADDR=:50051
       - CYCLONEDDS_URI=file:///home/ubuntu/data/cyclonedds.xml
       - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
     volumes:
       - ../robot_ws/src/syncai_bridge:/app
-    networks:
-      - syncai-network
+    network_mode: host
     stdin_open: true
     tty: true
     restart: unless-stopped
@@ -67,8 +65,7 @@ services:
     volumes:
       - ../backend:/app
       - /app/node_modules
-    networks:
-      - syncai-network
+    network_mode: host
     stdin_open: true
     tty: true
     restart: unless-stopped

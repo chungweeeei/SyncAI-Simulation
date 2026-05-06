@@ -56,15 +56,7 @@ def generate_launch_description():
                 output='screen',
                 parameters=[{'bt_xml_file': charging_bt_xml}],
                 arguments=['--ros-args', '--log-level', 'info'],
-            ),
-            Node(
-                package='syncai_bt_plugins',
-                executable='navigate_with_alert_server',
-                name='navigate_with_alert_server',
-                output='screen',
-                parameters=[{'bt_xml_file': navigate_with_alert_bt_xml}],
-                arguments=['--ros-args', '--log-level', 'info'],
-            ),
+            )
         ],
     )
 

@@ -3,88 +3,18 @@ include:
   - robots/robot02.yml
 
 services:
-  sim:
-    build: 
-      context: ./sim_ws
-      dockerfile: Dockerfile
-      args:
-        HOST_UID: ${HOST_UID:-1000}
-        HOST_GID: ${HOST_GID:-1000}
-    image: syncai-simulation-base-image:latest
-    container_name: syncai-iot-server
-
-    runtime: nvidia
-    environment:
-      # X11 forwarding
-      - DISPLAY=${DISPLAY}
-      - QT_X11_NO_MITSHM=1
-      - XAUTHORITY=/home/ubuntu/.Xauthority
-
-      # NVIDIA settings
-      - NVIDIA_VISIBLE_DEVICES=all
-      - NVIDIA_DRIVER_CAPABILITIES=all
-
-      # ROS 2 DDS settings
-      - ROS_DOMAIN_ID=0
-      - CYCLONEDDS_URI=file:///home/ubuntu/sim_ws/config/cyclonedds.xml
-      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-
-      # syncai_wms PostgreSQL settings
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - SYNCAI_WMS_DB_HOST=postgresql
-      - SYNCAI_WMS_DB_PORT=5432
-
-    volumes:
-      - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ubuntu/.Xauthority:ro
-      - ./sim_ws:/home/ubuntu/sim_ws
-      - ./data:/home/ubuntu/data
-      - ./map:/home/ubuntu/map:ro
-
-    ports:
-      - 5020:5020
-      - 8100:8100
-    depends_on:
-      - postgresql
-    networks:
-      - syncai-network
-    stdin_open: true
-    tty: true
-    restart: unless-stopped
-
   postgresql:
     container_name: postgresql
     environment:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_USER: ${POSTGRES_USER}
     image: postgres:18
-    ports:
-      - 5432:5432
+    network_mode: host
     volumes:
       - ./data/db_data:/var/lib/postgresql
     tmpfs:
       - /tmp
       - /run
-    networks:
-      - syncai-network
-    restart: unless-stopped
-
-  pgadmin:
-    container_name: pgadmin
-    depends_on:
-      - postgresql
-    image: elestio/pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
-    ports:
-      - "5050:80"
-    tmpfs:
-      - /tmp
-      - /run
-    networks:
-      - syncai-network
     restart: unless-stopped
 
   temporal:
@@ -96,18 +26,15 @@ services:
       - DB_PORT=${TEMPORAL_DB_PORT}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PWD=${POSTGRES_PASSWORD}
-      - POSTGRES_SEEDS=postgresql
+      - POSTGRES_SEEDS=127.0.0.1
       - TEMPORAL_ADDRESS=${TEMPORAL_ADDRESS}
       - TEMPORAL_CLI_ADDRESS=${TEMPORAL_CLI_ADDRESS}
       - BIND_ON_IP=0.0.0.0
     image: temporalio/auto-setup:${TEMPORAL_VERSION}
-    ports:
-      - 7233:7233
+    network_mode: host
     tmpfs:
       - /tmp
       - /run
-    networks:
-      - syncai-network
     restart: unless-stopped
 
   temporal-ui:
@@ -119,17 +46,10 @@ services:
       - TEMPORAL_CORS_ORIGINS=${TEMPORAL_CORS_ORIGINS}
       - TEMPORAL_UI_AUTH_DISABLED=true
       - TEMPORAL_UI_CSRF_COOKIE_INSECURE=true
+      - TEMPORAL_UI_PORT=${TEMPORAL_UI_PORT}
     image: temporalio/ui:${TEMPORAL_UI_VERSION}
-    ports:
-      - ${TEMPORAL_UI_PORT}:8080
+    network_mode: host
     tmpfs:
       - /tmp
       - /run
-    networks:
-      - syncai-network
     restart: unless-stopped
-
-networks:
-  syncai-network:
-    external: true
-    name: syncai-network

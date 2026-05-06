@@ -1,35 +1,32 @@
 services:
-  robot01:
+  robot03:
     extends:
       file: base.yml
       service: robot
-    container_name: syncai-robot01
-    environment:
-      - SYNCAI_API_PORT=3000
+    container_name: syncai-robot03
     volumes:
-      - ../data/robot01:/home/ubuntu/data
+      - ../data/robot03:/home/ubuntu/data
 
-  robot01-bridge:
+  robot03-bridge:
     extends:
       file: base.yml
       service: bridge
-    container_name: syncai-robot01-bridge
+    container_name: syncai-robot03-bridge
     environment:
-      - GRPC_LISTEN_ADDR=:50051
-      - ROBOT_ID=robot01
+      - ROBOT_ID=robot03
       - ROBOT_API_URL=http://localhost:3000
     volumes:
-      - ../data/robot01:/home/ubuntu/data
+      - ../data/robot03:/home/ubuntu/data
     depends_on:
-      - robot01
+      - robot03
  
-  robot01-backend:
+  robot03-backend:
     extends:
       file: base.yml
       service: backend
-    container_name: syncai-robot01-backend
+    container_name: syncai-robot03-backend
     environment:
-      - PORT=3001
+      - PORT=3003
       - ROBOT_API_URL=http://localhost:3000
       - BRIDGE_GRPC_ADDRESS=localhost:50051
     depends_on:

@@ -7,17 +7,13 @@
     <Domain Id="any">
         <General>
             <Interfaces>
-                <NetworkInterface autodetermine="true" multicast="false" />
+                <NetworkInterface name="enP2p1s0" multicast="true" />
             </Interfaces>
-            <AllowMulticast>false</AllowMulticast>
+            <AllowMulticast>spdp</AllowMulticast>
         </General>
         <Discovery>
             <ParticipantIndex>auto</ParticipantIndex>
             <MaxAutoParticipantIndex>40</MaxAutoParticipantIndex>
-            <Peers>
-                <Peer address="syncai-simulation"/>
-                <Peer address="syncai-robot02"/>
-            </Peers>
         </Discovery>
         <SharedMemory>
             <Enable>false</Enable>

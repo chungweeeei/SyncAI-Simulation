@@ -5,6 +5,7 @@ from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable
+from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import PushROSNamespace, SetParameter, Node
 from launch_ros.descriptions import ParameterFile
@@ -60,7 +61,7 @@ def generate_launch_description():
 
     declare_params_file_cmd = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(bringup_dir, 'config', 'smoother_params.yaml'),
+        default_value=os.path.join(bringup_dir, 'config', 'path_smoother_params.yaml'),
         description='Full path to the ROS2 parameters file to use',
     )
 
@@ -68,6 +69,12 @@ def generate_launch_description():
         'autostart',
         default_value='true',
         description='Automatically startup the smoother server',
+    )
+
+    declare_use_local_lifecycle_manager_cmd = DeclareLaunchArgument(
+        'use_local_lifecycle_manager',
+        default_value='true',
+        description='Spawn a local lifecycle_manager (false when nav2_bringup_launch manages it globally)',
     )
 
     load_nodes = GroupAction(
@@ -83,9 +90,10 @@ def generate_launch_description():
                 arguments=['--ros-args', '--log-level', 'info']
             ),
             Node(
+                condition=IfCondition(LaunchConfiguration('use_local_lifecycle_manager')),
                 package='nav2_lifecycle_manager',
                 executable='lifecycle_manager',
-                name='lifecycle_manager_smoother',
+                name='lifecycle_manager_path_smoother',
                 output='screen',
                 arguments=['--ros-args', '--log-level', 'info'],
                 parameters=[{'autostart': autostart}, {'node_names': lifecycle_nodes}],
@@ -100,6 +108,8 @@ def generate_launch_description():
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_autostart_cmd)
+
+    ld.add_action(declare_use_local_lifecycle_manager_cmd)
 
     ld.add_action(load_nodes)
 

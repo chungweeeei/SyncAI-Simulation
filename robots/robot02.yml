@@ -4,6 +4,8 @@ services:
       file: base.yml
       service: robot
     container_name: syncai-robot02
+    environment:
+      - SYNCAI_API_PORT=4000
     volumes:
       - ../data/robot02:/home/ubuntu/data
 
@@ -13,8 +15,9 @@ services:
       service: bridge
     container_name: syncai-robot02-bridge
     environment:
+      - GRPC_LISTEN_ADDR=:50052
       - ROBOT_ID=robot02
-      - ROBOT_API_URL=http://syncai-robot02:3000
+      - ROBOT_API_URL=http://localhost:4000
     volumes:
       - ../data/robot02:/home/ubuntu/data
     depends_on:
@@ -26,10 +29,9 @@ services:
       service: backend
     container_name: syncai-robot02-backend
     environment:
-      - ROBOT_API_URL=http://syncai-robot02:3000
-      - BRIDGE_GRPC_ADDRESS=syncai-robot02-bridge:50051
-    ports:
-      - "3002:3000"
+      - PORT=4001
+      - ROBOT_API_URL=http://localhost:4000
+      - BRIDGE_GRPC_ADDRESS=localhost:50052
     depends_on:
       - postgresql
       - temporal
