@@ -109,9 +109,19 @@ class RobotActivities:
         self.task_repo.update_step_status(input.task_id, input.step_index, StepStatus.IN_PROGRESS)
         self.task_repo.update_current_step_index(input.task_id, input.step_index)
 
+        conveyor_id = input.params["conveyor_id"]
+
+        ok, box_id, query_msg = self.modbus_gateway.get_conveyor_box_id(conveyor_id)
+        if not ok:
+            self.task_repo.update_step_status(
+                input.task_id, input.step_index, StepStatus.FAILED,
+                error_msg=query_msg,
+            )
+            return StepResult(success=False, message=query_msg)
+
         success, msg = self.cargo_gateway.pickup(
-            conveyor_id=input.params["conveyor_id"],
-            box_id=input.params["box_id"],
+            conveyor_id=conveyor_id,
+            box_id=box_id,
         )
 
         status = StepStatus.COMPLETED if success else StepStatus.FAILED

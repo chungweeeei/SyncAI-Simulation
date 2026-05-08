@@ -8,7 +8,6 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from syncai_robot_api.helpers.map_helper import read_pgm_size
-from syncai_robot_api.gateways.entity import EntityGateway
 
 
 class BaseSchema(BaseModel):
@@ -48,7 +47,7 @@ class MapPayload(BaseSchema):
     vertexes: list[Vertex] = Field(default_factory=list)
 
 
-def init_map_router(map_name: str, entity_gateway: EntityGateway) -> APIRouter:
+def init_map_router(map_name: str) -> APIRouter:
 
     router = APIRouter(prefix="/api/v1/map", tags=["map"])
     _lock = threading.Lock()
@@ -117,21 +116,12 @@ def init_map_router(map_name: str, entity_gateway: EntityGateway) -> APIRouter:
                 detail=f"Vertex '{req.name}' already exists",
             )
 
-        success, message = entity_gateway.spawn_vertex(
-            name=req.name, x=req.pose.x, y=req.pose.y, yaw=req.pose.theta,
-        )
-        if not success:
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=message,
-            )
-
         with _lock:
             vertexes = _read_vertexes()
             vertexes.append({"name": req.name, "pose": {"x": req.pose.x, "y": req.pose.y, "theta": req.pose.theta}})
             _write_vertexes(vertexes)
 
-        return VertexResponse(success=True, message=message)
+        return VertexResponse(success=True, message=f"Vertex '{req.name}' created")
 
     @router.delete("/vertexes/{vertex_name}", response_model=VertexResponse)
     async def delete_vertex(vertex_name: str):
@@ -144,18 +134,11 @@ def init_map_router(map_name: str, entity_gateway: EntityGateway) -> APIRouter:
                 detail=f"Vertex '{vertex_name}' not found",
             )
 
-        success, message = entity_gateway.delete_vertex(name=vertex_name)
-        if not success:
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=message,
-            )
-
         with _lock:
             vertexes = _read_vertexes()
             vertexes = [v for v in vertexes if v["name"] != vertex_name]
             _write_vertexes(vertexes)
 
-        return VertexResponse(success=True, message=message)
+        return VertexResponse(success=True, message=f"Vertex '{vertex_name}' deleted")
 
     return router

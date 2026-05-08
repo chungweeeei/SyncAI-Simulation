@@ -23,6 +23,11 @@ from syncai_modbus_server.subscribers.conveyor_subscriber import init_conveyor_s
 CONVEYOR_BASE = 10
 MAX_DEVICES_PER_TYPE = 10
 
+# Input Register layout for conveyor box_id (ASCII packed, big-endian, 2 chars per register).
+# IR[BOX_ID_BASE + i*WIDTH .. +WIDTH] holds box_id for conveyor index i (0..9).
+CONVEYOR_BOX_ID_IR_BASE = 10
+CONVEYOR_BOX_ID_IR_WIDTH = 4
+
 
 class ModbusServerNode(Node):
 
@@ -71,10 +76,14 @@ class ModbusServerNode(Node):
         self._hr_block = WriteCallbackDataBlock(
             0, hr_initial, write_callback=self._on_hr_write
         )
-        # Input Registers: address 0..9 (read-only test data)
-        self._ir_block = ModbusSequentialDataBlock(
-            0, [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010]
+        # Input Registers:
+        #   0..9   read-only test data
+        #   10..49 conveyor box_id (4 registers per conveyor, ASCII packed big-endian)
+        ir_initial = (
+            [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010]
+            + [0] * (MAX_DEVICES_PER_TYPE * CONVEYOR_BOX_ID_IR_WIDTH)
         )
+        self._ir_block = ModbusSequentialDataBlock(0, ir_initial)
 
         # 
         slave_ctx = ModbusDeviceContext(
@@ -120,17 +129,22 @@ class ModbusServerNode(Node):
             pub = self.create_publisher(Float32, f'/conveyor/{conv_id}/speed_cmd', 10)
             self._conveyor_publishers[idx] = pub
 
+            box_id_ir_index = CONVEYOR_BOX_ID_IR_BASE + i * CONVEYOR_BOX_ID_IR_WIDTH
             init_conveyor_subscriber(
                 node=self,
                 device_id=conv_id,
                 di_index=idx,
                 di_block=self._di_block,
+                ir_index=box_id_ir_index,
+                ir_width=CONVEYOR_BOX_ID_IR_WIDTH,
+                ir_block=self._ir_block,
             )
 
             self.get_logger().info(
                 f'Conveyor [{conv_id}] mapped: coil {idx} (on/off @ {self._conveyor_default_speed:.2f}), '
                 f'HR {idx} -> /conveyor/{conv_id}/speed_cmd, '
-                f'discrete input {idx} <- /conveyor/{conv_id}/status'
+                f'discrete input {idx} <- /conveyor/{conv_id}/status, '
+                f'IR {box_id_ir_index}..{box_id_ir_index + CONVEYOR_BOX_ID_IR_WIDTH - 1} <- box_id'
             )
 
         # Start Modbus TCP server in background thread
