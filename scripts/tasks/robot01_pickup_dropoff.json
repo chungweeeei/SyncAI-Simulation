@@ -14,7 +14,7 @@
         "id": "step2",
         "name": "Pickup box from conveyor_01",
         "type": "PICKUP",
-        "params": { "conveyor_id": "conveyor_01", "box_id": "box01" }
+        "params": { "conveyor_id": "conveyor_01" }
       },
       {
         "id": "step3",

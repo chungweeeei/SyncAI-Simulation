@@ -6,7 +6,6 @@ export interface TaskStepParams {
   durationSec?: number;
   open?: boolean;
   conveyor_id?: string;
-  box_id?: string;
   zone_id?: string;
 }
 

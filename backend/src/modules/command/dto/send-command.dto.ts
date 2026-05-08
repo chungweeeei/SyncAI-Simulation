@@ -68,7 +68,10 @@ export class SendCommandDto {
   @Min(1)
   timeoutSec: number;
 
-  @ApiPropertyOptional({ type: ModbusParamsDto, description: 'Modbus parameters' })
+  @ApiPropertyOptional({
+    type: ModbusParamsDto,
+    description: 'Modbus parameters',
+  })
   @IsOptional()
   @ValidateNested()
   @Type(() => ModbusParamsDto)

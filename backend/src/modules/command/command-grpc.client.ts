@@ -12,7 +12,12 @@ export interface CommandRequestParams {
   deviceId: string;
   command: string;
   timeoutSec: number;
-  rest?: { method: string; url: string; body: string; headers?: Record<string, string> };
+  rest?: {
+    method: string;
+    url: string;
+    body: string;
+    headers?: Record<string, string>;
+  };
   modbus?: { server: string; unitId: number; address: number; value?: boolean };
 }
 
