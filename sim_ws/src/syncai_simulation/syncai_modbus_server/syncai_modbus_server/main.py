@@ -71,9 +71,11 @@ class ModbusServerNode(Node):
         self._hr_block = WriteCallbackDataBlock(
             0, hr_initial, write_callback=self._on_hr_write
         )
-        # Input Registers: address 0..9 (read-only test data)
+        # Input Registers: 0..9 reserved, 10..19 conveyor phase enum
+        # (0=idle, 1=running, 2=handoff, 3=carried, 4=dropped). Updated by
+        # ConveyorStatusSubscriber from /conveyor/<id>/status.
         self._ir_block = ModbusSequentialDataBlock(
-            0, [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010]
+            0, [0] * (CONVEYOR_BASE + MAX_DEVICES_PER_TYPE)
         )
 
         # 
@@ -125,12 +127,15 @@ class ModbusServerNode(Node):
                 device_id=conv_id,
                 di_index=idx,
                 di_block=self._di_block,
+                ir_index=idx,
+                ir_block=self._ir_block,
             )
 
             self.get_logger().info(
                 f'Conveyor [{conv_id}] mapped: coil {idx} (on/off @ {self._conveyor_default_speed:.2f}), '
                 f'HR {idx} -> /conveyor/{conv_id}/speed_cmd, '
-                f'discrete input {idx} <- /conveyor/{conv_id}/status'
+                f'discrete input {idx} <- /conveyor/{conv_id}/status (running bit), '
+                f'input register {idx} <- /conveyor/{conv_id}/status (phase enum)'
             )
 
         # Start Modbus TCP server in background thread

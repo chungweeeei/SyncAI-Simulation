@@ -27,11 +27,16 @@ class CargoGateway:
         msg = String()
         msg.data = payload
         pub.publish(msg)
-        self._carried_box = box_id
         self._logger.info(
             "[CargoGateway] pickup", conveyor=conveyor_id, box=box_id, robot=self._robot_name
         )
         return True, f"pickup published to /cargo/{conveyor_id}/pickup_cmd ({payload})"
+
+    def mark_carried(self, box_id: str) -> None:
+        self._carried_box = box_id
+
+    def clear_carried(self) -> None:
+        self._carried_box = None
 
     def dropoff(self, zone_id: str) -> Tuple[bool, str]:
         if self._carried_box is None:
@@ -43,7 +48,7 @@ class CargoGateway:
         msg = String()
         msg.data = payload
         self._drop_pub.publish(msg)
-        self._carried_box = None
+        self.clear_carried()
         self._logger.info("[CargoGateway] dropoff", box=box_id, zone=zone_id)
         return True, f"drop published to /cargo/drop_cmd ({payload})"
 
