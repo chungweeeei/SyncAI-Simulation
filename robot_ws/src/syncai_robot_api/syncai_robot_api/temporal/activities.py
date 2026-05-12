@@ -122,7 +122,7 @@ class RobotActivities:
                 conveyor_id=conveyor_id, timeout_sec=timeout
             )
             if success:
-                self.cargo_gateway.mark_carried(box_id)
+                self.cargo_gateway.mark_carried(box_id, conveyor_id)
 
         status = StepStatus.COMPLETED if success else StepStatus.FAILED
         self.task_repo.update_step_status(
@@ -137,9 +137,16 @@ class RobotActivities:
         self.task_repo.update_step_status(input.task_id, input.step_index, StepStatus.IN_PROGRESS)
         self.task_repo.update_current_step_index(input.task_id, input.step_index)
 
-        success, msg = self.cargo_gateway.dropoff(
-            zone_id=input.params["zone_id"],
-        )
+        zone_id = input.params["zone_id"]
+        timeout = input.params.get("verify_timeout_sec", 10.0)
+
+        success, msg, conveyor_id = self.cargo_gateway.dropoff(zone_id=zone_id)
+        if success:
+            success, msg = self.modbus_gateway.verify_dropoff(
+                conveyor_id=conveyor_id, timeout_sec=timeout
+            )
+            if success:
+                self.cargo_gateway.clear_carried()
 
         status = StepStatus.COMPLETED if success else StepStatus.FAILED
         self.task_repo.update_step_status(

@@ -84,10 +84,14 @@ class ConveyorStatusSubscriber:
         state = msg.data.strip()
         lower = state.lower()
 
+        is_running: bool | None = None
         if lower.startswith("handoff:"):
             box_id = state.split(":", 1)[1].strip()
             self._write_box_id(box_id)
             is_running = True
+        elif lower.startswith("carried:") or lower.startswith("dropped:"):
+            # Box has left the conveyor (picked up by robot or dropped at zone).
+            self._write_box_id("")
         elif lower == "running":
             self._write_box_id("")
             is_running = True
@@ -100,8 +104,9 @@ class ConveyorStatusSubscriber:
             )
             return
 
-        # +1 for pymodbus internal offset
-        self._di_block.setValues(self._di_index + 1, [is_running])
+        if is_running is not None:
+            # +1 for pymodbus internal offset
+            self._di_block.setValues(self._di_index + 1, [is_running])
 
         phase = _phase_from_status(msg.data)
         if phase is not None:
