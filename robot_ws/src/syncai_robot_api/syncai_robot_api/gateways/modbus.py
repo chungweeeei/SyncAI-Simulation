@@ -10,8 +10,9 @@ POLL_INTERVAL_SEC = 0.25
 CONVEYOR_BASE_IR = 10
 PHASE_CARRIED = 3
 
-# Mirrors sim_ws/syncai_modbus_server: IR[10 + i*4 .. +4] holds box_id for conveyor index i.
-CONVEYOR_BOX_ID_IR_BASE = 10
+# Mirrors sim_ws/syncai_modbus_server: IR[50 + i*4 .. +4] holds box_id for conveyor index i.
+# Phase enum at IR[10..19]; box_id moved to 50 to avoid collision.
+CONVEYOR_BOX_ID_IR_BASE = 50
 CONVEYOR_BOX_ID_IR_WIDTH = 4
 
 
@@ -73,6 +74,33 @@ class ModbusGateway:
 
         return False, f"Door {action_str} timed out after {timeout_sec}s"
 
+    def read_conveyor_box_id(self, conveyor_id: str) -> Tuple[bool, str, str]:
+        ir_address = self._parse_conveyor_box_id_ir_address(conveyor_id)
+        self._logger.info(
+            "[ModbusGateway] read_conveyor_box_id",
+            conveyor=conveyor_id,
+            ir_address=ir_address,
+        )
+
+        if not self._client.connected:
+            if not self._client.connect():
+                return False, "Modbus TCP connection failed", ""
+
+        resp = self._client.read_input_registers(
+            ir_address, count=CONVEYOR_BOX_ID_IR_WIDTH, device_id=self._unit_id
+        )
+        if resp.isError():
+            return False, f"Modbus read_input_registers failed: {resp}", ""
+
+        chars = bytearray()
+        for reg in resp.registers:
+            chars.append((reg >> 8) & 0xFF)
+            chars.append(reg & 0xFF)
+        box_id = chars.rstrip(b"\x00").decode("ascii", errors="replace")
+        if not box_id:
+            return False, f"conveyor {conveyor_id} has no box_id at IR[{ir_address}]", ""
+        return True, f"read box_id={box_id} from {conveyor_id}", box_id
+
     def verify_pickup(
         self,
         conveyor_id: str,
@@ -118,6 +146,13 @@ class ModbusGateway:
         if not match:
             raise ValueError(f"Cannot parse conveyor id: {conveyor_id}")
         return CONVEYOR_BASE_IR + (int(match.group(1)) - 1)  # conveyor_01 -> 10
+
+    @staticmethod
+    def _parse_conveyor_box_id_ir_address(conveyor_id: str) -> int:
+        match = re.search(r"conveyor_(\d+)", conveyor_id)
+        if not match:
+            raise ValueError(f"Cannot parse conveyor id: {conveyor_id}")
+        return CONVEYOR_BOX_ID_IR_BASE + (int(match.group(1)) - 1) * CONVEYOR_BOX_ID_IR_WIDTH
 
     def close(self):
         self._client.close()

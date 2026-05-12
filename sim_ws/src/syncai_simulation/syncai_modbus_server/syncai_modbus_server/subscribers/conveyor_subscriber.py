@@ -51,14 +51,18 @@ class ConveyorStatusSubscriber:
         device_id: str,
         di_index: int,
         di_block: ModbusSequentialDataBlock,
-        ir_index: int,
+        phase_ir_index: int,
+        box_id_ir_index: int,
+        box_id_ir_width: int,
         ir_block: ModbusSequentialDataBlock,
     ) -> None:
         self._device_id = device_id
         self._di_index = di_index
         self._logger = logger
         self._di_block = di_block
-        self._ir_index = ir_index
+        self._phase_ir_index = phase_ir_index
+        self._box_id_ir_index = box_id_ir_index
+        self._ir_width = box_id_ir_width
         self._ir_block = ir_block
 
     def register(self, node: Node) -> None:
@@ -101,10 +105,10 @@ class ConveyorStatusSubscriber:
 
         phase = _phase_from_status(msg.data)
         if phase is not None:
-            self._ir_block.setValues(self._ir_index + 1, [phase])
+            self._ir_block.setValues(self._phase_ir_index + 1, [phase])
         self._logger.debug(
             f"[ConveyorStatusSubscriber] Conveyor {self._device_id} state: {state} "
-            f"-> DI[{self._di_index}] = {is_running}, IR[{self._ir_index}] = {phase}"
+            f"-> DI[{self._di_index}] = {is_running}, IR[{self._phase_ir_index}] = {phase}"
         )
 
     def _write_box_id(self, box_id: str) -> None:
@@ -116,7 +120,7 @@ class ConveyorStatusSubscriber:
             for i in range(0, max_bytes, 2)
         ]
         # +1 for pymodbus internal offset
-        self._ir_block.setValues(self._ir_index + 1, words)
+        self._ir_block.setValues(self._box_id_ir_index + 1, words)
 
 
 def init_conveyor_subscriber(
@@ -124,7 +128,9 @@ def init_conveyor_subscriber(
     device_id: str,
     di_index: int,
     di_block: ModbusSequentialDataBlock,
-    ir_index: int,
+    phase_ir_index: int,
+    box_id_ir_index: int,
+    box_id_ir_width: int,
     ir_block: ModbusSequentialDataBlock,
 ) -> None:
     subscriber = ConveyorStatusSubscriber(
@@ -132,7 +138,9 @@ def init_conveyor_subscriber(
         device_id=device_id,
         di_index=di_index,
         di_block=di_block,
-        ir_index=ir_index,
+        phase_ir_index=phase_ir_index,
+        box_id_ir_index=box_id_ir_index,
+        box_id_ir_width=box_id_ir_width,
         ir_block=ir_block,
     )
     subscriber.register(node)

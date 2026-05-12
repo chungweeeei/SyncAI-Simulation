@@ -25,7 +25,8 @@ MAX_DEVICES_PER_TYPE = 10
 
 # Input Register layout for conveyor box_id (ASCII packed, big-endian, 2 chars per register).
 # IR[BOX_ID_BASE + i*WIDTH .. +WIDTH] holds box_id for conveyor index i (0..9).
-CONVEYOR_BOX_ID_IR_BASE = 10
+# Phase enum lives at IR[10..19]; box_id starts at 50 to avoid collision.
+CONVEYOR_BOX_ID_IR_BASE = 50
 CONVEYOR_BOX_ID_IR_WIDTH = 4
 
 
@@ -77,12 +78,11 @@ class ModbusServerNode(Node):
             0, hr_initial, write_callback=self._on_hr_write
         )
         # Input Registers: 0..9 reserved, 10..19 conveyor phase enum
-        # (0=idle, 1=running, 2=handoff, 3=carried, 4=dropped). Updated by
+        # (0=idle, 1=running, 2=handoff, 3=carried, 4=dropped), 50..89 conveyor
+        # box_id (ASCII packed, 4 registers per conveyor). Updated by
         # ConveyorStatusSubscriber from /conveyor/<id>/status.
-        self._ir_block = ModbusSequentialDataBlock(
-            0, [0] * (CONVEYOR_BASE + MAX_DEVICES_PER_TYPE)
-        )
-        self._ir_block = ModbusSequentialDataBlock(0, ir_initial)
+        ir_size = CONVEYOR_BOX_ID_IR_BASE + MAX_DEVICES_PER_TYPE * CONVEYOR_BOX_ID_IR_WIDTH
+        self._ir_block = ModbusSequentialDataBlock(0, [0] * ir_size)
 
         # 
         slave_ctx = ModbusDeviceContext(
@@ -134,7 +134,9 @@ class ModbusServerNode(Node):
                 device_id=conv_id,
                 di_index=idx,
                 di_block=self._di_block,
-                ir_index=idx,
+                phase_ir_index=idx,
+                box_id_ir_index=box_id_ir_index,
+                box_id_ir_width=CONVEYOR_BOX_ID_IR_WIDTH,
                 ir_block=self._ir_block,
             )
 
@@ -142,7 +144,8 @@ class ModbusServerNode(Node):
                 f'Conveyor [{conv_id}] mapped: coil {idx} (on/off @ {self._conveyor_default_speed:.2f}), '
                 f'HR {idx} -> /conveyor/{conv_id}/speed_cmd, '
                 f'discrete input {idx} <- /conveyor/{conv_id}/status (running bit), '
-                f'input register {idx} <- /conveyor/{conv_id}/status (phase enum)'
+                f'input register {idx} <- /conveyor/{conv_id}/status (phase enum), '
+                f'input registers {box_id_ir_index}..{box_id_ir_index + CONVEYOR_BOX_ID_IR_WIDTH - 1} <- box_id (ASCII packed)'
             )
 
         # Start Modbus TCP server in background thread
