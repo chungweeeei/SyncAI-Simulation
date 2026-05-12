@@ -15,7 +15,6 @@ from syncai_robot_api.gateways.agent import init_agent_gateway
 from syncai_robot_api.gateways.robot import init_robot_gateway
 from syncai_robot_api.gateways.modbus import ModbusGateway
 from syncai_robot_api.gateways.cargo import init_cargo_gateway
-from syncai_robot_api.gateways.entity import init_entity_gateway
 from syncai_robot_api.gateways.wms import init_wms_gateway
 
 from syncai_robot_api.jobs.send_robot_state import init_send_robot_state_job
@@ -55,9 +54,12 @@ class SyncAIRobotAPI(Node):
         # Register gateways
         # agent_gateway = init_agent_gateway(logger=logger)
         robot_gateway = init_robot_gateway(logger=logger, node=self, robot_id=robot_config.robot_id)
-        modbus_gateway = ModbusGateway(logger=logger, host="syncai-iot-server", port=5020)
+
+        
+        modbus_host = os.getenv("SYNCAI_MODBUS_HOST", "localhost")
+        modbus_port = int(os.getenv("SYNCAI_MODBUS_PORT", "5020"))
+        modbus_gateway = ModbusGateway(logger=logger, host=modbus_host, port=modbus_port)
         cargo_gateway = init_cargo_gateway(logger=logger, node=self, robot_name=robot_config.robot_name)
-        entity_gateway = init_entity_gateway(logger=logger)
         wms_gateway = init_wms_gateway(logger=logger)
 
         # Register subscribers
@@ -74,7 +76,6 @@ class SyncAIRobotAPI(Node):
             robot_repo=robot_repo,
             task_repo=task_repo,
             robot_gateway=robot_gateway,
-            entity_gateway=entity_gateway,
             robot_id=robot_config.robot_id,
             map_name=robot_config.map,
         )

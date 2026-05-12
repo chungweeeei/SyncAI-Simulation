@@ -52,7 +52,6 @@ class ChargeParams(BaseModel):
 
 class PickupParams(BaseModel):
     conveyor_id: str = Field(..., description="Conveyor device id", examples=["conveyor_01"])
-    box_id: str = Field(..., description="Box id to pick up", examples=["box01"])
 
 class DropoffParams(BaseModel):
     zone_id: str = Field(..., description="Dropoff zone id", examples=["dropoff_a"])

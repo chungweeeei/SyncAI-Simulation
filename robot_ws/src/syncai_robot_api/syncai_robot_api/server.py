@@ -13,7 +13,6 @@ from syncai_robot_api.routers.map import init_map_router
 from syncai_robot_api.repositories.robot.robot import RobotRepo
 from syncai_robot_api.repositories.task.task import TaskRepo
 from syncai_robot_api.gateways.robot import RobotGateway
-from syncai_robot_api.gateways.entity import EntityGateway
 from syncai_robot_api.temporal.shared import TEMPORAL_SERVER_URL
 
 
@@ -21,7 +20,6 @@ def create_app(
     robot_repo: RobotRepo,
     task_repo: TaskRepo,
     robot_gateway: RobotGateway,
-    entity_gateway: EntityGateway,
     robot_id: str,
     map_name: str,
 ) -> FastAPI:
@@ -42,7 +40,7 @@ def create_app(
 
     app.include_router(init_task_router(task_repo=task_repo, robot_gateway=robot_gateway, robot_id=robot_id))
     app.include_router(init_robot_state_router(robot_repo=robot_repo, task_repo=task_repo))
-    app.include_router(init_map_router(map_name=map_name, entity_gateway=entity_gateway))
+    app.include_router(init_map_router(map_name=map_name))
 
     return app
 
@@ -52,14 +50,13 @@ def start_api_server(
     robot_repo: RobotRepo,
     task_repo: TaskRepo,
     robot_gateway: RobotGateway,
-    entity_gateway: EntityGateway,
     robot_id: str,
     map_name: str,
 ):
     host = os.getenv("SYNCAI_API_HOST", "0.0.0.0")
     port = int(os.getenv("SYNCAI_API_PORT", "3000"))
 
-    app = create_app(robot_repo=robot_repo, task_repo=task_repo, robot_gateway=robot_gateway, entity_gateway=entity_gateway, robot_id=robot_id, map_name=map_name)
+    app = create_app(robot_repo=robot_repo, task_repo=task_repo, robot_gateway=robot_gateway, robot_id=robot_id, map_name=map_name)
 
     def _run():
         logger.info("[APIServer] Starting", host=host, port=port)

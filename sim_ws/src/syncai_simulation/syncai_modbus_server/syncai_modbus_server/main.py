@@ -23,6 +23,11 @@ from syncai_modbus_server.subscribers.conveyor_subscriber import init_conveyor_s
 CONVEYOR_BASE = 10
 MAX_DEVICES_PER_TYPE = 10
 
+# Input Register layout for conveyor box_id (ASCII packed, big-endian, 2 chars per register).
+# IR[BOX_ID_BASE + i*WIDTH .. +WIDTH] holds box_id for conveyor index i (0..9).
+CONVEYOR_BOX_ID_IR_BASE = 10
+CONVEYOR_BOX_ID_IR_WIDTH = 4
+
 
 class ModbusServerNode(Node):
 
@@ -77,6 +82,7 @@ class ModbusServerNode(Node):
         self._ir_block = ModbusSequentialDataBlock(
             0, [0] * (CONVEYOR_BASE + MAX_DEVICES_PER_TYPE)
         )
+        self._ir_block = ModbusSequentialDataBlock(0, ir_initial)
 
         # 
         slave_ctx = ModbusDeviceContext(
@@ -122,6 +128,7 @@ class ModbusServerNode(Node):
             pub = self.create_publisher(Float32, f'/conveyor/{conv_id}/speed_cmd', 10)
             self._conveyor_publishers[idx] = pub
 
+            box_id_ir_index = CONVEYOR_BOX_ID_IR_BASE + i * CONVEYOR_BOX_ID_IR_WIDTH
             init_conveyor_subscriber(
                 node=self,
                 device_id=conv_id,

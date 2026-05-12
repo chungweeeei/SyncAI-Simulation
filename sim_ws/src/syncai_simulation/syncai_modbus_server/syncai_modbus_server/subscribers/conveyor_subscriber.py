@@ -77,8 +77,25 @@ class ConveyorStatusSubscriber:
         self._logger.info(f"[ConveyorStatusSubscriber] Registered subscriber for {topic}")
 
     def _status_cb(self, msg: String) -> None:
-        state = msg.data.strip().lower()
-        is_running = state == "running"
+        state = msg.data.strip()
+        lower = state.lower()
+
+        if lower.startswith("handoff:"):
+            box_id = state.split(":", 1)[1].strip()
+            self._write_box_id(box_id)
+            is_running = True
+        elif lower == "running":
+            self._write_box_id("")
+            is_running = True
+        elif lower == "stopped":
+            self._write_box_id("")
+            is_running = False
+        else:
+            self._logger.debug(
+                f"[ConveyorStatusSubscriber] {self._device_id} unhandled state: {state}"
+            )
+            return
+
         # +1 for pymodbus internal offset
         self._di_block.setValues(self._di_index + 1, [is_running])
 
@@ -89,6 +106,17 @@ class ConveyorStatusSubscriber:
             f"[ConveyorStatusSubscriber] Conveyor {self._device_id} state: {state} "
             f"-> DI[{self._di_index}] = {is_running}, IR[{self._ir_index}] = {phase}"
         )
+
+    def _write_box_id(self, box_id: str) -> None:
+        max_bytes = self._ir_width * 2
+        encoded = box_id.encode("ascii", errors="replace")[:max_bytes]
+        encoded = encoded.ljust(max_bytes, b"\x00")
+        words = [
+            (encoded[i] << 8) | encoded[i + 1]
+            for i in range(0, max_bytes, 2)
+        ]
+        # +1 for pymodbus internal offset
+        self._ir_block.setValues(self._ir_index + 1, words)
 
 
 def init_conveyor_subscriber(

@@ -10,6 +10,10 @@ POLL_INTERVAL_SEC = 0.25
 CONVEYOR_BASE_IR = 10
 PHASE_CARRIED = 3
 
+# Mirrors sim_ws/syncai_modbus_server: IR[10 + i*4 .. +4] holds box_id for conveyor index i.
+CONVEYOR_BOX_ID_IR_BASE = 10
+CONVEYOR_BOX_ID_IR_WIDTH = 4
+
 
 class ModbusGateway:
 
