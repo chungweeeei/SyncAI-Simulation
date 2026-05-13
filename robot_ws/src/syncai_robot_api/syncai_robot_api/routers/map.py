@@ -25,6 +25,7 @@ class MapMetadata(BaseSchema):
     resolution: float = Field(..., description="Resolution of the map", examples=[0.05])
     width: int = Field(..., description="Width of the map", examples=[100])
     height: int = Field(..., description="Height of the map", examples=[100])
+    image: str = Field(..., description="The base64-encoded image data of the map")
 
 
 class Vertex(BaseSchema):
@@ -44,7 +45,6 @@ class VertexResponse(BaseSchema):
 
 class MapPayload(BaseSchema):
     map_metadata: MapMetadata = Field(..., alias="mapMetadata")
-    vertexes: list[Vertex] = Field(default_factory=list)
 
 
 def init_map_router(map_name: str) -> APIRouter:
@@ -91,9 +91,6 @@ def init_map_router(map_name: str) -> APIRouter:
         origin = map_config.get("origin", [0.0, 0.0, 0.0])
         map_id = Path(map_yaml).stem
 
-        with _lock:
-            vertexes = _read_vertexes()
-
         return MapPayload(
             map_metadata=MapMetadata(
                 map_id=map_id,
@@ -101,8 +98,8 @@ def init_map_router(map_name: str) -> APIRouter:
                 resolution=map_config.get("resolution", 0.05),
                 width=width,
                 height=height,
-            ),
-            vertexes=[Vertex(name=v["name"], pose=Pose(**v["pose"])) for v in vertexes],
+                image=""
+            )
         )
 
     @router.post("/vertexes", response_model=VertexResponse, status_code=status.HTTP_201_CREATED)
