@@ -36,6 +36,8 @@ def _read_robot_id(data_dir):
 # Nav2 startup order — lifecycle_manager will configure/activate in this order
 NAV2_LIFECYCLE_NODES = [
     'map_server',
+    'filter_mask_server',
+    'costmap_filter_info_server',
     'amcl',
     'controller_server',
     'planner_server',
@@ -49,6 +51,7 @@ NAV2_LIFECYCLE_NODES = [
 # Module launches to include (lifecycle_manager skipped via launch arg)
 NAV2_MODULE_LAUNCHES = [
     'map_server_launch.py',
+    'costmap_filter_launch.py',
     'amcl_launch.py',
     'controller_launch.py',
     'planner_launch.py',

@@ -1,5 +1,7 @@
 devices:
-  - id: door_01
-    type: door
   - id: conveyor_01
+    type: conveyor
+  - id: conveyor_02
+    type: conveyor
+  - id: conveyor_03
     type: conveyor

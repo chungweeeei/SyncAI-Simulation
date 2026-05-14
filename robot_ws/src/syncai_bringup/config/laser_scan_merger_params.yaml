@@ -83,7 +83,7 @@ pointcloud_to_laserscan:
     # Cap at 10 m: at 1.30° beam spacing, arcs >22 cm between neighbors make
     # returns beyond 10 m unreliable (isolated-point rate spikes), and the
     # global costmap rolling window is smaller than this anyway.
-    range_max: 10.0
+    range_max: 25.0
     use_inf: true
     inf_epsilon: 1.0
     queue_size: 16

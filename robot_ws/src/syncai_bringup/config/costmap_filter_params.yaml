@@ -1,7 +1,7 @@
 filter_mask_server:
   ros__parameters:
     use_sim_time: true
-    yaml_filename: "/home/ubuntu/map/keepout_mask.yaml"
+    yaml_filename: "/home/ubuntu/map/warehouse_keepout_mask.yaml"
 
 costmap_filter_info_server:
   ros__parameters:
@@ -11,18 +11,3 @@ costmap_filter_info_server:
     mask_topic: "/<robot_namespace>/filter_mask"
     base: 0.0
     multiplier: 1.0
-
-speed_mask_server:
-  ros__parameters:
-    use_sim_time: true
-    yaml_filename: "/home/ubuntu/map/speed_mask.yaml"
-
-speed_filter_info_server:
-  ros__parameters:
-    use_sim_time: true
-    type: 1
-    filter_info_topic: "speed_filter_info"
-    mask_topic: "/<robot_namespace>/speed_filter_mask"
-    base: 100.0
-    multiplier: -1.0
-    percentage: true
