@@ -84,7 +84,6 @@ private:
     blackboard->set<double>("target_x", goal->target_x);
     blackboard->set<double>("target_y", goal->target_y);
     blackboard->set<double>("target_yaw", goal->target_yaw);
-    blackboard->set<std::string>("recharge_service", goal->recharge_service);
 
     // Create BT from XML
     BT::Tree tree;

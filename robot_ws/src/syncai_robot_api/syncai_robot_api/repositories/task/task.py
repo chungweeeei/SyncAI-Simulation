@@ -17,6 +17,7 @@ class TaskRepo:
         self._lock = threading.Lock()
         self._tasks: Dict[str, Task] = {}
         self._active_task_id: Optional[str] = None
+        self._cancel_event: threading.Event = threading.Event()
 
     def add_task(self, task: Task) -> bool:
         with self._lock:
@@ -57,10 +58,18 @@ class TaskRepo:
     def set_active_task(self, task_id: str):
         with self._lock:
             self._active_task_id = task_id
+            self._cancel_event.clear()
 
     def clear_active_task(self):
         with self._lock:
             self._active_task_id = None
+            self._cancel_event.clear()
+
+    def request_cancel(self):
+        self._cancel_event.set()
+
+    def is_cancel_requested(self) -> bool:
+        return self._cancel_event.is_set()
 
     def update_task_status(self, task_id: str, status: TaskStatus, error_msg: Optional[str] = None):
         with self._lock:

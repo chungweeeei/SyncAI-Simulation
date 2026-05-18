@@ -24,6 +24,23 @@ class RobotActivities:
     robot_id: str
     logger: structlog.stdlib.BoundLogger
 
+    def _finalize_step_status(self, input: StepInput, success: bool, msg: str) -> StepResult:
+        # If cancel was requested while this activity was running, the step is
+        # CANCELLED regardless of the gateway outcome.
+        if self.task_repo.is_cancel_requested():
+            self.task_repo.update_step_status(
+                input.task_id, input.step_index, StepStatus.CANCELLED,
+                error_msg="Cancelled by user"
+            )
+            return StepResult(success=False, message="Cancelled by user")
+
+        status = StepStatus.COMPLETED if success else StepStatus.FAILED
+        self.task_repo.update_step_status(
+            input.task_id, input.step_index, status,
+            error_msg=msg if not success else None
+        )
+        return StepResult(success=success, message=msg)
+
     @activity.defn
     def execute_move(self, input: StepInput) -> StepResult:
         self.task_repo.update_step_status(input.task_id, input.step_index, StepStatus.IN_PROGRESS)
@@ -40,28 +57,28 @@ class RobotActivities:
             x=input.params["x"], y=input.params["y"], yaw=yaw_rad
         )
 
-        if success and cell_id:
+        if success and cell_id and not self.task_repo.is_cancel_requested():
             # Arrived at a known cell — claim it
             self.wms_gateway.occupy_cell(cell_id=cell_id, robot_id=self.robot_id)
-        # On failure or no destination cell, robot stays free (already released).
+        # On failure, cancel, or no destination cell, robot stays free (already released).
 
-        status = StepStatus.COMPLETED if success else StepStatus.FAILED
-        self.task_repo.update_step_status(
-            input.task_id, input.step_index, status,
-            error_msg=msg if not success else None
-        )
-
-        return StepResult(success=success, message=msg)
+        return self._finalize_step_status(input, success, msg)
 
     @activity.defn
     async def execute_wait(self, input: StepInput) -> StepResult:
         self.task_repo.update_step_status(input.task_id, input.step_index, StepStatus.IN_PROGRESS)
         self.task_repo.update_current_step_index(input.task_id, input.step_index)
 
-        await asyncio.sleep(input.params["durationSec"])
+        try:
+            await asyncio.sleep(input.params["durationSec"])
+        except asyncio.CancelledError:
+            self.task_repo.update_step_status(
+                input.task_id, input.step_index, StepStatus.CANCELLED,
+                error_msg="Cancelled by user"
+            )
+            raise
 
-        self.task_repo.update_step_status(input.task_id, input.step_index, StepStatus.COMPLETED)
-        return StepResult(success=True, message="Wait completed")
+        return self._finalize_step_status(input, True, "Wait completed")
 
     @activity.defn
     def execute_charge(self, input: StepInput) -> StepResult:
@@ -76,13 +93,7 @@ class RobotActivities:
             yaw=yaw_rad,
         )
 
-        status = StepStatus.COMPLETED if success else StepStatus.FAILED
-        self.task_repo.update_step_status(
-            input.task_id, input.step_index, status,
-            error_msg=msg if not success else None
-        )
-            
-        return StepResult(success=success, message=msg)
+        return self._finalize_step_status(input, success, msg)
 
     @activity.defn
     def execute_door(self, input: StepInput) -> StepResult:
@@ -96,13 +107,7 @@ class RobotActivities:
             coil_address=input.params.get("coil_address"),
         )
 
-        status = StepStatus.COMPLETED if success else StepStatus.FAILED
-        self.task_repo.update_step_status(
-            input.task_id, input.step_index, status,
-            error_msg=msg if not success else None
-        )
-
-        return StepResult(success=success, message=msg)
+        return self._finalize_step_status(input, success, msg)
 
     @activity.defn
     def execute_pickup(self, input: StepInput) -> StepResult:
@@ -121,16 +126,10 @@ class RobotActivities:
             success, msg = self.modbus_gateway.verify_pickup(
                 conveyor_id=conveyor_id, timeout_sec=timeout
             )
-            if success:
+            if success and not self.task_repo.is_cancel_requested():
                 self.cargo_gateway.mark_carried(box_id, conveyor_id)
 
-        status = StepStatus.COMPLETED if success else StepStatus.FAILED
-        self.task_repo.update_step_status(
-            input.task_id, input.step_index, status,
-            error_msg=msg if not success else None
-        )
-
-        return StepResult(success=success, message=msg)
+        return self._finalize_step_status(input, success, msg)
 
     @activity.defn
     def execute_dropoff(self, input: StepInput) -> StepResult:
@@ -145,13 +144,7 @@ class RobotActivities:
             success, msg = self.modbus_gateway.verify_dropoff(
                 conveyor_id=conveyor_id, timeout_sec=timeout
             )
-            if success:
+            if success and not self.task_repo.is_cancel_requested():
                 self.cargo_gateway.clear_carried()
 
-        status = StepStatus.COMPLETED if success else StepStatus.FAILED
-        self.task_repo.update_step_status(
-            input.task_id, input.step_index, status,
-            error_msg=msg if not success else None
-        )
-
-        return StepResult(success=success, message=msg)
+        return self._finalize_step_status(input, success, msg)

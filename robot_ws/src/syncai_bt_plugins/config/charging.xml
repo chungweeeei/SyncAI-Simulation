@@ -2,7 +2,7 @@
   <BehaviorTree ID="MainTree">
     <Sequence>
       <Dock dock_x="{target_x}" dock_y="{target_y}" dock_yaw="{target_yaw}"/>
-      <Recharge service_name="{recharge_service}"/>
+      <Recharge/>
       <Undock/>
     </Sequence>
   </BehaviorTree>

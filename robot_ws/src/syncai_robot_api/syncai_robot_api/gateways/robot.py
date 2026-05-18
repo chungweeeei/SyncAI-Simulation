@@ -90,7 +90,6 @@ class RobotGateway:
         x: float,
         y: float,
         yaw: float,
-        recharge_service: str = "recharge",
     ) -> Tuple[bool, str]:
         if not self._charging_client.wait_for_server(timeout_sec=10.0):
             return False, "Charging action server not available"
@@ -99,7 +98,6 @@ class RobotGateway:
         goal_msg.target_x = x
         goal_msg.target_y = y
         goal_msg.target_yaw = yaw
-        goal_msg.recharge_service = recharge_service
 
         self._logger.info(
             "[RobotGateway] Sending charging goal",

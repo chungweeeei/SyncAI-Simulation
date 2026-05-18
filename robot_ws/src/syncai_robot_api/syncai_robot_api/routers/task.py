@@ -8,7 +8,6 @@ from syncai_robot_api.repositories.task.task import TaskRepo
 from syncai_robot_api.repositories.task.schema import (
     TaskActionType,
     StepType,
-    StepStatus,
     MoveParams,
     WaitParams,
     DoorParams,
@@ -127,27 +126,24 @@ def init_task_router(task_repo: TaskRepo, robot_gateway: RobotGateway, robot_id:
         if task.status in (TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Task is already {task.status}")
 
+        # 1. Raise cancel signal — running activity will read this when it exits
+        #    and write the current step as CANCELLED instead of COMPLETED/FAILED.
+        task_repo.request_cancel()
+        # 2. Flip task status so _on_workflow_complete takes the cancel branch.
         task_repo.update_task_status(task_id, TaskStatus.CANCELLED)
-        task_repo.clear_active_task()
-        task_repo.set_completed_at(task_id)
-
-        # Cancel remaining PENDING/IN_PROGRESS steps
-        task = task_repo.get_task(task_id)
-        if task:
-            for i, step in enumerate(task.payload.steps):
-                if step.status in (StepStatus.PENDING, StepStatus.IN_PROGRESS):
-                    task_repo.update_step_status(task_id, i, StepStatus.CANCELLED)
-
-        # Cancel Temporal workflow
+        # 3. Abort in-flight ROS2 action (covers MOVE / CHARGE). No-op otherwise.
+        robot_gateway.cancel_current_goal()
+        # 4. Cancel the Temporal workflow:
+        #    - WAIT activity gets asyncio.CancelledError
+        #    - DOOR / PICKUP / DROPOFF activities are sync; they finish naturally
+        #      (we do not interrupt modbus polling per simulator semantics)
+        #    - Any future PENDING steps are skipped
         temporal_client = request.app.state.temporal_client
         try:
             handle = temporal_client.get_workflow_handle(get_workflow_id(task_id))
             await handle.cancel()
         except Exception:
             pass
-
-        # Immediately cancel in-flight ROS action
-        robot_gateway.cancel_current_goal()
 
         return TaskResponse(id=task_id, status=TaskStatus.CANCELLED, message="Task cancel requested")
 

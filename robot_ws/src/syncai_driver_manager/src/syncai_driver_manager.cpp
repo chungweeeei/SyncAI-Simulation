@@ -49,9 +49,16 @@ void DriverManagerNode::init_pub_sub()
 {
     battery_pub_ = this->create_publisher<sensor_msgs::msg::BatteryState>("battery_state", rclcpp::QoS(10));
 
-    recharge_srv_ = this->create_service<std_srvs::srv::Trigger>(
-        "recharge",
-        std::bind(&DriverManagerNode::recharge_callback, this,
+    start_recharge_srv_ = this->create_service<std_srvs::srv::Trigger>(
+        "start_recharge",
+        std::bind(&DriverManagerNode::start_recharge_callback, this,
+                  std::placeholders::_1, std::placeholders::_2),
+        rclcpp::ServicesQoS(),
+        service_cb_group_);
+
+    stop_recharge_srv_ = this->create_service<std_srvs::srv::Trigger>(
+        "stop_recharge",
+        std::bind(&DriverManagerNode::stop_recharge_callback, this,
                   std::placeholders::_1, std::placeholders::_2),
         rclcpp::ServicesQoS(),
         service_cb_group_);
@@ -110,19 +117,41 @@ void DriverManagerNode::battery_timer_callback()
     }
 }
 
-void DriverManagerNode::recharge_callback(
+void DriverManagerNode::start_recharge_callback(
     const std::shared_ptr<std_srvs::srv::Trigger::Request> /*request*/,
     std::shared_ptr<std_srvs::srv::Trigger::Response> response)
 {
     std::lock_guard<std::mutex> lock(state_mutex_);
-    is_charging_ = !is_charging_;
+    bool was_charging = is_charging_;
+    is_charging_ = true;
     response->success = true;
-    if (is_charging_) {
-        response->message = "Charging started";
-        RCLCPP_INFO(this->get_logger(), "[DriverManagerNode] Charging started at %.1f%%", battery_level_);
+    if (was_charging) {
+        response->message = "Already charging";
+        RCLCPP_INFO(this->get_logger(),
+            "[DriverManagerNode] start_recharge: already charging at %.1f%%", battery_level_);
     } else {
+        response->message = "Charging started";
+        RCLCPP_INFO(this->get_logger(),
+            "[DriverManagerNode] start_recharge: charging started at %.1f%%", battery_level_);
+    }
+}
+
+void DriverManagerNode::stop_recharge_callback(
+    const std::shared_ptr<std_srvs::srv::Trigger::Request> /*request*/,
+    std::shared_ptr<std_srvs::srv::Trigger::Response> response)
+{
+    std::lock_guard<std::mutex> lock(state_mutex_);
+    bool was_charging = is_charging_;
+    is_charging_ = false;
+    response->success = true;
+    if (was_charging) {
         response->message = "Charging stopped";
-        RCLCPP_INFO(this->get_logger(), "[DriverManagerNode] Charging stopped at %.1f%%", battery_level_);
+        RCLCPP_INFO(this->get_logger(),
+            "[DriverManagerNode] stop_recharge: charging stopped at %.1f%%", battery_level_);
+    } else {
+        response->message = "Not charging";
+        RCLCPP_INFO(this->get_logger(),
+            "[DriverManagerNode] stop_recharge: was not charging (battery %.1f%%)", battery_level_);
     }
 }
 

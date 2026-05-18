@@ -21,7 +21,8 @@ public:
   static BT::PortsList providedPorts()
   {
     return {
-      BT::InputPort<std::string>("service_name", "recharge", "Recharge service name"),
+      BT::InputPort<std::string>("start_service", "start_recharge", "Service to start charging"),
+      BT::InputPort<std::string>("stop_service", "stop_recharge", "Service to stop charging"),
       BT::InputPort<std::string>("battery_topic", "battery_state", "Battery state topic"),
       BT::InputPort<double>("target_percentage", 100.0, "Target battery percentage (0-100)"),
     };
@@ -33,7 +34,8 @@ public:
 
 private:
   rclcpp::Node::SharedPtr node_;
-  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr service_client_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr start_client_;
+  rclcpp::Client<std_srvs::srv::Trigger>::SharedPtr stop_client_;
   rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr battery_sub_;
   std::atomic<float> current_percentage_{0.0f};
   double target_percentage_{100.0};

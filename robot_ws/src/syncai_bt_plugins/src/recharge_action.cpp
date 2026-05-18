@@ -15,8 +15,9 @@ BT::NodeStatus RechargeAction::onStart()
     throw BT::RuntimeError("Missing 'node' in blackboard");
   }
 
-  std::string service_name, battery_topic;
-  getInput("service_name", service_name);
+  std::string start_service, stop_service, battery_topic;
+  getInput("start_service", start_service);
+  getInput("stop_service", stop_service);
   getInput("battery_topic", battery_topic);
   getInput("target_percentage", target_percentage_);
 
@@ -30,17 +31,18 @@ BT::NodeStatus RechargeAction::onStart()
       current_percentage_.store(msg->percentage);
     });
 
-  // Call recharge service to start charging
-  service_client_ = node_->create_client<std_srvs::srv::Trigger>(service_name);
+  // Create both clients up-front so onHalted can call stop even if onRunning never reaches target.
+  start_client_ = node_->create_client<std_srvs::srv::Trigger>(start_service);
+  stop_client_ = node_->create_client<std_srvs::srv::Trigger>(stop_service);
 
-  if (!service_client_->wait_for_service(std::chrono::seconds(10))) {
+  if (!start_client_->wait_for_service(std::chrono::seconds(10))) {
     RCLCPP_ERROR(node_->get_logger(),
-      "[Recharge] Service '%s' not available", service_name.c_str());
+      "[Recharge] Start service '%s' not available", start_service.c_str());
     return BT::NodeStatus::FAILURE;
   }
 
   auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-  auto future = service_client_->async_send_request(request).future.share();
+  auto future = start_client_->async_send_request(request).future.share();
 
   if (future.wait_for(std::chrono::seconds(5)) == std::future_status::ready) {
     auto response = future.get();
@@ -52,12 +54,12 @@ BT::NodeStatus RechargeAction::onStart()
       return BT::NodeStatus::RUNNING;
     } else {
       RCLCPP_WARN(node_->get_logger(),
-        "[Recharge] Service call failed: %s", response->message.c_str());
+        "[Recharge] Start service call failed: %s", response->message.c_str());
       return BT::NodeStatus::FAILURE;
     }
   }
 
-  RCLCPP_ERROR(node_->get_logger(), "[Recharge] Service call timed out");
+  RCLCPP_ERROR(node_->get_logger(), "[Recharge] Start service call timed out");
   return BT::NodeStatus::FAILURE;
 }
 
@@ -68,8 +70,17 @@ BT::NodeStatus RechargeAction::onRunning()
   if (pct >= target_percentage_) {
     RCLCPP_INFO(node_->get_logger(),
       "[Recharge] Battery reached %.0f%%, charging complete", pct);
+
+    // Idempotent stop — driver_manager auto-stops at 100% but we send explicit
+    // stop for safety and to support target_percentage < 100.
+    if (charging_started_ && stop_client_) {
+      auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
+      stop_client_->async_send_request(request);
+    }
+
     battery_sub_.reset();
-    service_client_.reset();
+    start_client_.reset();
+    stop_client_.reset();
     return BT::NodeStatus::SUCCESS;
   }
 
@@ -78,14 +89,15 @@ BT::NodeStatus RechargeAction::onRunning()
 
 void RechargeAction::onHalted()
 {
-  // If charging was started, call service again to toggle it off
-  if (charging_started_ && service_client_) {
+  // Charge cancelled mid-flight — explicitly stop charging on the simulator.
+  if (charging_started_ && stop_client_) {
     auto request = std::make_shared<std_srvs::srv::Trigger::Request>();
-    service_client_->async_send_request(request);
-    RCLCPP_INFO(node_->get_logger(), "[Recharge] Halted, sent stop charging request");
+    stop_client_->async_send_request(request);
+    RCLCPP_INFO(node_->get_logger(), "[Recharge] Halted, sent stop_recharge request");
   }
   battery_sub_.reset();
-  service_client_.reset();
+  start_client_.reset();
+  stop_client_.reset();
   charging_started_ = false;
 }
 
