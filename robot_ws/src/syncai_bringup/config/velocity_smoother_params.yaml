@@ -15,10 +15,10 @@ velocity_smoother:
     # the prior overshoot/oscillation where cmd 0.5 was passed to a chassis
     # that physically delivered only ~0.38, leaving the loop perpetually
     # saturated and overshooting goal yaw.
-    max_velocity: [0.8, 0.0, 0.4]
-    min_velocity: [-0.8, 0.0, -0.4]
-    max_accel: [0.8, 0.0, 1.2]
-    max_decel: [-1.0, 0.0, -1.5]
+    max_velocity: [0.8, 0.0, 0.6]
+    min_velocity: [-0.8, 0.0, -0.6]
+    max_accel: [1.0, 0.0, 2.5]
+    max_decel: [-1.0, 0.0, -3.0]
     odom_topic: odom
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]

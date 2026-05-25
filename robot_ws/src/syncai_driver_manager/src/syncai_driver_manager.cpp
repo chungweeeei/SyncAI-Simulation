@@ -23,6 +23,7 @@ void DriverManagerNode::declare_parameters()
     this->declare_parameter("battery_charge_rate", 0.5);    // % per second
     this->declare_parameter("battery_publish_rate", 1.0);   // Hz
     this->declare_parameter("robot_frame_id", "base_link");
+    this->declare_parameter("robot_type", "amr");
 }
 
 void DriverManagerNode::get_parameters()
@@ -43,6 +44,9 @@ void DriverManagerNode::get_parameters()
 
     robot_frame_id_ = this->get_parameter("robot_frame_id").as_string();
     RCLCPP_INFO(this->get_logger(), "[DriverManagerNode][get_parameters] robot_frame_id: %s", robot_frame_id_.c_str());
+
+    robot_type_ = this->get_parameter("robot_type").as_string();
+    RCLCPP_INFO(this->get_logger(), "[DriverManagerNode][get_parameters] robot_type: %s", robot_type_.c_str());
 }
 
 void DriverManagerNode::init_pub_sub()
@@ -81,7 +85,10 @@ void DriverManagerNode::init_pub_sub()
 void DriverManagerNode::battery_timer_callback()
 {
     std::lock_guard<std::mutex> lock(state_mutex_);
-    if (is_charging_) {
+    if (robot_type_ == "robot_dog") {
+        battery_level_ = 100.0;
+        is_charging_ = false;
+    } else if (is_charging_) {
         battery_level_ += battery_charge_rate_ / battery_publish_rate_;
         battery_level_ = std::min(100.0, battery_level_);
         if (battery_level_ >= 100.0) {

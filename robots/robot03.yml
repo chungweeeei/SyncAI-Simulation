@@ -1,0 +1,40 @@
+services:
+  robot03:
+    extends:
+      file: base.yml
+      service: robot
+    container_name: syncai-robot03
+    environment:
+      - SYNCAI_API_PORT=5000
+    volumes:
+      - ../data/robot03:/home/ubuntu/data
+      - ../data/robot03/ros_ws/install:/home/ubuntu/robot_ws/install
+      - ../data/robot03/ros_ws/build:/home/ubuntu/robot_ws/build
+      - ../data/robot03/ros_ws/log:/home/ubuntu/robot_ws/log
+
+  robot03-bridge:
+    extends:
+      file: base.yml
+      service: bridge
+    container_name: syncai-robot03-bridge
+    environment:
+      - GRPC_LISTEN_ADDR=:50053
+      - ROBOT_ID=robot03
+      - ROBOT_API_URL=http://localhost:5000
+    volumes:
+      - ../data/robot03:/home/ubuntu/data
+    depends_on:
+      - robot03
+ 
+  robot03-backend:
+    extends:
+      file: base.yml
+      service: backend
+    container_name: syncai-robot03-backend
+    environment:
+      - PORT=5001
+      - ROBOT_API_URL=http://localhost:5000
+      - BRIDGE_GRPC_ADDRESS=localhost:50053
+    depends_on:
+      - postgresql
+      - temporal

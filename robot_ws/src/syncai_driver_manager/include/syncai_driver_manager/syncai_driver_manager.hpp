@@ -56,6 +56,7 @@ private:
     double battery_publish_rate_;    // Hz
     bool is_charging_;
     std::string robot_frame_id_;
+    std::string robot_type_;
 };
 } // namespace syncai_driver_manager
 

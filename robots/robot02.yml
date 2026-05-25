@@ -8,6 +8,9 @@ services:
       - SYNCAI_API_PORT=4000
     volumes:
       - ../data/robot02:/home/ubuntu/data
+      - ../data/robot02/ros_ws/install:/home/ubuntu/robot_ws/install
+      - ../data/robot02/ros_ws/build:/home/ubuntu/robot_ws/build
+      - ../data/robot02/ros_ws/log:/home/ubuntu/robot_ws/log
 
   robot02-bridge:
     extends:

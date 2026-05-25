@@ -12,6 +12,7 @@ def generate_launch_description():
     cfg.read(config_path)
 
     robot_id = cfg["identity"]["robot_id"]
+    robot_type = cfg["identity"].get("robot_type", "amr")
 
     return LaunchDescription([
         DeclareLaunchArgument(
@@ -40,6 +41,11 @@ def generate_launch_description():
             description="Frame ID of the robot"
         ),
         DeclareLaunchArgument(
+            "robot_type",
+            default_value=robot_type,
+            description="Robot kind (amr|robot_dog)"
+        ),
+        DeclareLaunchArgument(
             "use_sim_time",
             default_value="true",
             description="Use simulation clock"
@@ -57,6 +63,7 @@ def generate_launch_description():
                 {"battery_charge_rate": LaunchConfiguration("battery_charge_rate")},
                 {"battery_publish_rate": LaunchConfiguration("battery_publish_rate")},
                 {"robot_frame_id": LaunchConfiguration("robot_frame_id")},
+                {"robot_type": LaunchConfiguration("robot_type")},
                 {"use_sim_time": LaunchConfiguration("use_sim_time")},
             ]
         )
